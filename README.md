@@ -32,9 +32,12 @@ repositories for example usage of `element-data-loader`.
 
 + ScanImage
      ```python
+     import scanreader
      from element_data_loader import scanimage_loader
 
-     loaded_scan = scanreader.read_scan(scan_filepaths)
+     scan_filepath = '<imaging_root_data_dir>/subject1/session0/<scan_filename>.tif' # ScanImage file path
+     loaded_scan = scanreader.read_scan(scan_filepath)
+
      recording_time = scanimage_loader.get_scanimage_acq_time(loaded_scan)
      header = scanimage_loader.parse_scanimage_header(loaded_scan)
      ```
@@ -43,6 +46,7 @@ repositories for example usage of `element-data-loader`.
      ```python
      from element_data_loader import suite2p_loader
 
+     output_dir = '<imaging_root_data_dir>/subject1/session0/suite2p' # Directory containing Suite2p output
      loaded_dataset = suite2p_loader.Suite2p(output_dir)
      ```
 
@@ -50,5 +54,6 @@ repositories for example usage of `element-data-loader`.
      ```python
      from element_data_loader import caiman_loader
 
+     output_dir = '<imaging_root_data_dir>/subject1/session0/caiman' # Directory containing CaImAn output
      loaded_dataset = caiman_loader.CaImAn(output_dir)
      ```
