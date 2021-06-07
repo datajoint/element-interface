@@ -51,7 +51,6 @@ class CaImAn:
         self.params = self.cnmf.params
 
         self.h5f = h5py.File(self.caiman_fp, 'r')
-        self.package_version = self.h5f['params']['data']['caiman_version']
         self.motion_correction = self.h5f['motion_correction']
         self._masks = None
 
