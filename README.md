@@ -12,7 +12,7 @@
 + The loaders for each acquisition and analysis package are stored within a separate module.
 
 + Acquisition packages
-     + `scanimage_loader.py`
+     + `scanimage_utils.py`
 
 + Analysis packages
      + `suite2p_loader.py`
@@ -33,13 +33,13 @@ repositories for example usage of `element-data-loader`.
 + ScanImage
      ```python
      import scanreader
-     from element_data_loader import scanimage_loader
+     from element_data_loader import scanimage_utils
 
      scan_filepath = '<imaging_root_data_dir>/subject1/session0/<scan_filename>.tif' # ScanImage file path
      loaded_scan = scanreader.read_scan(scan_filepath)
 
-     recording_time = scanimage_loader.get_scanimage_acq_time(loaded_scan)
-     header = scanimage_loader.parse_scanimage_header(loaded_scan)
+     recording_time = scanimage_utils.get_scanimage_acq_time(loaded_scan)
+     header = scanimage_utils.parse_scanimage_header(loaded_scan)
      ```
 
 + Suite2p
