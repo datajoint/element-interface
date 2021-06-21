@@ -28,5 +28,5 @@ setup(
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
     scripts=[],
     install_requires=requirements,
-    extras_require={'caiman': ['caiman','h5py','scipy']}
+    extras_require={'caiman': ['caiman', 'h5py', 'scipy']}
 )
