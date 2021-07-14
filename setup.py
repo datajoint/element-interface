@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
 from os import path
+import urllib.request
 
 pkg_name = 'element_data_loader'
 here = path.abspath(path.dirname(__file__))
@@ -11,14 +12,14 @@ with open(path.join(here, 'README.md'), 'r') as f:
 with open(path.join(here, 'requirements.txt')) as f:
     requirements = f.read().splitlines()
 
-caiman_requirements = ['caiman@git+https://github.com/flatironinstitute/CaImAn.git',
-                     'h5py',
-                     'scipy']
-import urllib.request
 with urllib.request.urlopen('https://raw.githubusercontent.com/flatironinstitute/CaImAn/master/requirements.txt') as f:
-   caiman_requirements.extend(f.read().decode('UTF-8').split('\n'))
+   caiman_requirements = f.read().decode('UTF-8').split('\n')
+
 caiman_requirements.remove('')
 
+caiman_requirements.extend(['h5py',
+                            'scipy',
+                            'caiman@git+https://github.com/flatironinstitute/CaImAn.git'])
 print(caiman_requirements)
 
 with open(path.join(here, pkg_name, 'version.py')) as f:
