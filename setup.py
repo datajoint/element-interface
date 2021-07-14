@@ -11,6 +11,11 @@ with open(path.join(here, 'README.md'), 'r') as f:
 with open(path.join(here, 'requirements.txt')) as f:
     requirements = f.read().splitlines()
 
+with open('https://raw.githubusercontent.com/flatironinstitute/CaImAn/master/requirements.txt') as f:
+    caiman_requirements = f.read().splitlines()
+print(caiman_requirements)
+print(type(caiman_requirements))
+
 with open(path.join(here, pkg_name, 'version.py')) as f:
     exec(f.read())
 
@@ -29,7 +34,7 @@ setup(
     scripts=[],
     install_requires=requirements,
     extras_require={
-        'caiman': ['https://raw.githubusercontent.com/flatironinstitute/CaImAn/master/requirements.txt',
+        'caiman': [caiman_requirements,
                    'caiman@git+https://github.com/flatironinstitute/CaImAn.git',
                    'h5py',
                    'scipy']
