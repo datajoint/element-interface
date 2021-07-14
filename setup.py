@@ -11,8 +11,8 @@ with open(path.join(here, 'README.md'), 'r') as f:
 with open(path.join(here, 'requirements.txt')) as f:
     requirements = f.read().splitlines()
 
-with open('https://raw.githubusercontent.com/flatironinstitute/CaImAn/master/requirements.txt') as f:
-    caiman_requirements = f.read().splitlines()
+import urllib2
+caiman_requirements = urllib2.urlopen('https://raw.githubusercontent.com/flatironinstitute/CaImAn/master/requirements.txt').read().split('\n')
 print(caiman_requirements)
 print(type(caiman_requirements))
 
