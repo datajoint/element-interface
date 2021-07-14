@@ -14,13 +14,7 @@ with open(path.join(here, 'requirements.txt')) as f:
 
 with urllib.request.urlopen('https://raw.githubusercontent.com/flatironinstitute/CaImAn/master/requirements.txt') as f:
    caiman_requirements = f.read().decode('UTF-8').split('\n')
-
 caiman_requirements.remove('')
-
-caiman_requirements.extend(['h5py',
-                            'scipy',
-                            'caiman@git+https://github.com/flatironinstitute/CaImAn.git'])
-print(caiman_requirements)
 
 with open(path.join(here, pkg_name, 'version.py')) as f:
     exec(f.read())
@@ -40,6 +34,9 @@ setup(
     scripts=[],
     install_requires=requirements,
     extras_require={
-        'caiman': caiman_requirements
+        'caiman_requirements': caiman_requirements,
+        'caiman': ['h5py',
+                   'scipy',
+                   'caiman@git+https://github.com/flatironinstitute/CaImAn.git']
     }
 )
