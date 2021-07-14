@@ -28,5 +28,10 @@ setup(
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
     scripts=[],
     install_requires=requirements,
-    extras_require={'caiman': ['h5py','scipy','caiman@git+https://github.com/flatironinstitute/CaImAn.git']}
+    extras_require={
+        'caiman': ['https://raw.githubusercontent.com/flatironinstitute/CaImAn/master/requirements.txt',
+                   'caiman@git+https://github.com/flatironinstitute/CaImAn.git',
+                   'h5py',
+                   'scipy']
+    }
 )
