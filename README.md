@@ -46,7 +46,8 @@ repositories for example usage of `element-data-loader`.
      ```python
      from element_data_loader import suite2p_loader
 
-     output_dir = '<imaging_root_data_dir>/subject1/session0/suite2p' # Directory containing Suite2p output
+     # Directory containing Suite2p output
+     output_dir = '<imaging_root_data_dir>/subject1/session0/suite2p'
      loaded_dataset = suite2p_loader.Suite2p(output_dir)
      ```
 
@@ -54,6 +55,7 @@ repositories for example usage of `element-data-loader`.
      ```python
      from element_data_loader import caiman_loader
 
-     output_dir = '<imaging_root_data_dir>/subject1/session0/caiman' # Directory containing CaImAn output
+     # Directory containing CaImAn output
+     output_dir = '<imaging_root_data_dir>/subject1/session0/caiman'
      loaded_dataset = caiman_loader.CaImAn(output_dir)
      ```
