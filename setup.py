@@ -21,7 +21,7 @@ print(caiman_requirements)
 caiman_requirements.extend(
                     ['caiman@git+https://github.com/flatironinstitute/CaImAn.git',
                      'h5py',
-                     'scipy']
+                     'scipy'])
 print(type(caiman_requirements))
 print(caiman_requirements)
 
