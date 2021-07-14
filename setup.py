@@ -13,8 +13,8 @@ with open(path.join(here, 'requirements.txt')) as f:
 
 import urllib.request
 with urllib.request.urlopen('https://raw.githubusercontent.com/flatironinstitute/CaImAn/master/requirements.txt') as f:
-   caiman_requirements = f.read().decode('UTF-8').split('\n').remove('')
-
+   caiman_requirements = f.read().decode('UTF-8').split('\n')
+caiman_requirements.remove('')
 print(caiman_requirements)
 
 with open(path.join(here, pkg_name, 'version.py')) as f:
