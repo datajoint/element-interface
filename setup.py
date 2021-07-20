@@ -38,7 +38,7 @@ setup(
         'sbxreader': ['sbxreader'],
         'suite2p': ['suite2p'],
         'caiman_requirements': caiman_requirements,
-        'caiman': ['h5py',
+        'caiman_package': ['h5py',
                    'scipy',
                    'caiman@git+https://github.com/flatironinstitute/CaImAn.git'],
     }
