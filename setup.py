@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 from os import path
 import urllib.request
 
-pkg_name = 'element_data_loader'
+pkg_name = next(p for p in find_packages() if '.' not in p)
 here = path.abspath(path.dirname(__file__))
 
 with open(path.join(here, 'README.md'), 'r') as f:
