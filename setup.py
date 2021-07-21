@@ -36,7 +36,7 @@ setup(
     extras_require={
         'scanreader': ['scanreader@git+https://github.com/atlab/scanreader.git'],
         'sbxreader': ['sbxreader'],
-        'suite2p': ['mkl-fft==1.2.0','PyQt5==5.15.1','PyQt5-sip==12.8.1','pyqtgraph==0.11.0','suite2p'],
+        'suite2p': ['mkl_fft==1.2.0','PyQt5==5.15.1','PyQt5-sip==12.8.1','pyqtgraph==0.11.0','suite2p'],
         'caiman_requirements': caiman_requirements,
         'caiman': ['h5py',
                    'scipy',
