@@ -36,7 +36,7 @@ setup(
     extras_require={
         'scanreader': ['scanreader@git+https://github.com/atlab/scanreader.git'],
         'sbxreader': ['sbxreader'],
-        'suite2p': ['suite2p@https://github.com/MouseLand/suite2p.git'], # TODO issue with pypi version, github version works, change to pypi once issue is resolved
+        'suite2p': ['suite2p@git+https://github.com/MouseLand/suite2p.git'], # TODO issue with pypi version, github version works, change to pypi once issue is resolved
         'caiman_requirements': caiman_requirements,
         'caiman': ['h5py',
                    'scipy',
