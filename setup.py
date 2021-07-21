@@ -34,7 +34,7 @@ setup(
     scripts=[],
     install_requires=requirements,
     extras_require={
-        'scanreader': ['scanreader@git+https://github.com/atlab/scanreader.git'],
+        'scanreader_package': ['scanreader@git+https://github.com/atlab/scanreader.git'],
         'sbxreader': ['sbxreader'],
         'suite2p': ['suite2p'],
         'caiman_requirements': caiman_requirements,
