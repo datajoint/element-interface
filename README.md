@@ -20,9 +20,41 @@
 
 # Installation
 
-```
-pip install git+https://github.com/datajoint/element-data-loader.git
-```
++ Install `element-data-loader`
+     ```
+     pip install git+https://github.com/datajoint/element-data-loader.git
+     ```
+
++ `element-data-loader` can also be used to install packages used for reading acquired data (e.g. `scanreader`) and running analysis (e.g. `CaImAn`).
+
++ If your workflow uses these packages, you should install them when you install `element-data-loader`.
+
++ Install `element-data-loader` with `scanreader`
+     ```
+     pip install "element-data-loader[scanreader] @ git+https://github.com/datajoint/element-data-loader"
+     ```
+
++ Install `element-data-loader` with `sbxreader`
+     ```
+     pip install "element-data-loader[sbxreader] @ git+https://github.com/datajoint/element-data-loader"
+     ```
+
++ Install `element-data-loader` with `Suite2p`
+     ```
+     pip install "element-data-loader[suite2p] @ git+https://github.com/datajoint/element-data-loader"
+     ```
+
++ Install `element-data-loader` with `CaImAn` requires two separate commands
+     ```
+     pip install "element-data-loader[caiman_requirements] @ git+https://github.com/datajoint/element-data-loader"
+     pip install "element-data-loader[caiman] @ git+https://github.com/datajoint/element-data-loader"
+     ```
+
++ Install `element-data-loader` with multiple packages
+     ```
+     pip install "element-data-loader[caiman_requirements] @ git+https://github.com/datajoint/element-data-loader"
+     pip install "element-data-loader[scanreader,sbxreader,suite2p,caiman] @ git+https://github.com/datajoint/element-data-loader"
+     ```
 
 # Usage
 
@@ -35,7 +67,9 @@ repositories for example usage of `element-data-loader`.
      import scanreader
      from element_data_loader import scanimage_utils
 
-     scan_filepath = '<imaging_root_data_dir>/subject1/session0/<scan_filename>.tif' # ScanImage file path
+     # ScanImage file path
+     scan_filepath = '<imaging_root_data_dir>/subject1/session0/<scan_filename>.tif'
+
      loaded_scan = scanreader.read_scan(scan_filepath)
 
      recording_time = scanimage_utils.get_scanimage_acq_time(loaded_scan)
@@ -48,6 +82,7 @@ repositories for example usage of `element-data-loader`.
 
      # Directory containing Suite2p output
      output_dir = '<imaging_root_data_dir>/subject1/session0/suite2p'
+
      loaded_dataset = suite2p_loader.Suite2p(output_dir)
      ```
 
@@ -57,5 +92,6 @@ repositories for example usage of `element-data-loader`.
 
      # Directory containing CaImAn output
      output_dir = '<imaging_root_data_dir>/subject1/session0/caiman'
+
      loaded_dataset = caiman_loader.CaImAn(output_dir)
      ```
