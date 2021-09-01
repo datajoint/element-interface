@@ -1,12 +1,9 @@
 from suite2p import default_ops
 
-ops = default_ops()
-
 # Note that the flags will be updated in the ops dictionary according to the
 # step you choose to run / function you select
 
-ops['nonrigid'] = False
-ops['two_step_registration'] = False
+ops = dict(default_ops(), nonrigid=True, two_step_registration=False)
 
 db = {
       'h5py': [], # a single h5 file path
