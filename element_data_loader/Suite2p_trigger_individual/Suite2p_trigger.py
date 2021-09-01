@@ -19,7 +19,7 @@ def motion_correction_suite2p(ops, db):
         dict : Returns a dictionary with x and y shifts
     """
     # Rigid motion correction
-    if ops['nonrigid'] == False:
+    if not ops['nonrigid']:
         # The flags are hard coded and set to run each step of Suite2p (as this
         # is meant to be fixed. If this is updated by the user, we can generate 
         # an error warning to mention that this function is only meant to be
