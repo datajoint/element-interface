@@ -1,8 +1,8 @@
-from suite2p import run_s2p, default_ops
-from suite2p.detection.anatomical import roi_detect
+from suite2p import run_s2p
 from suite2p.extraction import dcnv
 import numpy as np
 import os
+import warnings
 
 
 def motion_correction_suite2p(ops, db):
@@ -13,33 +13,31 @@ def motion_correction_suite2p(ops, db):
         ops (dict): ops dictionary can be obtained by using default_ops() function. 
                     It contains all options and default values used to perform 
                     preprocessing.
+        db (dict): dictionary that includes paths pointing towards the input data,
+                   and where to store the data
 
     Returns:
-        dict : Returns a dictionary with x and y shifts
+        dict: Returns a dictionary with x and y shifts
+        data.bin: Creates and saves a binary file on your local path. If 
+                  delete_bin is set to True, the binary file is deleted after
+                  processing.
+        ops.npy: Creates and saves the options dictionary in a numpy array file 
+                 in the specified path. The ops file gets updated during the 
+                 cell detection and the deconvultion steps.
     """
-    # Rigid motion correction
-    if not ops['nonrigid']:
-        # The flags are hard coded and set to run each step of Suite2p (as this
-        # is meant to be fixed. If this is updated by the user, we can generate 
-        # an error warning to mention that this function is only meant to be
-        # used for registration.
+
+    # Nonrigid motion correction
+
+    if ops['nonrigid']:
+
+        print("==========RUNNING NON-RIGID REGISTRATION==========")
+        warnings.warn('You are running registration/ motion correction using \
+                      Suite2p module, this requires do_registration=1,\
+                      roidetect=False, spikedetect=False. If the ops dictionary\
+                      has values differing from these, the flags will \
+                      automatically be se set to it.')
 
         ops.update(do_registration = 1, 
-                    roi_detect = False,
-                    spikedetect = False,
-                    delete_bin = True)
-
-        reg_ops = run_s2p(ops,db)
-        desired_keys = ['xoff', 'yoff', 'do_registration', 'two_step_registration',
-                        'roidetect', 'spikedetect', 'delete_bin']
-        reg_ops = {key: reg_ops[key] for key in desired_keys}
-
-        return reg_ops
-
-    else:
-        
-        ops.update(nonrigid = True, 
-                    do_registration = 1, 
                     roidetect = False,
                     spikedetect = False,
                     delete_bin = True)
@@ -53,8 +51,29 @@ def motion_correction_suite2p(ops, db):
                         'xblock', 'yblock', 'xrange', 'yrange', 'nblocks',
                         'nframes']
         reg_ops = {key: reg_ops[key] for key in desired_keys}
+        
+    else:
+    
+    # Rigid motion correction
 
-        return reg_ops
+        print("==========RUNNING RIGID REGISTRATION==========")
+        warnings.warn('You are running registration/ motion correction using \
+                      Suite2p module, this requires do_registration=1,\
+                      roidetect=False, spikedetect=False. If the ops dictionary\
+                      has values differing from these, the flags will \
+                      automatically be se set to it.')
+
+        ops.update(do_registration = 1, 
+                    roi_detect = False,
+                    spikedetect = False,
+                    delete_bin = True)
+
+        reg_ops = run_s2p(ops,db)
+        desired_keys = ['xoff', 'yoff', 'do_registration', 'two_step_registration',
+                        'roidetect', 'spikedetect', 'delete_bin']
+        reg_ops = {key: reg_ops[key] for key in desired_keys}
+
+    return reg_ops
 
 
 def segmentation_suite2p(reg_ops, db):
@@ -62,14 +81,36 @@ def segmentation_suite2p(reg_ops, db):
     Make sure the 'roidetect' key is set to True to perform cell/ roi detection
 
     Args:
-        reg_ops (dict): reg_ops dictionary can be obtained from registration step (CaImAn or Suite2p)
-                        Must contain x and y shifts along with 'do_registration'=0, 'two_step_registration'=False,
+        reg_ops (dict): reg_ops dictionary can be obtained from registration 
+                        step (CaImAn or Suite2p) Must contain x and y shifts 
+                        along with 'do_registration'=0,
+                        'two_step_registration'=False,
                         'roidetect'=True and 'spikedetect'= False
+        db (dict): dictionary that includes paths pointing towards the input data,
+                   and where to store the data
 
-    Returns:
-        dict : Returns a dictionary with x and y shifts
+    Returns: 
+        reg_ops (dict): The ops dictionary is updated with additional keys that
+                        are added 
+        data.bin: Creates and saves a binary file on your local path, if the one
+                  created during registration is deleted. If delete_bin is set 
+                  to True, the binary file is deleted after processing.
+        ops.npy: Updates the options dictionary in a file created during the 
+                 registration step and saves as a numpy array file on the 
+                 specified path.
+        F.npy: Stores an array of fluorescence traces
+        Fneu.npy: Returns an array of neuropil fluorescence traces
+        iscell.npy: Specifies whether an ROI is a cell
+        stat.npy: Returns a list of statistics computed for each cell
+        spks.npy: Returns an empty file, it is updated during the deconvolution
+                  step with deconvolved traces
     """
-    # Set flags
+
+    warnings.warn('You are running cell detection/ segmentation using \
+                    Suite2p module, this requires do_registration=0,\
+                    roidetect=True, spikedetect=False. If the ops dictionary\
+                    has values differing from these, the flags will \
+                    automatically be se set to it.')
     reg_ops.update(do_registration = 0,
                     roidetect = True,
                     spikedetect = False)
@@ -85,10 +126,38 @@ def segmentation_suite2p(reg_ops, db):
 
 
 def deconvolution_suite2p(roi_ops, db):
+    """Performs cell detection using Suite2p package, 
+    Make sure the 'roidetect' key is set to True to perform cell/ roi detection.
+    The code to run deconvolution separately can be found here
+    </https://suite2p.readthedocs.io/en/latest/deconvolution.html>.
 
-    # Rigid motion correction
-    F = np.load("element_data_loader/test_data/suite2p/plane0/F.npy", allow_pickle = True)
-    Fneu = np.load("element_data_loader/test_data/suite2p/plane0/Fneu.npy", allow_pickle = True)
+    Args:
+        roi_ops (dict): roi_ops dictionary can be obtained from registration
+                        step (CaImAn or Suite2p). Must contain baseline,
+                        win_baseline (window in seconds for max filter),
+                        sig_baseline (width of Gaussian filter in seconds),
+                        fs (sampling rate per plane),
+                        prctile_baseline (percentile of trace to use as baseline
+                        is using constant_prctile for baseline)
+                        along with 'do_registration'=0,
+                        'two_step_registration'=False,'roidetect'=False and
+                        'spikedetect'= True
+
+    Returns:
+        roi_ops (dict): Returns a dictionary generated during the cell detection
+                        step
+        spks.npy: Updates the file with an array of deconvolved traces
+    """
+
+    warnings.warn('You are running cell detection/ segmentation using \
+                      Suite2p module, this requires do_registration=0,\
+                      roidetect=True, spikedetect=False. If the ops dictionary\
+                      has values differing from these, the flags will \
+                      automatically be se set to it.')
+
+    F = np.load(db['fast-disk'] + '/suite2p/plane0/F.npy', allow_pickle = True)
+    Fneu= np.load(db['fast-disk'] + '/suite2p/plane0/Fneu.npy',
+                  allow_pickle = True)
     Fc = F - roi_ops['neucoeff'] * Fneu
 
     Fc = dcnv.preprocess(

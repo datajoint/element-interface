@@ -86,6 +86,41 @@ repositories for example usage of `element-data-loader`.
      loaded_dataset = suite2p_loader.Suite2p(output_dir)
      ```
 
+
++ Suite2p functions for processing
+     
+     Each step of the Suite2p pipeline (registration, cell detection and 
+     deconvolution) can be run independently. The functions will facilitate this
+     process. The user will need to define the ops and the db dictionary before
+     one or all of the processing steps of Suite2p are run.
+
+     ```python
+     from Suite2p_trigger import motion_correction_suite2p, segmentation_suite2p
+     from variables import ops, db
+     from suite2p import default_ops
+
+     ops = dict(default_ops(), nonrigid=True, two_step_registration=False)
+
+     db = {
+          'h5py': [], # a single h5 file path
+          'h5py_key': 'data',
+          'look_one_level_down': False, # whether to look in ALL subfolders when 
+                                        # searching for tiffs
+          'data_path': ['/test_data'], # a list of folders with tiffs 
+                                   # (or folder of folders with tiffs if 
+                                   # look_one_level_down is True, or subfolders 
+                                   # is not empty)                                    
+          'subfolders': [], # choose subfolders of 'data_path' to look in (optional)
+          'fast-disk': '/test_data' # string which specifies where the binary file 
+                                   # will be stored (should be an SSD)
+          }
+     
+     reg_ops = motion_registration_suite2p(ops, db)
+     roi_ops = segmentation_suite2p(reg_ops, db)
+     roi_ops, spikes = deconvolution_suite2p(roi_ops, db)
+     ```
+
+
 + CaImAn
      ```python
      from element_data_loader import caiman_loader
