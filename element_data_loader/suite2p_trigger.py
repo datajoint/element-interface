@@ -18,7 +18,7 @@ def motion_correction_suite2p(ops, db):
                    data, and path to store outputs
 
     Returns:
-        ops (dict): Returns a dictionary that includes x and y shifts
+        registration_ops (dict): Returns a dictionary that includes x and y shifts
         data.bin: Creates and saves a binary file on your local path. If
                   delete_bin is set to True (default: False), the binary file is
                   deleted after processing.
