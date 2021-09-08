@@ -87,16 +87,19 @@ repositories for example usage of `element-data-loader`.
      ```
 
 
-+ Suite2p functions for processing
++ Suite2p wrapper functions for triggering analysis
      
-     Each step of the Suite2p pipeline (registration, cell detection and 
-     deconvolution) can be run independently. The functions will facilitate this
-     process. The user will need to define the ops and the db dictionary before
-     one or all of the processing steps of Suite2p are run.
+     Each step of Suite2p (registration, segmentation and deconvolution) 
+     can be run independently. The functions in this package will facilitate 
+     this process. Requirements include the [ops dictionary](
+     https://suite2p.readthedocs.io/en/latest/settings.html) and db dictionary.
+     These wrapper functions were developed primarily because `run_s2p` cannot 
+     individually run deconvolution using the `spikedetect` flag 
+     ([Suite2p Issue #718](https://github.com/MouseLand/suite2p/issues/718)).
 
      ```python
-     from Suite2p_trigger import motion_correction_suite2p, segmentation_suite2p
-     from variables import ops, db
+     from element_data_loader.suite2p_trigger import motion_correction_suite2p,
+     segmentation_suite2p, deconvolution_suite2p
      from suite2p import default_ops
 
      ops = dict(default_ops(), nonrigid=True, two_step_registration=False)
@@ -115,9 +118,9 @@ repositories for example usage of `element-data-loader`.
                                    # will be stored (should be an SSD)
           }
      
-     reg_ops = motion_registration_suite2p(ops, db)
-     roi_ops = segmentation_suite2p(reg_ops, db)
-     roi_ops, spikes = deconvolution_suite2p(roi_ops, db)
+     registration_ops = motion_registration_suite2p(ops, db)
+     segmentation_ops = segmentation_suite2p(registration_ops, db)
+     deconvolution_ops, spikes = deconvolution_suite2p(segmentation_ops, db)
      ```
 
 
