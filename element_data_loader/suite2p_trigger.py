@@ -7,13 +7,13 @@ import re
 
 
 def motion_correction_suite2p(ops, db):
-    """Performs registration using Suite2p package, 
-    Make sure the 'do_registration' key is set to 1 to perform registration
+    """Performs registration using Suite2p package
 
     Args:
         ops (dict): ops dictionary can be obtained by using default_ops()
                     function. It contains all options and default values used
-                    to perform preprocessing.
+                    to perform preprocessing. ops['do_registration'] should be
+                    set to 1.
         db (dict): dictionary that includes paths pointing towards the input 
                    data, and path to store outputs
 
@@ -28,38 +28,38 @@ def motion_correction_suite2p(ops, db):
     """
 
     if (not ops['do_registration']) or ops['roidetect'] or ops['spikedetect']:
-        warnings.warn('You are running motion correction with Suite2p. \
-                        Requirements include do_registration=1,\
-                        roidetect=False, spikedetect=False.  The ops\
-                        dictionary has differing values. The flags will \
-                        be set to the required values.')
+        warnings.warn('You are running motion correction with Suite2p.' \
+                        'Requirements include do_registration=1,'\
+                        'roidetect=False, spikedetect=False.  The ops'\
+                        'dictionary has differing values. The flags will' \
+                        'be set to the required values.')
 
-    ops.update(do_registration = 1,
-                roidetect = False,
-                spikedetect = False)
+        ops.update(do_registration = 1,
+                    roidetect = False,
+                    spikedetect = False)
     
     if ops['nonrigid']:
 
         print("------------RUNNING NON-RIGID REGISTRATION------------")
 
         registration_ops = run_s2p(ops,db)
-        desired_keys = ['xoff', 'yoff', 'xoff1', 'yoff1',
+        subset_keys = ['xoff', 'yoff', 'xoff1', 'yoff1',
                         'do_registration',
                         'two_step_registration',
                         'roidetect',
                         'spikedetect', 'delete_bin',
                         'xblock', 'yblock', 'xrange', 'yrange', 'nblocks',
                         'nframes']
-        registration_ops = {key: registration_ops[key] for key in desired_keys}
 
     else:
 
         print("------------RUNNING RIGID REGISTRATION------------")
 
         registration_ops = run_s2p(ops,db)
-        desired_keys = ['xoff', 'yoff', 'do_registration', 'two_step_registration',
+        subset_keys = ['xoff', 'yoff', 'do_registration', 'two_step_registration',
                         'roidetect', 'spikedetect', 'delete_bin']
-        registration_ops = {key: registration_ops[key] for key in desired_keys}
+    
+    registration_ops = {key: registration_ops[key] for key in subset_keys}
 
     return registration_ops
 
@@ -96,21 +96,21 @@ def segmentation_suite2p(registration_ops, db):
     """
 
     if registration_ops['do_registration'] or not (registration_ops['roidetect']) or registration_ops['spikedetect']:
-        warnings.warn('You are running segmentation with Suite2p. Requirements\
-                     include do_registration=0, roidetect=True, \
-                     spikedetect=False. The ops dictionary has differing\
-                     values. The flags will be set to the required values.')
-    registration_ops.update(do_registration = 0,
-                    roidetect = True,
-                    spikedetect = False)
+        warnings.warn('You are running segmentation with Suite2p. Requirements'\
+                     'include do_registration=0, roidetect=True,' \
+                     'spikedetect=False. The ops dictionary has differing'\
+                     'values. The flags will be set to the required values.')
+        registration_ops.update(do_registration = 0,
+                        roidetect = True,
+                        spikedetect = False)
 
     segmentation_ops = run_s2p(registration_ops,db)
-    desired_keys = ['baseline', 'win_baseline', 'sig_baseline',
+    subset_keys = ['baseline', 'win_baseline', 'sig_baseline',
                     'fs', 'prctile_baseline', 'batch_size',
                     'tau','save_path', 'do_registration', 'roidetect',
                     'spikedetect', 'neucoeff']
 
-    segmentation_ops = {key: segmentation_ops[key] for key in desired_keys}
+    segmentation_ops = {key: segmentation_ops[key] for key in subset_keys}
 
     return segmentation_ops
 
@@ -139,10 +139,13 @@ def deconvolution_suite2p(segmentation_ops, db):
         spks.npy: Updates the file with an array of deconvolved traces
     """
     if segmentation_ops['do_registration'] or segmentation_ops['roidetect'] or (not segmentation_ops['spikedetect']):
-        warnings.warn('You are running deconvolution using Suite2p module.\
-                    Requirements include do_registration=0, roidetect=False,\
-                    spikedetect=True. The ops dictionary has differing values,\
-                    the flags will be se set to the required values.')
+        warnings.warn('You are running deconvolution using Suite2p module.'\
+                    'Requirements include do_registration=0, roidetect=False,'\
+                    'spikedetect=True. The ops dictionary has differing values,'\
+                    'the flags will be se set to the required values.')
+        segmentation_ops.update(do_registration = 0,
+                        roidetect = False,
+                        spikedetect = True)
 
     planes = [name for name in os.listdir(db['fast-disk'] + '/suite2p/') if re.match(re.compile('plane.'), name)]
 
@@ -161,10 +164,6 @@ def deconvolution_suite2p(segmentation_ops, db):
             fs=segmentation_ops['fs'],
             prctile_baseline=segmentation_ops['prctile_baseline']
         )
-
-        segmentation_ops.update(do_registration = 0,
-                        roidetect = False,
-                        spikedetect = True)
 
         deconvolution_ops = segmentation_ops
         spikes = dcnv.oasis(F=Fc, batch_size=deconvolution_ops['batch_size'], 

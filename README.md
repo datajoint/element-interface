@@ -88,7 +88,7 @@ repositories for example usage of `element-data-loader`.
 
 
 + Suite2p wrapper functions for triggering analysis
-     
+
      Each step of Suite2p (registration, segmentation and deconvolution) 
      can be run independently. The functions in this package will facilitate 
      this process. Requirements include the [ops dictionary](
@@ -102,7 +102,7 @@ repositories for example usage of `element-data-loader`.
      segmentation_suite2p, deconvolution_suite2p
      from suite2p import default_ops
 
-     ops = dict(default_ops(), nonrigid=True, two_step_registration=False)
+     ops = dict(default_ops(), nonrigid=False, two_step_registration=False)
 
      db = {
           'h5py': [], # a single h5 file path
@@ -117,9 +117,14 @@ repositories for example usage of `element-data-loader`.
           'fast-disk': '/test_data' # string which specifies where the binary file 
                                    # will be stored (should be an SSD)
           }
-     
+
+     ops.update(do_registration=1, roidetect=False, spikedetect=False)
      registration_ops = motion_registration_suite2p(ops, db)
+
+     registration_ops.update(do_registration=0, roidetect=True, spikedetect=False)
      segmentation_ops = segmentation_suite2p(registration_ops, db)
+
+     segmentation_ops.update(do_registration=0, roidetect=False, spikedetect=True)
      deconvolution_ops, spikes = deconvolution_suite2p(segmentation_ops, db)
      ```
 
