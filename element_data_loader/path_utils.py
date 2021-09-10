@@ -1,8 +1,4 @@
-import datajoint as dj
 import pathlib
-
-
-dj.config['enable_python_native_blobs'] = True
 
 
 def find_full_path(root_directories, relative_path):
