@@ -7,7 +7,7 @@ def find_full_path(root_directories, relative_path):
      from provided potential root directories (in the given order)
         :param root_directories: potential root directories
         :param relative_path: the relative path to find the valid root directory
-        :return: root_directory (pathlib.Path object)
+        :return: full-path (pathlib.Path object)
     """
     relative_path = pathlib.Path(relative_path)
 
@@ -33,7 +33,7 @@ def find_root_directory(root_directories, full_path):
     search and return one directory that is the parent of the given path
         :param root_directories: potential root directories
         :param full_path: the relative path to search the root directory
-        :return: full-path (pathlib.Path object)
+        :return: root directory (pathlib.Path object)
     """
     full_path = pathlib.Path(full_path)
 
