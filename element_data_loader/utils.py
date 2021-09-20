@@ -1,4 +1,6 @@
 import pathlib
+import uuid
+import hashlib
 
 
 def find_full_path(root_directories, relative_path):
@@ -15,7 +17,7 @@ def find_full_path(root_directories, relative_path):
     if relative_path.exists():
         return relative_path
 
-    # turn to list if only a single root directory is provided
+    # Turn to list if only a single root directory is provided
     if isinstance(root_directories, (str, pathlib.Path)):
         root_directories = [root_directories]
 
@@ -40,7 +42,7 @@ def find_root_directory(root_directories, full_path):
     if not full_path.exists():
         raise FileNotFoundError(f'{full_path} does not exist!')
 
-    # turn to list if only a single root directory is provided
+    # Turn to list if only a single root directory is provided
     if isinstance(root_directories, (str, pathlib.Path)):
         root_directories = [root_directories]
 
@@ -51,3 +53,14 @@ def find_root_directory(root_directories, full_path):
     except StopIteration:
         raise FileNotFoundError('No valid root directory found (from {})'
                                 ' for {}'.format(root_directories, full_path))
+
+
+def dict_to_uuid(key):
+    """
+    Given a dictionary `key`, returns a hash string as UUID
+    """
+    hashed = hashlib.md5()
+    for k, v in sorted(key.items()):
+        hashed.update(str(k).encode())
+        hashed.update(str(v).encode())
+    return uuid.UUID(hex=hashed.hexdigest())
