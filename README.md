@@ -90,8 +90,8 @@ repositories for example usage of `element-data-loader`.
 + Suite2p wrapper functions for triggering analysis
 
      Each step of Suite2p (registration, segmentation and deconvolution) 
-     can be run independently. The functions in this package will facilitate 
-     this process. Requirements include the [ops dictionary](
+     can be run independently for single plane tiff files. The functions in this
+     package will facilitate this process. Requirements include the [ops dictionary](
      https://suite2p.readthedocs.io/en/latest/settings.html) and db dictionary.
      These wrapper functions were developed primarily because `run_s2p` cannot 
      individually run deconvolution using the `spikedetect` flag 
@@ -103,19 +103,17 @@ repositories for example usage of `element-data-loader`.
      from suite2p import default_ops
 
      ops = dict(default_ops(), nonrigid=False, two_step_registration=False)
+     ```
+     Details of db dictionary can be found [here](https://github.com/MouseLand/suite2p/blob/4b6c3a95b53e5581dbab1feb26d67878db866068/jupyter/run_pipeline_tiffs_or_batch.ipynb)
 
+     ```python
      db = {
-          'h5py': [], # a single h5 file path
+          'h5py': [], # single h5 file path
           'h5py_key': 'data',
-          'look_one_level_down': False, # whether to look in ALL subfolders when 
-                                        # searching for tiffs
-          'data_path': ['/test_data'], # a list of folders with tiffs 
-                                   # (or folder of folders with tiffs if 
-                                   # look_one_level_down is True, or subfolders 
-                                   # is not empty)                                    
-          'subfolders': [], # choose subfolders of 'data_path' to look in (optional)
-          'fast-disk': '/test_data' # string which specifies where the binary file 
-                                   # will be stored (should be an SSD)
+          'look_one_level_down': False, # search for TIFFs in all subfolders 
+          'data_path': ['/test_data'], # list of folders with tiffs                                    
+          'subfolders': [], # choose subfolders of 'data_path'
+          'fast-disk': '/test_data' # string path for storing binary file 
           }
 
      ops.update(do_registration=1, roidetect=False, spikedetect=False)
@@ -125,7 +123,7 @@ repositories for example usage of `element-data-loader`.
      segmentation_ops = segmentation_suite2p(registration_ops, db)
 
      segmentation_ops.update(do_registration=0, roidetect=False, spikedetect=True)
-     deconvolution_ops, spikes = deconvolution_suite2p(segmentation_ops, db)
+     spikes = deconvolution_suite2p(segmentation_ops, db)
      ```
 
 
