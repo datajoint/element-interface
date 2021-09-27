@@ -3,7 +3,6 @@ from suite2p.extraction import dcnv
 import numpy as np
 import os
 import warnings
-import re
 
 
 def motion_correction_suite2p(ops, db):
@@ -18,7 +17,10 @@ def motion_correction_suite2p(ops, db):
                    data, and path to store outputs
 
     Returns:
-        registration_ops (dict): Returns a dictionary that includes x and y shifts
+        registration_ops (dict): Returns a dictionary that includes x and y shifts.
+                                 This dictionary only consists of a subset of the
+                                 output so that we only use the required values
+                                 in the segmentation step.
         data.bin: Creates and saves a binary file on your local path. If
                   delete_bin is set to True (default: False), the binary file is
                   deleted after processing.
@@ -80,7 +82,10 @@ def segmentation_suite2p(registration_ops, db):
 
     Returns:
         segmentation_ops (dict): The ops dictionary is updated with additional
-                                 keys that are added 
+                                 keys that are added. This dictionary only 
+                                 consists of a subset of the
+                                 output so that we only use the required values
+                                 in the deconvolution step.
         data.bin: Creates and saves a binary file on your local path, if the one
                   created during registration is deleted. If delete_bin is set 
                   to True, the binary file is deleted after processing.
@@ -134,8 +139,6 @@ def deconvolution_suite2p(segmentation_ops, db):
                         'spikedetect'= True
 
     Returns:
-        deconvolution_ops (dict): Returns a dictionary generated during the cell
-                                  detection step
         spks.npy: Updates the file with an array of deconvolved traces
     """
     if segmentation_ops['do_registration'] or segmentation_ops['roidetect'] or (not segmentation_ops['spikedetect']):
@@ -147,27 +150,23 @@ def deconvolution_suite2p(segmentation_ops, db):
                         roidetect = False,
                         spikedetect = True)
 
-    planes = [name for name in os.listdir(db['fast-disk'] + '/suite2p/') if re.match(re.compile('plane.'), name)]
+    F = np.load(db['fast-disk'] + '/suite2p/' + 'plane0' + '/F.npy', 
+                allow_pickle = True)
+    Fneu = np.load(db['fast-disk'] + '/suite2p/' + 'plane0' + '/Fneu.npy',
+                allow_pickle = True)
+    Fc = F - segmentation_ops['neucoeff'] * Fneu
 
-    for plane in planes:
-        F = np.load(db['fast-disk'] + '/suite2p/' + plane + '/F.npy', 
-                    allow_pickle = True)
-        Fneu = np.load(db['fast-disk'] + '/suite2p/' + plane + '/Fneu.npy',
-                    allow_pickle = True)
-        Fc = F - segmentation_ops['neucoeff'] * Fneu
+    Fc = dcnv.preprocess(
+        F=Fc,
+        baseline=segmentation_ops['baseline'],
+        win_baseline=segmentation_ops['win_baseline'],
+        sig_baseline=segmentation_ops['sig_baseline'],
+        fs=segmentation_ops['fs'],
+        prctile_baseline=segmentation_ops['prctile_baseline']
+    )
 
-        Fc = dcnv.preprocess(
-            F=Fc,
-            baseline=segmentation_ops['baseline'],
-            win_baseline=segmentation_ops['win_baseline'],
-            sig_baseline=segmentation_ops['sig_baseline'],
-            fs=segmentation_ops['fs'],
-            prctile_baseline=segmentation_ops['prctile_baseline']
-        )
+    spikes = dcnv.oasis(F=Fc, batch_size=segmentation_ops['batch_size'], 
+                        tau=segmentation_ops['tau'], fs=segmentation_ops['fs'])
+    np.save(os.path.join(segmentation_ops['save_path'], 'spks.npy'), spikes)
 
-        deconvolution_ops = segmentation_ops
-        spikes = dcnv.oasis(F=Fc, batch_size=deconvolution_ops['batch_size'], 
-                            tau=deconvolution_ops['tau'], fs=deconvolution_ops['fs'])
-        np.save(os.path.join(deconvolution_ops['save_path'], 'spks.npy'), spikes)
-
-    return deconvolution_ops, spikes
+    return spikes
