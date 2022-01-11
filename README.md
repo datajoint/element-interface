@@ -20,52 +20,52 @@
 
 # Installation
 
-+ Install `element-data-loader`
++ Install `element-interface`
      ```
-     pip install git+https://github.com/datajoint/element-data-loader.git
-     ```
-
-+ `element-data-loader` can also be used to install packages used for reading acquired data (e.g. `scanreader`) and running analysis (e.g. `CaImAn`).
-
-+ If your workflow uses these packages, you should install them when you install `element-data-loader`.
-
-+ Install `element-data-loader` with `scanreader`
-     ```
-     pip install "element-data-loader[scanreader] @ git+https://github.com/datajoint/element-data-loader"
+     pip install git+https://github.com/datajoint/element-interface.git
      ```
 
-+ Install `element-data-loader` with `sbxreader`
++ `element-interface` can also be used to install packages used for reading acquired data (e.g. `scanreader`) and running analysis (e.g. `CaImAn`).
+
++ If your workflow uses these packages, you should install them when you install `element-interface`.
+
++ Install `element-interface` with `scanreader`
      ```
-     pip install "element-data-loader[sbxreader] @ git+https://github.com/datajoint/element-data-loader"
+     pip install "element-interface[scanreader] @ git+https://github.com/datajoint/element-interface"
      ```
 
-+ Install `element-data-loader` with `Suite2p`
++ Install `element-interface` with `sbxreader`
      ```
-     pip install "element-data-loader[suite2p] @ git+https://github.com/datajoint/element-data-loader"
-     ```
-
-+ Install `element-data-loader` with `CaImAn` requires two separate commands
-     ```
-     pip install "element-data-loader[caiman_requirements] @ git+https://github.com/datajoint/element-data-loader"
-     pip install "element-data-loader[caiman] @ git+https://github.com/datajoint/element-data-loader"
+     pip install "element-interface[sbxreader] @ git+https://github.com/datajoint/element-interface"
      ```
 
-+ Install `element-data-loader` with multiple packages
++ Install `element-interface` with `Suite2p`
      ```
-     pip install "element-data-loader[caiman_requirements] @ git+https://github.com/datajoint/element-data-loader"
-     pip install "element-data-loader[scanreader,sbxreader,suite2p,caiman] @ git+https://github.com/datajoint/element-data-loader"
+     pip install "element-interface[suite2p] @ git+https://github.com/datajoint/element-interface"
+     ```
+
++ Install `element-interface` with `CaImAn` requires two separate commands
+     ```
+     pip install "element-interface[caiman_requirements] @ git+https://github.com/datajoint/element-interface"
+     pip install "element-interface[caiman] @ git+https://github.com/datajoint/element-interface"
+     ```
+
++ Install `element-interface` with multiple packages
+     ```
+     pip install "element-interface[caiman_requirements] @ git+https://github.com/datajoint/element-interface"
+     pip install "element-interface[scanreader,sbxreader,suite2p,caiman] @ git+https://github.com/datajoint/element-interface"
      ```
 
 # Usage
 
 + See the [workflow-calcium-imaging](https://github.com/datajoint/workflow-calcium-imaging) 
 and [element-calcium-imaging](https://github.com/datajoint/element-calcium-imaging) 
-repositories for example usage of `element-data-loader`.
+repositories for example usage of `element-interface`.
 
 + ScanImage
      ```python
      import scanreader
-     from element_data_loader import scanimage_utils
+     from element_interface import scanimage_utils
 
      # ScanImage file path
      scan_filepath = '<imaging_root_data_dir>/subject1/session0/<scan_filename>.tif'
@@ -78,7 +78,7 @@ repositories for example usage of `element-data-loader`.
 
 + Suite2p
      ```python
-     from element_data_loader import suite2p_loader
+     from element_interface import suite2p_loader
 
      # Directory containing Suite2p output
      output_dir = '<imaging_root_data_dir>/subject1/session0/suite2p'
@@ -88,7 +88,7 @@ repositories for example usage of `element-data-loader`.
 
 + CaImAn
      ```python
-     from element_data_loader import caiman_loader
+     from element_interface import caiman_loader
 
      # Directory containing CaImAn output
      output_dir = '<imaging_root_data_dir>/subject1/session0/caiman'
