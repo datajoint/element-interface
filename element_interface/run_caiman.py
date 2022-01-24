@@ -45,12 +45,8 @@ def run_caiman(file_paths, parameters, sampling_rate, output_dir, is3D):
 
     cm.stop_server(dview=dview)
 
-    print('cnmf_output.mmap_file[:-4]', cnmf_output.mmap_file[:-4])
-
     cnmf_output_file = pathlib.Path(cnmf_output.mmap_file[:-4] + 'hdf5')
     assert cnmf_output_file.exists()
     assert cnmf_output_file.parent == pathlib.Path(output_dir)
-
-    print('cnmf_output_file: ', cnmf_output_file.as_posix())
 
     _save_mc(mc_output, cnmf_output_file.as_posix(), parameters['is3D'])
