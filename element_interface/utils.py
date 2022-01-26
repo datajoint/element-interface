@@ -16,7 +16,7 @@ def find_full_path(root_directories, relative_path):
     if relative_path.exists():
         return relative_path
 
-    # turn to list if only a single root directory is provided
+    # Turn to list if only a single root directory is provided
     if isinstance(root_directories, (str, pathlib.Path)):
         root_directories = [_to_Path(root_directories)]
 
@@ -41,7 +41,7 @@ def find_root_directory(root_directories, full_path):
     if not full_path.exists():
         raise FileNotFoundError(f'{full_path} does not exist!')
 
-    # turn to list if only a single root directory is provided
+    # Turn to list if only a single root directory is provided
     if isinstance(root_directories, (str, pathlib.Path)):
         root_directories = [_to_Path(root_directories)]
 
