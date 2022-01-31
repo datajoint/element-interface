@@ -108,7 +108,7 @@ def _process_scanimage_tiff(scan_filenames, output_dir='./'):
     Read ScanImage TIFF - reshape into volumetric data based on scanning depths and channels
     Save new TIFF files for each channel - with shape (frame x height x width x depth)
     """
-    from skimage.external.tifffile import imsave
+    from tifffile import imsave
     import scanreader
 
     # ------------ CaImAn multi-channel multi-plane tiff file ------------
