@@ -1,4 +1,2 @@
 numpy==1.21.0
 tifffile
-scipy
-h5py
