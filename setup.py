@@ -41,7 +41,7 @@ setup(
         'caiman': ['h5py==3.3.0',
                    'scipy==1.7.0',
                    'caiman@git+https://github.com/flatironinstitute/CaImAn.git@v1.8.9'],
-	'imgconverter': [tifffile, nd2]
+	'imgconverter': ['tifffile==2021.11.2', 'nd2==0.1.6']
     }
     # TODO suite2p - issue with current pypi version, github version works, change to pypi once issue is resolved and version lock
 )
