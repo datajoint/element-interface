@@ -2,7 +2,7 @@ import nd2
 import tifffile
 
 
-def nd2totif(nd2_file):
+def nd2_to_tif(nd2_file):
     """
     Convert Nikon .nd2 file to .tif file.
     
