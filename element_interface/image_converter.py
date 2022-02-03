@@ -1,5 +1,6 @@
 import nd2
 import tifffile
+import pathlib
 
 
 def nd2_to_tif(nd2_file):
@@ -12,5 +13,5 @@ def nd2_to_tif(nd2_file):
         Path to the .nd2 file.
     """
     f = nd2.ND2File(nd2_file)
-    tif_file = nd2_file[:-3] + 'tif'
+    tif_file = pathlib.Path(nd2_file).with_suffix('.nd2')
     tifffile.imwrite(tif_file, f.asarray(), imagej=True)
