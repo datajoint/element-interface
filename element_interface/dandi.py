@@ -32,8 +32,7 @@ def upload_to_dandi(
         If True, delete all files in archive that are not present in local directory.
     """
 
-    if working_directory is None:
-        working_directory = os.path.curdir
+    working_directory =  working_directory or os.path.curdir
 
     if api_key is not None:
         os.environ["DANDI_API_KEY"] = api_key
