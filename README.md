@@ -50,6 +50,11 @@
      pip install "element-interface[caiman] @ git+https://github.com/datajoint/element-interface"
      ```
 
++ Install `element-interface` with `FISSA`
+     ```
+     pip install "element-interface[fissa] @ git+https://github.com/datajoint/element-interface"
+     ```
+
 + Install `element-interface` with multiple packages
      ```
      pip install "element-interface[caiman_requirements] @ git+https://github.com/datajoint/element-interface"
