@@ -36,7 +36,7 @@ setup(
     extras_require={
         'scanreader': ['scanreader@git+https://github.com/atlab/scanreader.git'],
         'sbxreader': ['sbxreader==0.1.6.post1'],
-        'suite2p': ['suite2p@git+https://github.com/MouseLand/suite2p.git',
+        'suite2p': ['suite2p@git+https://github.com/datajoint-company/suite2p.git',
 		    'cellpose==1.0.2'],
         'caiman_requirements': caiman_requirements,
         'caiman': ['h5py==3.3.0',
