@@ -97,3 +97,13 @@ def ingest_csv_to_table(csvs, tables,
             insert_len = len(table) - prev_len
             print(f'\n---- Inserting {insert_len} entry(s) '
                   + f'into {table.table_name} ----')
+
+
+# Search through nested dictionary for key and returns its value
+def recursive_search(key, dictionary):
+    if key in dictionary: return dictionary[key]
+    for value in dictionary.values():
+        if isinstance(value, dict):
+            a = recursive_search(key, value)
+            if a is not None: return a
+    return None
