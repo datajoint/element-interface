@@ -1,6 +1,7 @@
 import pathlib
 import uuid
 import hashlib
+import csv
 
 
 def find_full_path(root_directories, relative_path):
@@ -71,3 +72,47 @@ def dict_to_uuid(key):
         hashed.update(str(k).encode())
         hashed.update(str(v).encode())
     return uuid.UUID(hex=hashed.hexdigest())
+
+
+def ingest_csv_to_table(csvs, tables,
+                   skip_duplicates=True, verbose=True):
+    """
+    Inserts data from a series of csvs into their corresponding table:
+        e.g., ingest_csv_to_table(['./lab_data.csv', './proj_data.csv'],
+                                 [lab.Lab(),lab.Project()]
+    ingest_csv_to_table(csvs, tables, skip_duplicates=True)
+        :param csvs: list of relative paths to CSV files.  CSV are delimited by commas.
+        :param tables: list of datajoint tables with ()
+        :param verbose: print number inserted (i.e., table length change)
+    """
+    for csv_filepath, table in zip(csvs, tables):
+        with open(csv_filepath, newline='') as f:
+            data = list(csv.DictReader(f, delimiter=','))
+        if verbose:
+            prev_len = len(table)
+        table.insert(data, skip_duplicates=skip_duplicates,
+                     # Ignore extra fields because some CSVs feed multiple tables
+                     ignore_extra_fields=True)
+        if verbose:
+            insert_len = len(table) - prev_len
+            print(f'\n---- Inserting {insert_len} entry(s) '
+                  + f'into {table.table_name} ----')
+
+
+def recursive_search(key, dictionary):
+    """
+    Search through a nested dictionary for a key and returns its value.  If there are 
+    more than one key with the same name at different depths, the algorithm returns the 
+    value of the least nested key.
+ 
+    recursive_search(key, dictionary)
+        :param key: key used to search through a nested dictionary
+        :param dictionary: nested dictionary
+        :return a: value of the input argument `key`
+    """
+    if key in dictionary: return dictionary[key]
+    for value in dictionary.values():
+        if isinstance(value, dict):
+            a = recursive_search(key, value)
+            if a is not None: return a
+    return None

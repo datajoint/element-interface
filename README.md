@@ -1,8 +1,11 @@
-# Data loaders for the DataJoint Elements 
+# DataJoint Elements Interface for external analysis packages
 
-+ This repository is a set of modules used for loading
- neurophyiological data into the
++ This repository serves a few purposes:
+     + Load neurophysiological data into the
  [DataJoint Elements](https://github.com/datajoint/datajoint-elements).
+     + Install packages used for neurophysiological data processing.
+     + Trigger packages used for neurophysiological data processing.
+     + Functions common to the DataJoint Elements (e.g. search directory tree for data files).
 
 + See [DataJoint Elements](https://github.com/datajoint/datajoint-elements) for descriptions
  of the `elements` and `workflows` developed as part of this initiative.
