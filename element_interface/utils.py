@@ -101,7 +101,9 @@ def ingest_csv_to_table(csvs, tables,
 
 def recursive_search(key, dictionary):
     """
-    Search through a nested dictionary for a key and returns its value.  If there are more than one key with the same name at different depths, the algorithm returns the value of the least nested key.
+    Search through a nested dictionary for a key and returns its value.  If there are 
+    more than one key with the same name at different depths, the algorithm returns the 
+    value of the least nested key.
  
     recursive_search(key, dictionary)
         :param key: key used to search through a nested dictionary
