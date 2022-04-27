@@ -27,17 +27,17 @@ def upload_to_dandi(
         Must have write permissions to this directory.
         Default is current working directory
     api_key: str, optional
-        Provide the DANDI API key if not already in environmental variable DANDI_API_KEY.
+        Provide the DANDI API key if not already in environmental variable DANDI_API_KEY
     sync: str, optional
         If True, delete all files in archive that are not present in local directory.
     """
 
-    working_directory =  working_directory or os.path.curdir
+    working_directory = working_directory or os.path.curdir
 
     if api_key is not None:
         os.environ["DANDI_API_KEY"] = api_key
 
-    dandiset_directory = os.path.join(working_directory, dandiset_id)
+    dandiset_directory = os.path.join(working_directory, dandiset_id) #
 
     download(
         f"https://gui-staging.dandiarchive.org/#/dandiset/{dandiset_id}"
@@ -51,7 +51,7 @@ def upload_to_dandi(
     )
 
     subprocess.run(
-        ["dandi", "organize", "-d", dandiset_directory, data_directory,]
+        ["dandi", "organize", "-d", dandiset_directory, data_directory]
     )
 
     upload(
@@ -60,4 +60,3 @@ def upload_to_dandi(
         dandi_instance="dandi-staging" if staging else "dandi",
         sync=sync,
     )
-

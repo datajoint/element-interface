@@ -12,9 +12,10 @@ with open(path.join(here, 'README.md'), 'r') as f:
 with open(path.join(here, 'requirements.txt')) as f:
     requirements = f.read().splitlines()
 
-with urllib.request.urlopen('https://raw.githubusercontent.com/flatironinstitute/CaImAn/master/requirements.txt') as f:
-   caiman_requirements = f.read().decode('UTF-8').split('\n')
-caiman_requirements.remove('')
+with urllib.request.urlopen('https://raw.githubusercontent.com/flatironinstitute/'
+                            + 'CaImAn/master/requirements.txt') as f:
+    caiman_requirements = f.read().decode('UTF-8').split('\n')
+    caiman_requirements.remove('')
 
 with open(path.join(here, pkg_name, 'version.py')) as f:
     exec(f.read())
@@ -37,13 +38,15 @@ setup(
         'scanreader': ['scanreader@git+https://github.com/atlab/scanreader.git'],
         'sbxreader': ['sbxreader==0.1.6.post1'],
         'suite2p': ['suite2p@git+https://github.com/datajoint-company/suite2p.git',
-		    'cellpose==1.0.2'],
+                    'cellpose==1.0.2'],
         'caiman_requirements': caiman_requirements,
         'caiman': ['h5py==3.3.0',
                    'scipy==1.7.0',
                    'caiman@git+https://github.com/flatironinstitute/CaImAn.git@v1.8.9'],
         'fissa': ['fissa@git+https://github.com/rochefort-lab/fissa.git'],
-        'image_converter': ['tifffile==2021.11.2', 'nd2==0.1.6']
+        'image_converter': ['tifffile==2021.11.2', 'nd2==0.1.6'],
+        'dandi': ['dandi']
     }
-    # TODO suite2p - issue with current pypi version, github version works, change to pypi once issue is resolved and version lock
+    # TODO suite2p - issue with current pypi version, github version works,
+    #                change to pypi once issue is resolved and version lock
 )
