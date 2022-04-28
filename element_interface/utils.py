@@ -74,8 +74,8 @@ def dict_to_uuid(key):
     return uuid.UUID(hex=hashed.hexdigest())
 
 
-def ingest_csv_to_table(csvs, tables,
-                   skip_duplicates=True, verbose=True):
+def ingest_csv_to_table(csvs, tables, verbose=True, skip_duplicates=True,
+                        ignore_extra_fields=True, allow_direct_insert=False):
     """
     Inserts data from a series of csvs into their corresponding table:
         e.g., ingest_csv_to_table(['./lab_data.csv', './proj_data.csv'],
@@ -84,6 +84,10 @@ def ingest_csv_to_table(csvs, tables,
         :param csvs: list of relative paths to CSV files.  CSV are delimited by commas.
         :param tables: list of datajoint tables with ()
         :param verbose: print number inserted (i.e., table length change)
+        :param skip_duplicates: skip duplicate entries
+        :param ignore_extra_fields: if a csv feeds multiple tables, the subset of
+                                    columns not applicable to a table will be ignored
+        :param allow_direct_insert: permit insertion into Imported and Computed tables
     """
     for csv_filepath, table in zip(csvs, tables):
         with open(csv_filepath, newline='') as f:
@@ -92,7 +96,9 @@ def ingest_csv_to_table(csvs, tables,
             prev_len = len(table)
         table.insert(data, skip_duplicates=skip_duplicates,
                      # Ignore extra fields because some CSVs feed multiple tables
-                     ignore_extra_fields=True)
+                     ignore_extra_fields=ignore_extra_fields,
+                     # Allow direct bc element-event uses dj.Imported w/o `make` funcs
+                     allow_direct_insert=allow_direct_insert)
         if verbose:
             insert_len = len(table) - prev_len
             print(f'\n---- Inserting {insert_len} entry(s) '
