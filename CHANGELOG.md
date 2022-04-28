@@ -2,13 +2,12 @@
 
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
-## [0.1.0a1] - 2022-01-12
-### Changed
-+ Renamed the package `element-data-loader` to `element-interface`
+## Unreleased - 2022-04-24
++ Add - Function `ingest_csv_to_table` to insert data from CSV files into tables.
++ Add - Function `recursive_search` to search through nested dictionary for a key.
 
-## [0.1.0a0] - 2021-06-21
-### Added
-+ Readers for: `ScanImage`, `Suite2p`, `CaImAn`
+## 0.1.0a1 - 2022-01-12
++ Change - Rename the package `element-data-loader` to `element-interface`.
 
-
-[0.1.0a0]: https://github.com/datajoint/element-data-loader/releases/tag/0.1.0a0
+## 0.1.0a0 - 2021-06-21
++ Add - Readers for: `ScanImage`, `Suite2p`, `CaImAn`.
