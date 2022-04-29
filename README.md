@@ -29,12 +29,11 @@ Install `element-interface`:
      ```
 
 `element-interface` can also be used to install packages used for reading acquired data (e.g. `scanreader`) and running analysis (e.g. `CaImAn`). To install the relevant packages, add the relevant item(s) to your command as follows, separated by commas:
-     ```python
+
      pip install "element-interface[<item1>] @ git+https://github.com/datajoint/element-interface"
      # OR 
      pip install "element-interface[<item1>,<item2>] @ git+https://github.com/datajoint/element-interface"
-     ```
-
+     
 Optional install items include
 + `scanreader`
 + `sbxreader`
