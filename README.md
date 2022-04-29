@@ -38,13 +38,14 @@ Optional install items include
 + `scanreader`
 + `sbxreader`
 + Suite2p as `suite2p`
-+ [CaImAn](https://github.com/MouseLand/suite2p) as `caiman,caiman_requirements`
++ [CaImAn](https://github.com/MouseLand/suite2p) as `caiman` and `caiman_requirements`. Note: these must be installed sequentially.
 + [FISSA](https://github.com/rochefort-lab/fissa) as `fissa`
 + [DANDI](https://github.com/dandi) as `dandi`
 
 For example,
 ```
-pip install "element-interface[scanreader,caiman,caiman_requirements] @ git+https://github.com/datajoint/element-interface"
+pip install "element-interface[scanreader,caiman] @ git+https://github.com/datajoint/element-interface"
+pip install "element-interface[caiman_requirements] @ git+https://github.com/datajoint/element-interface"
 ```
 
 # Usage
