@@ -37,7 +37,7 @@ def upload_to_dandi(
     if api_key is not None:
         os.environ["DANDI_API_KEY"] = api_key
 
-    dandiset_directory = os.path.join(working_directory, dandiset_id) #
+    dandiset_directory = os.path.join(working_directory, str(dandiset_id)) #enforce str
 
     download(
         f"https://gui-staging.dandiarchive.org/#/dandiset/{dandiset_id}"
@@ -47,16 +47,21 @@ def upload_to_dandi(
     )
 
     subprocess.run(
-        ["dandi", "organize", "-d", dandiset_directory, data_directory, "-f", "dry"]
+        ["dandi", "organize", "-d", dandiset_directory, data_directory, "-f", "dry"],
+        shell=True # without this param, subprocess interprets first arg as file/dir
     )
 
     subprocess.run(
-        ["dandi", "organize", "-d", dandiset_directory, data_directory]
+        ["dandi", "organize", "-d", dandiset_directory, data_directory],
+        shell=True
     )
 
+    print(f'work_dir: {working_directory}\ndata_dir: {data_directory}\n'
+          + f'dand_dir: {dandiset_directory}')
+
     upload(
-        [],
-        dandiset_path=dandiset_directory,
+        [dandiset_directory],
+        # dandiset_path=dandiset_directory, # dandi.upload has no such arg
         dandi_instance="dandi-staging" if staging else "dandi",
         sync=sync,
     )

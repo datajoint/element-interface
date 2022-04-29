@@ -23,46 +23,30 @@
 
 # Installation
 
-+ Install `element-interface`
+Install `element-interface`:
      ```
      pip install git+https://github.com/datajoint/element-interface.git
      ```
 
-+ `element-interface` can also be used to install packages used for reading acquired data (e.g. `scanreader`) and running analysis (e.g. `CaImAn`).
-
-+ If your workflow uses these packages, you should install them when you install `element-interface`.
-
-+ Install `element-interface` with `scanreader`
-     ```
-     pip install "element-interface[scanreader] @ git+https://github.com/datajoint/element-interface"
+`element-interface` can also be used to install packages used for reading acquired data (e.g. `scanreader`) and running analysis (e.g. `CaImAn`). To install the relevant packages, add the relevant item(s) to your command as follows, separated by commas:
+     ```python
+     pip install "element-interface[<item1>] @ git+https://github.com/datajoint/element-interface"
+     # OR 
+     pip install "element-interface[<item1>,<item2>] @ git+https://github.com/datajoint/element-interface"
      ```
 
-+ Install `element-interface` with `sbxreader`
-     ```
-     pip install "element-interface[sbxreader] @ git+https://github.com/datajoint/element-interface"
-     ```
+Optional install items include
++ `scanreader`
++ `sbxreader`
++ Suite2p as `suite2p`
++ [CaImAn](https://github.com/MouseLand/suite2p) as `caiman,caiman_requirements`
++ [FISSA](https://github.com/rochefort-lab/fissa) as `fissa`
++ [DANDI](https://github.com/dandi) as `dandi`
 
-+ Install `element-interface` with `Suite2p`
-     ```
-     pip install "element-interface[suite2p] @ git+https://github.com/datajoint/element-interface"
-     ```
-
-+ Install `element-interface` with `CaImAn` requires two separate commands
-     ```
-     pip install "element-interface[caiman_requirements] @ git+https://github.com/datajoint/element-interface"
-     pip install "element-interface[caiman] @ git+https://github.com/datajoint/element-interface"
-     ```
-
-+ Install `element-interface` with `FISSA`
-     ```
-     pip install "element-interface[fissa] @ git+https://github.com/datajoint/element-interface"
-     ```
-
-+ Install `element-interface` with multiple packages
-     ```
-     pip install "element-interface[caiman_requirements] @ git+https://github.com/datajoint/element-interface"
-     pip install "element-interface[scanreader,sbxreader,suite2p,caiman] @ git+https://github.com/datajoint/element-interface"
-     ```
+For example,
+```
+pip install "element-interface[scanreader,caiman,caiman_requirements] @ git+https://github.com/datajoint/element-interface"
+```
 
 # Usage
 
