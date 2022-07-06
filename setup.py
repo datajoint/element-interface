@@ -42,7 +42,7 @@ setup(
         'caiman': ['h5py==3.3.0',
                    'scipy==1.7.0',
                    'caiman@git+https://github.com/flatironinstitute/CaImAn.git@v1.8.9'],
-        'fissa': ['fissa@git+https://github.com/rochefort-lab/fissa.git'],
+        'fissa': ['fissa==1.0.0'],
         'image_converter': ['tifffile==2021.11.2', 'nd2==0.1.6'],
         'dandi' : ['dandi']
     }
