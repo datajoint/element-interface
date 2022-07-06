@@ -3,7 +3,6 @@
 + This repository serves a few purposes:
      + Load neurophysiological data into the
  [DataJoint Elements](https://github.com/datajoint/datajoint-elements).
-     + Install packages used for neurophysiological data processing.
      + Trigger packages used for neurophysiological data processing.
      + Functions common to the DataJoint Elements (e.g. search directory tree for data files).
 
@@ -12,7 +11,7 @@
 
 # Architecture
 
-+ The loaders for each acquisition and analysis package are stored within a separate module.
++ The functions for each acquisition and analysis package are stored within a separate module.
 
 + Acquisition packages
      + `scanimage_utils.py`
@@ -20,33 +19,16 @@
 + Analysis packages
      + `suite2p_loader.py`
      + `caiman_loader.py`
+     + `run_caiman.py`
 
 # Installation
 
-Install `element-interface`:
++ Install `element-interface`:
      ```
-     pip install git+https://github.com/datajoint/element-interface.git
+     pip install element-interface
      ```
 
-`element-interface` can also be used to install packages used for reading acquired data (e.g. `scanreader`) and running analysis (e.g. `CaImAn`). To install the relevant packages, add the relevant item(s) to your command as follows, separated by commas:
-
-     pip install "element-interface[<item1>] @ git+https://github.com/datajoint/element-interface"
-     # OR 
-     pip install "element-interface[<item1>,<item2>] @ git+https://github.com/datajoint/element-interface"
-     
-Optional install items include
-+ `scanreader`
-+ `sbxreader`
-+ Suite2p as `suite2p`
-+ [CaImAn](https://github.com/MouseLand/suite2p) as `caiman` and `caiman_requirements`. Note: these must be installed sequentially.
-+ [FISSA](https://github.com/rochefort-lab/fissa) as `fissa`
-+ [DANDI](https://github.com/dandi) as `dandi`
-
-For example,
-```
-pip install "element-interface[scanreader,caiman] @ git+https://github.com/datajoint/element-interface"
-pip install "element-interface[caiman_requirements] @ git+https://github.com/datajoint/element-interface"
-```
++ This package is to be used in combination with the other DataJoint Elements (e.g. `element-calcium-imaging`).  The installation of packages used for data processing (e.g. `Suite2p`) will be included within the respective DataJoint Element (e.g. `element-calcium-imaging`).
 
 # Usage
 
