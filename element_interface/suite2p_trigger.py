@@ -20,12 +20,9 @@ def motion_correction_suite2p(ops, db):
                                  This dictionary only consists of a subset of the
                                  output so that we only use the required values
                                  in the segmentation step.
-        data.bin: Creates and saves a binary file on your local path. If
-                  delete_bin is set to True (default: False), the binary file is
-                  deleted after processing.
-        ops.npy: Creates and saves the options dictionary in a numpy array file
-                 in the specified path. The ops file gets updated during the
-                 cell detection and the deconvolution steps.
+        data.bin: Binary file of the data.  If delete_bin is set to True (default: False), the binary file is deleted after processing.
+        ops.npy: Options dictionary. This file gets updated during the
+                 segmentation and deconvolution steps.
     """
 
     if (not ops["do_registration"]) or ops["roidetect"] or ops["spikedetect"]:
@@ -153,8 +150,7 @@ def segmentation_suite2p(motion_correction_ops, db):
 
 
 def deconvolution_suite2p(segmentation_ops, db):
-    """Performs cell detection using Suite2p package,
-    Make sure the 'roidetect' key is set to True to perform cell/ roi detection.
+    """Performs deconvolution using the Suite2p package for single plane tiff files.
     The code to run deconvolution separately can be found here
     </https://suite2p.readthedocs.io/en/latest/deconvolution.html>.
 
@@ -179,10 +175,10 @@ def deconvolution_suite2p(segmentation_ops, db):
         or (not segmentation_ops["spikedetect"])
     ):
         warnings.warn(
-            "You are running deconvolution using Suite2p module."
+            "Running deconvolution with Suite2p."
             "Requirements include do_registration=0, roidetect=False,"
             "spikedetect=True. The ops dictionary has differing values,"
-            "the flags will be se set to the required values."
+            "the flags will be set to the required values."
         )
         segmentation_ops.update(do_registration=0, roidetect=False, spikedetect=True)
 
