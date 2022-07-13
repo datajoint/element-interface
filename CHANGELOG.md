@@ -7,6 +7,11 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Add - GitHub Issue templates
 + Add - Function (`suite2p_trigger`) for running Suite2p's steps individually
 
+## 0.2.1 - 2022-07-13
+
++ Add - Adopt `black` formatting
++ Add - Code of Conduct
+
 ## 0.2.0 - 2022-07-06
 
 + First release of `element-interface`.

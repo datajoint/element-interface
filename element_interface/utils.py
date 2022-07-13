@@ -25,8 +25,10 @@ def find_full_path(root_directories, relative_path):
         if (_to_Path(root_dir) / relative_path).exists():
             return _to_Path(root_dir) / relative_path
 
-    raise FileNotFoundError('No valid full-path found (from {})'
-                            ' for {}'.format(root_directories, relative_path))
+    raise FileNotFoundError(
+        "No valid full-path found (from {})"
+        " for {}".format(root_directories, relative_path)
+    )
 
 
 def find_root_directory(root_directories, full_path):
@@ -40,19 +42,24 @@ def find_root_directory(root_directories, full_path):
     full_path = _to_Path(full_path)
 
     if not full_path.exists():
-        raise FileNotFoundError(f'{full_path} does not exist!')
+        raise FileNotFoundError(f"{full_path} does not exist!")
 
     # Turn to list if only a single root directory is provided
     if isinstance(root_directories, (str, pathlib.Path)):
         root_directories = [_to_Path(root_directories)]
 
     try:
-        return next(_to_Path(root_dir) for root_dir in root_directories
-                    if _to_Path(root_dir) in set(full_path.parents))
+        return next(
+            _to_Path(root_dir)
+            for root_dir in root_directories
+            if _to_Path(root_dir) in set(full_path.parents)
+        )
 
     except StopIteration:
-        raise FileNotFoundError('No valid root directory found (from {})'
-                                ' for {}'.format(root_directories, full_path))
+        raise FileNotFoundError(
+            "No valid root directory found (from {})"
+            " for {}".format(root_directories, full_path)
+        )
 
 
 def _to_Path(path):
@@ -60,7 +67,7 @@ def _to_Path(path):
     Convert the input "path" into a pathlib.Path object
     Handles one odd Windows/Linux incompatibility of the "\\"
     """
-    return pathlib.Path(str(path).replace('\\', '/'))
+    return pathlib.Path(str(path).replace("\\", "/"))
 
 
 def dict_to_uuid(key):
@@ -74,8 +81,14 @@ def dict_to_uuid(key):
     return uuid.UUID(hex=hashed.hexdigest())
 
 
-def ingest_csv_to_table(csvs, tables, verbose=True, skip_duplicates=True,
-                        ignore_extra_fields=True, allow_direct_insert=False):
+def ingest_csv_to_table(
+    csvs,
+    tables,
+    verbose=True,
+    skip_duplicates=True,
+    ignore_extra_fields=True,
+    allow_direct_insert=False,
+):
     """
     Inserts data from a series of csvs into their corresponding table:
         e.g., ingest_csv_to_table(['./lab_data.csv', './proj_data.csv'],
@@ -90,35 +103,42 @@ def ingest_csv_to_table(csvs, tables, verbose=True, skip_duplicates=True,
         :param allow_direct_insert: permit insertion into Imported and Computed tables
     """
     for csv_filepath, table in zip(csvs, tables):
-        with open(csv_filepath, newline='') as f:
-            data = list(csv.DictReader(f, delimiter=','))
+        with open(csv_filepath, newline="") as f:
+            data = list(csv.DictReader(f, delimiter=","))
         if verbose:
             prev_len = len(table)
-        table.insert(data, skip_duplicates=skip_duplicates,
-                     # Ignore extra fields because some CSVs feed multiple tables
-                     ignore_extra_fields=ignore_extra_fields,
-                     # Allow direct bc element-event uses dj.Imported w/o `make` funcs
-                     allow_direct_insert=allow_direct_insert)
+        table.insert(
+            data,
+            skip_duplicates=skip_duplicates,
+            # Ignore extra fields because some CSVs feed multiple tables
+            ignore_extra_fields=ignore_extra_fields,
+            # Allow direct bc element-event uses dj.Imported w/o `make` funcs
+            allow_direct_insert=allow_direct_insert,
+        )
         if verbose:
             insert_len = len(table) - prev_len
-            print(f'\n---- Inserting {insert_len} entry(s) '
-                  + f'into {table.table_name} ----')
+            print(
+                f"\n---- Inserting {insert_len} entry(s) "
+                + f"into {table.table_name} ----"
+            )
 
 
 def recursive_search(key, dictionary):
     """
-    Search through a nested dictionary for a key and returns its value.  If there are 
-    more than one key with the same name at different depths, the algorithm returns the 
+    Search through a nested dictionary for a key and returns its value.  If there are
+    more than one key with the same name at different depths, the algorithm returns the
     value of the least nested key.
- 
+
     recursive_search(key, dictionary)
         :param key: key used to search through a nested dictionary
         :param dictionary: nested dictionary
         :return a: value of the input argument `key`
     """
-    if key in dictionary: return dictionary[key]
+    if key in dictionary:
+        return dictionary[key]
     for value in dictionary.values():
         if isinstance(value, dict):
             a = recursive_search(key, value)
-            if a is not None: return a
+            if a is not None:
+                return a
     return None
