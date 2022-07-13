@@ -72,15 +72,11 @@ repositories for example usage of `element-interface`.
      ([Suite2p Issue #718](https://github.com/MouseLand/suite2p/issues/718)).
 
      ```python
-     from element_data_loader.suite2p_trigger import motion_correction_suite2p,
-     segmentation_suite2p, deconvolution_suite2p
-     from suite2p import default_ops
+     import element_interface
+     import suite2p
 
-     ops = dict(default_ops(), nonrigid=False, two_step_registration=False)
-     ```
-     Details of db dictionary can be found [here](https://github.com/MouseLand/suite2p/blob/4b6c3a95b53e5581dbab1feb26d67878db866068/jupyter/run_pipeline_tiffs_or_batch.ipynb)
+     ops = dict(suite2p.default_ops(), nonrigid=False, two_step_registration=False)
 
-     ```python
      db = {
           'h5py': [], # single h5 file path
           'h5py_key': 'data',
@@ -91,13 +87,13 @@ repositories for example usage of `element-interface`.
           }
 
      ops.update(do_registration=1, roidetect=False, spikedetect=False)
-     registration_ops = motion_registration_suite2p(ops, db)
+     motion_correction_ops = element_interface.suite2p_trigger.motion_correction_suite2p(ops, db)
 
-     registration_ops.update(do_registration=0, roidetect=True, spikedetect=False)
-     segmentation_ops = segmentation_suite2p(registration_ops, db)
+     motion_correction_ops.update(do_registration=0, roidetect=True, spikedetect=False)
+     segmentation_ops = element_interface.suite2p_trigger.segmentation_suite2p(motion_correction_ops, db)
 
      segmentation_ops.update(do_registration=0, roidetect=False, spikedetect=True)
-     spikes = deconvolution_suite2p(segmentation_ops, db)
+     spikes = element_interface.suite2p_trigger.deconvolution_suite2p(segmentation_ops, db)
      ```
 
 
