@@ -5,10 +5,10 @@ import warnings
 
 
 def motion_correction_suite2p(ops, db):
-    """Performs registration using Suite2p package
+    """Performs motion correction (i.e. registration) using the Suite2p package.
 
     Args:
-        ops (dict): ops dictionary can be obtained by using default_ops()
+        ops (dict): ops dictionary can be obtained by using suite2p.default_ops()
                     function. It contains all options and default values used
                     to perform preprocessing. ops['do_registration'] should be
                     set to 1.
@@ -16,7 +16,7 @@ def motion_correction_suite2p(ops, db):
                    data, and path to store outputs
 
     Returns:
-        registration_ops (dict): Returns a dictionary that includes x and y shifts.
+        motion_correction_ops (dict): Returns a dictionary that includes x and y shifts.
                                  This dictionary only consists of a subset of the
                                  output so that we only use the required values
                                  in the segmentation step.
@@ -30,7 +30,7 @@ def motion_correction_suite2p(ops, db):
 
     if (not ops["do_registration"]) or ops["roidetect"] or ops["spikedetect"]:
         warnings.warn(
-            "You are running motion correction with Suite2p."
+            "Running motion correction with Suite2p."
             "Requirements include do_registration=1,"
             "roidetect=False, spikedetect=False.  The ops"
             "dictionary has differing values. The flags will"
@@ -41,9 +41,9 @@ def motion_correction_suite2p(ops, db):
 
     if ops["nonrigid"]:
 
-        print("------------RUNNING NON-RIGID REGISTRATION------------")
+        print("------------Running non-rigid motion correction------------")
 
-        registration_ops = suite2p.run_s2p(ops, db)
+        motion_correction_ops = suite2p.run_s2p(ops, db)
         subset_keys = [
             "xoff",
             "yoff",
@@ -64,9 +64,9 @@ def motion_correction_suite2p(ops, db):
 
     else:
 
-        print("------------RUNNING RIGID REGISTRATION------------")
+        print("------------Running rigid motion correction------------")
 
-        registration_ops = suite2p.run_s2p(ops, db)
+        motion_correction_ops = suite2p.run_s2p(ops, db)
         subset_keys = [
             "xoff",
             "yoff",
@@ -77,22 +77,22 @@ def motion_correction_suite2p(ops, db):
             "delete_bin",
         ]
 
-    registration_ops = {key: registration_ops[key] for key in subset_keys}
+    motion_correction_ops = {key: motion_correction_ops[key] for key in subset_keys}
 
-    return registration_ops
+    return motion_correction_ops
 
 
-def segmentation_suite2p(registration_ops, db):
-    """Performs cell detection using Suite2p package,
-    Make sure the 'roidetect' key is set to True to perform cell/ roi detection
+def segmentation_suite2p(motion_correction_ops, db):
+    """Performs cell segmentation (i.e. roi detection) using Suite2p package.
 
     Args:
-        registration_ops (dict): reg_ops dictionary can be obtained from
-                                 registration step (CaImAn or Suite2p).
-                                 Must contain x and y shifts along with
-                                 'do_registration'=0,
-                                 'two_step_registration'=False,
-                                 'roidetect'=True and 'spikedetect'= False
+        motion_correction_ops (dict): ops dictionary can be generated from motion correction that was run with either CaImAn or Suite2p.
+                                 Must contain:
+                                 - x and y shifts
+                                 - do_registration=0
+                                 - two_step_registration=False
+                                 - roidetect=True
+                                 - spikedetect=False
         db (dict): dictionary that includes paths pointing towards the input
                    data, and path to store outputs
 
@@ -117,19 +117,21 @@ def segmentation_suite2p(registration_ops, db):
     """
 
     if (
-        registration_ops["do_registration"]
-        or not (registration_ops["roidetect"])
-        or registration_ops["spikedetect"]
+        motion_correction_ops["do_registration"]
+        or (not motion_correction_ops["roidetect"])
+        or motion_correction_ops["spikedetect"]
     ):
         warnings.warn(
-            "You are running segmentation with Suite2p. Requirements"
+            "Running segmentation with Suite2p. Requirements"
             "include do_registration=0, roidetect=True,"
             "spikedetect=False. The ops dictionary has differing"
             "values. The flags will be set to the required values."
         )
-        registration_ops.update(do_registration=0, roidetect=True, spikedetect=False)
+        motion_correction_ops.update(
+            do_registration=0, roidetect=True, spikedetect=False
+        )
 
-    segmentation_ops = suite2p.run_s2p(registration_ops, db)
+    segmentation_ops = suite2p.run_s2p(motion_correction_ops, db)
     subset_keys = [
         "baseline",
         "win_baseline",
