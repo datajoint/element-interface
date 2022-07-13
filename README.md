@@ -62,7 +62,7 @@ repositories for example usage of `element-interface`.
 
 + Suite2p wrapper functions for triggering analysis
 
-  + Functions to independently run Suite2p's registration, segmentation, and deconvolution steps. These functions currently work for single plane tiff files.  If running all Suite2p pre-processing steps concurrently, these functions are not required and one can run `suite2p.run_s2p()`.
+  + Functions to independently run Suite2p's motion correction, segmentation, and deconvolution steps. These functions currently work for single plane tiff files.  If running all Suite2p pre-processing steps concurrently, these functions are not required and one can run `suite2p.run_s2p()`.
 
   + These wrapper functions were developed primarily because `run_s2p` cannot individually run deconvolution using the `spikedetect` flag ([Suite2p Issue #718](https://github.com/MouseLand/suite2p/issues/718)).
 

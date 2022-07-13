@@ -5,7 +5,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 ## 0.3.0 - 2022-07-13
 
 + Add - GitHub Issue templates
-+ Add - Function (`suite2p_trigger`) for running Suite2p's steps individually
++ Add - Function (`suite2p_trigger`) for independently running Suite2p's motion correction, segmentation, and deconvolution steps.
 
 ## 0.2.1 - 2022-07-13
 
