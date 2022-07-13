@@ -3,7 +3,6 @@
 + This repository serves a few purposes:
      + Load neurophysiological data into the
  [DataJoint Elements](https://github.com/datajoint/datajoint-elements).
-     + Install packages used for neurophysiological data processing.
      + Trigger packages used for neurophysiological data processing.
      + Functions common to the DataJoint Elements (e.g. search directory tree for data files).
 
@@ -12,7 +11,7 @@
 
 # Architecture
 
-+ The loaders for each acquisition and analysis package are stored within a separate module.
++ The functions for each acquisition and analysis package are stored within a separate module.
 
 + Acquisition packages
      + `scanimage_utils.py`
@@ -20,33 +19,16 @@
 + Analysis packages
      + `suite2p_loader.py`
      + `caiman_loader.py`
+     + `run_caiman.py`
 
 # Installation
 
-Install `element-interface`:
++ Install `element-interface`:
      ```
-     pip install git+https://github.com/datajoint/element-interface.git
+     pip install element-interface
      ```
 
-`element-interface` can also be used to install packages used for reading acquired data (e.g. `scanreader`) and running analysis (e.g. `CaImAn`). To install the relevant packages, add the relevant item(s) to your command as follows, separated by commas:
-
-     pip install "element-interface[<item1>] @ git+https://github.com/datajoint/element-interface"
-     # OR 
-     pip install "element-interface[<item1>,<item2>] @ git+https://github.com/datajoint/element-interface"
-     
-Optional install items include
-+ `scanreader`
-+ `sbxreader`
-+ Suite2p as `suite2p`
-+ [CaImAn](https://github.com/MouseLand/suite2p) as `caiman` and `caiman_requirements`. Note: these must be installed sequentially.
-+ [FISSA](https://github.com/rochefort-lab/fissa) as `fissa`
-+ [DANDI](https://github.com/dandi) as `dandi`
-
-For example,
-```
-pip install "element-interface[scanreader,caiman] @ git+https://github.com/datajoint/element-interface"
-pip install "element-interface[caiman_requirements] @ git+https://github.com/datajoint/element-interface"
-```
++ This package is to be used in combination with the other DataJoint Elements (e.g. `element-calcium-imaging`).  The installation of packages used for data processing (e.g. `Suite2p`) will be included within the respective DataJoint Element (e.g. `element-calcium-imaging`).
 
 # Usage
 
@@ -77,6 +59,47 @@ repositories for example usage of `element-interface`.
 
      loaded_dataset = suite2p_loader.Suite2p(output_dir)
      ```
+
+
++ Suite2p wrapper functions for triggering analysis
+
+     Each step of Suite2p (registration, segmentation and deconvolution) 
+     can be run independently for single plane tiff files. The functions in this
+     package will facilitate this process. Requirements include the [ops dictionary](
+     https://suite2p.readthedocs.io/en/latest/settings.html) and db dictionary.
+     These wrapper functions were developed primarily because `run_s2p` cannot 
+     individually run deconvolution using the `spikedetect` flag 
+     ([Suite2p Issue #718](https://github.com/MouseLand/suite2p/issues/718)).
+
+     ```python
+     from element_data_loader.suite2p_trigger import motion_correction_suite2p,
+     segmentation_suite2p, deconvolution_suite2p
+     from suite2p import default_ops
+
+     ops = dict(default_ops(), nonrigid=False, two_step_registration=False)
+     ```
+     Details of db dictionary can be found [here](https://github.com/MouseLand/suite2p/blob/4b6c3a95b53e5581dbab1feb26d67878db866068/jupyter/run_pipeline_tiffs_or_batch.ipynb)
+
+     ```python
+     db = {
+          'h5py': [], # single h5 file path
+          'h5py_key': 'data',
+          'look_one_level_down': False, # search for TIFFs in all subfolders 
+          'data_path': ['/test_data'], # list of folders with tiffs                                    
+          'subfolders': [], # choose subfolders of 'data_path'
+          'fast-disk': '/test_data' # string path for storing binary file 
+          }
+
+     ops.update(do_registration=1, roidetect=False, spikedetect=False)
+     registration_ops = motion_registration_suite2p(ops, db)
+
+     registration_ops.update(do_registration=0, roidetect=True, spikedetect=False)
+     segmentation_ops = segmentation_suite2p(registration_ops, db)
+
+     segmentation_ops.update(do_registration=0, roidetect=False, spikedetect=True)
+     spikes = deconvolution_suite2p(segmentation_ops, db)
+     ```
+
 
 + CaImAn
      ```python
