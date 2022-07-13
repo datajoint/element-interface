@@ -1,5 +1,4 @@
-from suite2p import run_s2p
-from suite2p.extraction import dcnv
+import suite2p
 import numpy as np
 import os
 import warnings
@@ -44,7 +43,7 @@ def motion_correction_suite2p(ops, db):
 
         print("------------RUNNING NON-RIGID REGISTRATION------------")
 
-        registration_ops = run_s2p(ops,db)
+        registration_ops = suite2p.run_s2p(ops,db)
         subset_keys = ['xoff', 'yoff', 'xoff1', 'yoff1',
                         'do_registration',
                         'two_step_registration',
@@ -57,7 +56,7 @@ def motion_correction_suite2p(ops, db):
 
         print("------------RUNNING RIGID REGISTRATION------------")
 
-        registration_ops = run_s2p(ops,db)
+        registration_ops = suite2p.run_s2p(ops,db)
         subset_keys = ['xoff', 'yoff', 'do_registration', 'two_step_registration',
                         'roidetect', 'spikedetect', 'delete_bin']
     
@@ -109,7 +108,7 @@ def segmentation_suite2p(registration_ops, db):
                         roidetect = True,
                         spikedetect = False)
 
-    segmentation_ops = run_s2p(registration_ops,db)
+    segmentation_ops = suite2p.run_s2p(registration_ops,db)
     subset_keys = ['baseline', 'win_baseline', 'sig_baseline',
                     'fs', 'prctile_baseline', 'batch_size',
                     'tau','save_path', 'do_registration', 'roidetect',
@@ -156,7 +155,7 @@ def deconvolution_suite2p(segmentation_ops, db):
                 allow_pickle = True)
     Fc = F - segmentation_ops['neucoeff'] * Fneu
 
-    Fc = dcnv.preprocess(
+    Fc = suite2p.extraction.dcnv.preprocess(
         F=Fc,
         baseline=segmentation_ops['baseline'],
         win_baseline=segmentation_ops['win_baseline'],
@@ -165,8 +164,10 @@ def deconvolution_suite2p(segmentation_ops, db):
         prctile_baseline=segmentation_ops['prctile_baseline']
     )
 
-    spikes = dcnv.oasis(F=Fc, batch_size=segmentation_ops['batch_size'], 
-                        tau=segmentation_ops['tau'], fs=segmentation_ops['fs'])
+    spikes = suite2p.extraction.dcnv.oasis(F=Fc, 
+                                           batch_size=segmentation_ops['batch_size'], 
+                                           tau=segmentation_ops['tau'], 
+                                           fs=segmentation_ops['fs'])
     np.save(os.path.join(segmentation_ops['save_path'], 'spks.npy'), spikes)
 
     return spikes
