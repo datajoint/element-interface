@@ -8,7 +8,7 @@ def motion_correction_suite2p(ops, db):
     """Performs motion correction (i.e. registration) using the Suite2p package.
 
     Args:
-        ops (dict): ops dictionary can be obtained by using suite2p.default_ops()
+        ops (dict): ops dictionary can be obtained by using `suite2p.default_ops()`
                     function. It contains all options and default values used
                     to perform preprocessing. ops['do_registration'] should be
                     set to 1.
@@ -17,9 +17,7 @@ def motion_correction_suite2p(ops, db):
 
     Returns:
         motion_correction_ops (dict): Returns a dictionary that includes x and y shifts.
-                                 This dictionary only consists of a subset of the
-                                 output so that we only use the required values
-                                 in the segmentation step.
+                                      A subset of the ops dictionary returned from `suite2p.run_s2p()` that is required for the segmentation step.
         data.bin: Binary file of the data.  If delete_bin is set to True (default: False), the binary file is deleted after processing.
         ops.npy: Options dictionary. This file gets updated during the
                  segmentation and deconvolution steps.
@@ -83,8 +81,7 @@ def segmentation_suite2p(motion_correction_ops, db):
     """Performs cell segmentation (i.e. roi detection) using Suite2p package.
 
     Args:
-        motion_correction_ops (dict): ops dictionary can be generated from motion correction that was run with either CaImAn or Suite2p.
-                                 Must contain:
+        motion_correction_ops (dict): options dictionary. Requirements:
                                  - x and y shifts
                                  - do_registration=0
                                  - two_step_registration=False
@@ -94,23 +91,14 @@ def segmentation_suite2p(motion_correction_ops, db):
                    data, and path to store outputs
 
     Returns:
-        segmentation_ops (dict): The ops dictionary is updated with additional
-                                 keys that are added. This dictionary only
-                                 consists of a subset of the
-                                 output so that we only use the required values
-                                 in the deconvolution step.
-        data.bin: Creates and saves a binary file on your local path, if the one
-                  created during registration is deleted. If delete_bin is set
-                  to True, the binary file is deleted after processing.
-        ops.npy: Updates the options dictionary in a file created during the
-                 registration step and saves as a numpy array file on the
-                 specified path.
-        F.npy: Stores an array of fluorescence traces
-        Fneu.npy: Returns an array of neuropil fluorescence traces
-        iscell.npy: Specifies whether an ROI is a cell
-        stat.npy: Returns a list of statistics computed for each cell
-        spks.npy: Returns an empty file, it is updated during the deconvolution
-                  step with deconvolved traces
+        segmentation_ops (dict): A subset of the ops dictionary returned from `suite2p.run_s2p()` that is required for the deconvolution step.
+        data.bin: Binary file if the one created during motion correction is deleted. If delete_bin=True, the binary file is deleted after processing.
+        ops.npy: Updated ops dictionary created by suite2p.run_s2p()
+        F.npy: Array of fluorescence traces
+        Fneu.npy: Array of neuropil fluorescence traces
+        iscell.npy: Specifies whether a region of interest is a cell and the probability
+        stat.npy: List of statistics computed for each cell
+        spks.npy: Empty file. This file is updated with deconvolved traces during the deconvolution step.
     """
 
     if (
@@ -155,16 +143,19 @@ def deconvolution_suite2p(segmentation_ops, db):
     </https://suite2p.readthedocs.io/en/latest/deconvolution.html>.
 
     Args:
-        segmentation_ops (dict): roi_ops dictionary can be obtained from registration
-                        step (CaImAn or Suite2p). Must contain baseline,
-                        win_baseline (window in seconds for max filter),
-                        sig_baseline (width of Gaussian filter in seconds),
-                        fs (sampling rate per plane),
-                        prctile_baseline (percentile of trace to use as baseline
-                        is using constant_prctile for baseline)
-                        along with 'do_registration'=0,
-                        'two_step_registration'=False,'roidetect'=False and
-                        'spikedetect'= True
+        segmentation_ops (dict): options dictionary. Requirements:
+                        - baseline - setting that describes how to compute the baseline of each trace
+                        - win_baseline - window for max filter in seconds
+                        - sig_baseline - width of Gaussian filter in seconds
+                        - fs - sampling rate per plane
+                        - prctile_baseline - percentile of trace to use as baseline if using `constant_prctile` for baseline
+                        - batch_size - number of frames processed per batch
+                        - tau - timescale of the sensor, used for the deconvolution kernel
+                        - neucoeff - neuropil coefficient for all regions of interest
+                        - do_registration=0
+                        - two_step_registration=False
+                        - roidetect=False
+                        - spikedetect=True
 
     Returns:
         spks.npy: Updates the file with an array of deconvolved traces
