@@ -6,7 +6,6 @@ import warnings
 
 def motion_correction_suite2p(ops, db):
     """Performs motion correction (i.e. registration) using the Suite2p package.
-
     Args:
         ops (dict): ops dictionary can be obtained by using `suite2p.default_ops()`
                     function. It contains all options and default values used
@@ -14,7 +13,6 @@ def motion_correction_suite2p(ops, db):
                     set to 1.
         db (dict): dictionary that includes paths pointing towards the input
                    data, and path to store outputs
-
     Returns:
         motion_correction_ops (dict): Returns a dictionary that includes x and y shifts.
                                       A subset of the ops dictionary returned from `suite2p.run_s2p()` that is required for the segmentation step.
@@ -79,7 +77,6 @@ def motion_correction_suite2p(ops, db):
 
 def segmentation_suite2p(motion_correction_ops, db):
     """Performs cell segmentation (i.e. roi detection) using Suite2p package.
-
     Args:
         motion_correction_ops (dict): options dictionary. Requirements:
                                  - x and y shifts
@@ -89,7 +86,6 @@ def segmentation_suite2p(motion_correction_ops, db):
                                  - spikedetect=False
         db (dict): dictionary that includes paths pointing towards the input
                    data, and path to store outputs
-
     Returns:
         segmentation_ops (dict): A subset of the ops dictionary returned from `suite2p.run_s2p()` that is required for the deconvolution step.
         data.bin: Binary file if the one created during motion correction is deleted. If delete_bin=True, the binary file is deleted after processing.
@@ -141,7 +137,6 @@ def deconvolution_suite2p(segmentation_ops, db):
     """Performs deconvolution using the Suite2p package for single plane tiff files.
     The code to run deconvolution separately can be found here
     </https://suite2p.readthedocs.io/en/latest/deconvolution.html>.
-
     Args:
         segmentation_ops (dict): options dictionary. Requirements:
                         - baseline - setting that describes how to compute the baseline of each trace
@@ -156,7 +151,6 @@ def deconvolution_suite2p(segmentation_ops, db):
                         - two_step_registration=False
                         - roidetect=False
                         - spikedetect=True
-
     Returns:
         spks.npy: Updates the file with an array of deconvolved traces
     """
