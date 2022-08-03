@@ -99,7 +99,7 @@ def segmentation_suite2p(motion_correction_ops, db):
 
     if (
         motion_correction_ops["do_registration"]
-        or (not motion_correction_ops["roidetect"])
+        or not motion_correction_ops["roidetect"]
         or motion_correction_ops["spikedetect"]
     ):
         warnings.warn(
