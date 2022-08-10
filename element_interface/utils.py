@@ -1,7 +1,11 @@
-import pathlib
-import uuid
-import hashlib
 import csv
+import uuid
+import pathlib
+import hashlib
+import logging
+import datajoint as dj
+
+logger = logging.getLogger("DataJoint")
 
 
 def find_full_path(root_directories, relative_path):
@@ -134,6 +138,10 @@ def recursive_search(key, dictionary):
         :param dictionary: nested dictionary
         :return a: value of the input argument `key`
     """
+    logger.warn(
+        "The `recursive_search` function is depreciated and will be removed from "
+        + "`element-interface` v0.3.0"
+    )
     if key in dictionary:
         return dictionary[key]
     for value in dictionary.values():
@@ -142,3 +150,24 @@ def recursive_search(key, dictionary):
             if a is not None:
                 return a
     return None
+
+
+def insert1_skip_full_duplicates(table, entry):
+    """
+    This function inserts one entry into the table.
+    It ignores duplicates on if all the other entries also match.
+    Duplicates on secondary keys are not ignored.
+    After validation, this functionality will be integrating into core DataJoint.
+    """
+    try:
+        table.insert1(entry)
+    except dj.errors.DuplicateError as err:
+        if "PRIMARY" not in err.args[0]:
+            # secondary indexes are checked only after confirming primary uniqueness
+            raise
+        key = {k: v for k, v in entry.items() if k in table.primary_key}
+        if (table & key).fetch1() != entry:
+            raise err.suggest(
+                "Duplicate primary key with different secondary attributes from"
+                + "existing value."
+            )
