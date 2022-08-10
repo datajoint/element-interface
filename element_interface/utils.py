@@ -116,7 +116,7 @@ def ingest_csv_to_table(
             skip_duplicates=skip_duplicates,
             # Ignore extra fields because some CSVs feed multiple tables
             ignore_extra_fields=ignore_extra_fields,
-            # Allow direct bc element-event uses dj.Imported w/o `make` funcs
+            # Allow direct b/c element-event uses dj.Imported w/o `make` functions
             allow_direct_insert=allow_direct_insert,
         )
         if verbose:
@@ -154,10 +154,13 @@ def recursive_search(key, dictionary):
 
 def insert1_skip_full_duplicates(table, entry):
     """
-    This function inserts one entry into the table.
-    It ignores duplicates on if all the other entries also match.
-    Duplicates on secondary keys are not ignored.
-    After validation, this functionality will be integrating into core DataJoint.
+    Inserts one entry into table, ignoring duplicates only if all other entries match.
+    Duplicates on secondary keys are not ignored. After validation, this functionality
+    will be integrated into core DataJoint.
+
+    insert1_skip_full_duplicates(table, entry)
+        :param table: datajoint table
+        :param entry (dict): valid entry for the given table
     """
     try:
         table.insert1(entry)
@@ -168,6 +171,5 @@ def insert1_skip_full_duplicates(table, entry):
         key = {k: v for k, v in entry.items() if k in table.primary_key}
         if (table & key).fetch1() != entry:
             raise err.suggest(
-                "Duplicate primary key with different secondary attributes from"
-                + "existing value."
+                "Duplicate primary key with different secondary attributes."
             )
