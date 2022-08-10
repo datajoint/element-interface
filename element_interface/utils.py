@@ -154,7 +154,7 @@ def recursive_search(key, dictionary):
 
 def insert1_skip_full_duplicates(table, entry):
     """
-    Inserts one entry into table, ignoring duplicates only if all other entries match.
+    Inserts one entry into table, ignoring duplicates only if all the secondary attributes match.
     Duplicates on secondary keys are not ignored. After validation, this functionality
     will be integrated into core DataJoint.
 
