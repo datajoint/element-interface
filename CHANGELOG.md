@@ -2,6 +2,10 @@
 
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## 0.2.2 - Unreleased
++ Add - `insert1_skip_full_duplicates` to `utils`
++ Add - Depreciation warning for `recursive_search`
+
 ## 0.2.1 - 2022-07-13
 + Add - Adopt `black` formatting
 + Add - Code of Conduct
