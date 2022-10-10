@@ -29,12 +29,10 @@ def get_pv_metadata(pvtiffile):
         metainfo: A dict mapping keys to corresponding metadata values fetched from the .xml file.
     """
 
-    xml_files_list = glob.glob1(
-        pathlib.Path(pvtiffile).parent, "*.xml"
-    )  # May return multiple xml files. Only need one that contains scan metadata.
+    xml_files = pathlib.Path(pvtiffile).parent.glob("*.xml") # May return multiple xml files. Only need one that contains scan metadata.
 
-    for xml_file in xml_files_list:
-        tree = ET.parse(pathlib.Path.joinpath(pvtiffile.parent, xml_file))
+    for xml_file in xml_files :
+        tree = ET.parse(xml_file)
         root = tree.getroot()
         if root.find(".//Sequence"):
             break
