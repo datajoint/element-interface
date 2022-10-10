@@ -43,7 +43,7 @@ def get_pv_metadata(pvfile):
 
     framerate = np.divide(1, float(root.findall('.//PVStateValue/[@key="framePeriod"]')[0].attrib.get('value')))   # rate = 1/framePeriod
 
-    usec_per_line = float(root.findall(".//PVStateValue/[@key='scanLinePeriod']")[0].attrib.get('value')) * 1000
+    usec_per_line = float(root.findall(".//PVStateValue/[@key='scanLinePeriod']")[0].attrib.get('value')) * 1e6     # Convert from seconds to microseconds
 
     scan_datetime = datetime.strptime(root.attrib.get('date'), "%m/%d/%Y %I:%M:%S %p")
 
