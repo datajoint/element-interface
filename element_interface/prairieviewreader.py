@@ -1,4 +1,4 @@
-import os
+import pathlib
 import glob
 import xml.etree.ElementTree as ET
 import numpy as np
@@ -7,12 +7,17 @@ from datetime import datetime
 
 
 
-def get_pv_metadata(pvfile):
+def get_pv_metadata(pvtiffile):
     
-    xml_file = glob.glob1(os.path.split(pvfile)[0], "*.xml")[0]  # Returns 3 xml files. Only need one that contains scan metadata.
+    xml_files_list = glob.glob1(pathlib.Path(pvtiffile).parent, '*.xml')  # May return multiple xml files. Only need one that contains scan metadata.
 
-    tree = ET.parse(xml_file)
-    root = tree.getroot()
+    for xml_file in xml_files_list:
+        tree = ET.parse(pathlib.Path.joinpath(pvtiffile.parent, xml_file))    
+        root = tree.getroot()
+        if root.find(".//Sequence"):
+            break
+    else:
+        raise FileNotFoundError(f'No PrarieView metadata XML file found at {pvtiffile.parent}')
     
     bidirectional_scan = False  # Does not support bidirectional
     
