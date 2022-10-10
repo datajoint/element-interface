@@ -1,5 +1,4 @@
 import pathlib
-import glob
 import xml.etree.ElementTree as ET
 import numpy as np
 from datetime import datetime
@@ -60,7 +59,7 @@ def get_pv_metadata(pvtiffile):
     ndepths = np.unique(planes_list).shape[0]
 
     # Total frames are displayed as number of "cycles"
-    nframes = int(root.findall(".//Sequence")[-1].attrib.get("cycle"))
+    nframes = len(root.findall(".//Sequence/Frame"))
 
     roi = 1
 
