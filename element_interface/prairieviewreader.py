@@ -126,7 +126,7 @@ def get_pv_metadata(pvtiffile):
         ".//PVStateShard/PVStateValue/[@key='micronsPerPixel']/IndexedValue/[@index='ZAxis']"
     ).attrib.get("value")
     z_fields = np.arange(z_min, z_max + 1, z_step)
-    assert z_fields.shape[0] == ndepths
+    assert z_fields.size == ndepths
 
     metainfo = dict(
         num_fields=nfields,
