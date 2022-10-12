@@ -112,8 +112,7 @@ def get_pv_metadata(pvtiffile):
     # All PrairieView-acquired images have square dimensions
     um_height = um_width = float(px_height) * um_per_pixel
 
-    x_field = x_coordinate  # X-coordinates do not change during scan
-    y_field = y_coordinate  # Y-coordinates do not change during scan
+    x_field, y_field = x_coordinate, y_coordinate  # coordinates do not change during scan
     z_min = root.findall(
         ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/SubindexedValue/[@subindex='0']"
     )[0].attrib.get("value")
