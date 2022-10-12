@@ -109,10 +109,8 @@ def get_pv_metadata(pvtiffile):
             ".//PVStateValue/[@key='micronsPerPixel']/IndexedValue/[@index='XAxis']"
         ).attrib.get("value")
     )
-    um_height = float(px_height) * um_per_pixel
-    um_width = (
-        um_height  # All PrairieView-acquired images have square dimensions (512 x 512)
-    )
+    # All PrairieView-acquired images have square dimensions
+    um_height = um_width = float(px_height) * um_per_pixel
 
     x_field = x_coordinate  # X-coordinates do not change during scan
     y_field = y_coordinate  # Y-coordinates do not change during scan
