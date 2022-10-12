@@ -45,10 +45,10 @@ def get_pv_metadata(pvtiffile):
     nfields = 1  # Always contains 1 field
 
     # Get all channels and find unique values
-    channel_list = []
-    channels = root.iterfind(".//Sequence/Frame/File/[@channel]")
-    for channel in channels:
-        channel_list.append(int(channel.attrib.get("channel")))
+    channel_list = [
+        int(channel.attrib.get("channel"))
+        for channel in root.iterfind(".//Sequence/Frame/File/[@channel]")
+    ]
     nchannels = len(set(channel_list))
 
     # One "Frame" per depth. Gets number of frames in first sequence
