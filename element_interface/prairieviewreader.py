@@ -52,10 +52,10 @@ def get_pv_metadata(pvtiffile):
     nchannels = len(set(channel_list))
 
     # One "Frame" per depth. Gets number of frames in first sequence
-    planes_list = []
-    planes = root.findall(".//Sequence/[@cycle='1']/Frame")
-    for plane in planes:
-        planes_list.append(int(plane.attrib.get("index")))
+    planes = [
+        int(plane.attrib.get("index")) 
+        for plane in root.findall(".//Sequence/[@cycle='1']/Frame")
+    ]
     ndepths = len(set(planes))
 
     # Total frames are displayed as number of "cycles"
