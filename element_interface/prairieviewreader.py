@@ -79,12 +79,8 @@ def get_pv_metadata(pvtiffile):
         ).attrib.get("value")
     )
 
-    framerate = np.divide(
-        1,
-        float(
-            root.findall('.//PVStateValue/[@key="framePeriod"]')[0].attrib.get("value")
-        ),
-    )  # rate = 1/framePeriod
+    framerate = 1 / float(
+            root.findall('.//PVStateValue/[@key="framePeriod"]')[0].attrib.get("value")))  # rate = 1/framePeriod
 
     usec_per_line = (
         float(
