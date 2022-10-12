@@ -49,7 +49,7 @@ def get_pv_metadata(pvtiffile):
     channels = root.iterfind(".//Sequence/Frame/File/[@channel]")
     for channel in channels:
         channel_list.append(int(channel.attrib.get("channel")))
-    nchannels = np.unique(channel_list).shape[0]
+    nchannels = len(set(channel_list))
 
     # One "Frame" per depth. Gets number of frames in first sequence
     planes_list = []
