@@ -46,18 +46,18 @@ def get_pv_metadata(pvtiffile):
     n_fields = 1  # Always contains 1 field
 
     # Get all channels and find unique values
-    channel_list = []
-    channels = root.iterfind(".//Sequence/Frame/File/[@channel]")
-    for channel in channels:
-        channel_list.append(int(channel.attrib.get("channel")))
-    n_channels = np.unique(channel_list).shape[0]
+    channel_list = [
+        int(channel.attrib.get("channel"))
+        for channel in root.iterfind(".//Sequence/Frame/File/[@channel]")
+    ]
+    n_channels = len(set(channel_list))
 
     # One "Frame" per depth. Gets number of frames in first sequence
-    planes_list = []
-    planes = root.findall(".//Sequence/[@cycle='1']/Frame")
-    for plane in planes:
-        planes_list.append(int(plane.attrib.get("index")))
-    n_depths = np.unique(planes_list).shape[0]
+    planes = [
+        int(plane.attrib.get("index")) 
+        for plane in root.findall(".//Sequence/[@cycle='1']/Frame")
+    ]
+    n_depths = len(set(planes))
 
     # Total frames are displayed as number of "cycles"
     n_frames = len(root.findall(".//Sequence/Frame"))
@@ -80,13 +80,8 @@ def get_pv_metadata(pvtiffile):
         ).attrib.get("value")
     )
 
-    framerate = np.divide(
-        1,
-        float(
-            root.findall(
-                './/PVStateValue/[@key="framePeriod"]')[0].attrib.get("value")
-        ),
-    )  # rate = 1/framePeriod
+    framerate = 1 / float(
+            root.findall('.//PVStateValue/[@key="framePeriod"]')[0].attrib.get("value")))  # rate = 1/framePeriod
 
     usec_per_line = (
         float(
@@ -119,14 +114,10 @@ def get_pv_metadata(pvtiffile):
             ".//PVStateValue/[@key='micronsPerPixel']/IndexedValue/[@index='XAxis']"
         ).attrib.get("value")
     )
-    um_height = float(px_height) * um_per_pixel
-    um_width = (
-        # All PrairieView-acquired images have square dimensions (512 x 512)
-        um_height
-    )
+    # All PrairieView-acquired images have square dimensions
+    um_height = um_width = float(px_height) * um_per_pixel
 
-    x_field = x_coordinate  # X-coordinates do not change during scan
-    y_field = y_coordinate  # Y-coordinates do not change during scan
+    x_field, y_field = x_coordinate, y_coordinate  # coordinates do not change during scan
     
     z_min = float(root.findall(
         ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/SubindexedValue/[@subindex='0']"
@@ -138,7 +129,7 @@ def get_pv_metadata(pvtiffile):
         ".//PVStateShard/PVStateValue/[@key='micronsPerPixel']/IndexedValue/[@index='ZAxis']"
     ).attrib.get("value"))
     z_fields = np.arange(z_min, z_max + 1, z_step)
-    assert z_fields.shape[0] == n_depths
+    assert z_fields.size == n_depths
 
     metainfo = dict(
         num_fields=n_fields,
