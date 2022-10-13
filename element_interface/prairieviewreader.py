@@ -59,11 +59,10 @@ def get_pv_metadata(pvtiffile):
     ]
     n_depths = len(set(planes))
 
-    # Total frames are displayed as number of "cycles"
     n_frames = len(root.findall(".//Sequence/Frame"))
 
     roi = 1
-    # x and y coordinate values
+    # x and y coordinate values for the center of the field
     x_coordinate = float(
         root.find(
             ".//PVStateValue/[@key='currentScanCenter']/IndexedValue/[@index='XAxis']"
@@ -83,14 +82,8 @@ def get_pv_metadata(pvtiffile):
     framerate = 1 / float(
         root.findall('.//PVStateValue/[@key="framePeriod"]')[0].attrib.get("value"))  # rate = 1/framePeriod
 
-    usec_per_line = (
-        float(
-            root.findall(".//PVStateValue/[@key='scanLinePeriod']")[0].attrib.get(
-                "value"
-            )
-        )
-        * 1e6
-    )  # Convert from seconds to microseconds
+    usec_per_line = float(
+        root.findall(".//PVStateValue/[@key='scanLinePeriod']")[0].attrib.get("value")) * 1e6  # Convert from seconds to microseconds
 
     scan_datetime = datetime.strptime(
         root.attrib.get("date"), "%m/%d/%Y %I:%M:%S %p")
@@ -114,7 +107,7 @@ def get_pv_metadata(pvtiffile):
             ".//PVStateValue/[@key='micronsPerPixel']/IndexedValue/[@index='XAxis']"
         ).attrib.get("value")
     )
-    # All PrairieView-acquired images have square dimensions
+
     um_height = um_width = float(px_height) * um_per_pixel
 
     # coordinates do not change during scan
