@@ -54,7 +54,7 @@ def get_pv_metadata(pvtiffile):
 
     # One "Frame" per depth. Gets number of frames in first sequence
     planes = [
-        int(plane.attrib.get("index")) 
+        int(plane.attrib.get("index"))
         for plane in root.findall(".//Sequence/[@cycle='1']/Frame")
     ]
     n_depths = len(set(planes))
@@ -63,7 +63,7 @@ def get_pv_metadata(pvtiffile):
     n_frames = len(root.findall(".//Sequence/Frame"))
 
     roi = 1
-    # x and y coordinate values 
+    # x and y coordinate values
     x_coordinate = float(
         root.find(
             ".//PVStateValue/[@key='currentScanCenter']/IndexedValue/[@index='XAxis']"
@@ -81,7 +81,7 @@ def get_pv_metadata(pvtiffile):
     )
 
     framerate = 1 / float(
-            root.findall('.//PVStateValue/[@key="framePeriod"]')[0].attrib.get("value")))  # rate = 1/framePeriod
+        root.findall('.//PVStateValue/[@key="framePeriod"]')[0].attrib.get("value"))  # rate = 1/framePeriod
 
     usec_per_line = (
         float(
@@ -117,8 +117,9 @@ def get_pv_metadata(pvtiffile):
     # All PrairieView-acquired images have square dimensions
     um_height = um_width = float(px_height) * um_per_pixel
 
-    x_field, y_field = x_coordinate, y_coordinate  # coordinates do not change during scan
-    
+    # coordinates do not change during scan
+    x_field, y_field = x_coordinate, y_coordinate
+
     z_min = float(root.findall(
         ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/SubindexedValue/[@subindex='0']"
     )[0].attrib.get("value"))
