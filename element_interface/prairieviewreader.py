@@ -1,7 +1,7 @@
 import pathlib
 import xml.etree.ElementTree as ET
-import numpy as np
 from datetime import datetime
+import numpy as np
 
 
 def get_pv_metadata(pvtiffile):
@@ -63,19 +63,14 @@ def get_pv_metadata(pvtiffile):
 
     roi = 1
     # x and y coordinate values for the center of the field
-    x_coordinate = float(
+    x_field = float(
         root.find(
             ".//PVStateValue/[@key='currentScanCenter']/IndexedValue/[@index='XAxis']"
         ).attrib.get("value")
     )
-    y_coordinate = float(
+    y_field = float(
         root.find(
             ".//PVStateValue/[@key='currentScanCenter']/IndexedValue/[@index='YAxis']"
-        ).attrib.get("value")
-    )
-    z_coordinate = float(
-        root.find(
-            ".//PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='0']"
         ).attrib.get("value")
     )
 
@@ -110,9 +105,6 @@ def get_pv_metadata(pvtiffile):
 
     um_height = um_width = float(px_height) * um_per_pixel
 
-    # coordinates do not change during scan
-    x_field, y_field = x_coordinate, y_coordinate
-
     z_min = float(root.findall(
         ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/SubindexedValue/[@subindex='0']"
     )[0].attrib.get("value"))
@@ -131,9 +123,9 @@ def get_pv_metadata(pvtiffile):
         num_planes=n_depths,
         num_frames=n_frames,
         num_rois=roi,
-        x_pos=x_coordinate,
-        y_pos=y_coordinate,
-        z_pos=z_coordinate,
+        x_pos=None,
+        y_pos=None,
+        z_pos=None,
         frame_rate=framerate,
         bidirectional=bidirectional_scan,
         bidirectional_z=bidirection_z,
