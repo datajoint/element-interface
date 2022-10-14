@@ -2,10 +2,10 @@
 
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
-## 0.3.0 - 2022-07-13
+## [0.3.0] - 2022-10-7
 
-+ Add - GitHub Issue templates
-+ Add - Function (`suite2p_trigger`) for independently running Suite2p's motion correction, segmentation, and deconvolution steps.
++ Add - Function `prairieviewreader` to parse metadata from Bruker PrarieView acquisition system
+
 
 ## 0.2.1 - 2022-07-13
 
@@ -28,4 +28,6 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 ## 0.1.0a0 - 2021-06-21
 
-+ Add - Readers for: `ScanImage`, `Suite2p`, `CaImAn`
++ Add - Readers for: `ScanImage`, `Suite2p`, `CaImAn`.
+
+[0.3.0]: https://github.com/datajoint/element-interface/releases/tag/0.3.0
