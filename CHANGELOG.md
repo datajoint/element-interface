@@ -3,13 +3,17 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
 ## [0.3.0] - 2022-10-7
+
 + Add - Function `prairieviewreader` to parse metadata from Bruker PrarieView acquisition system
 
+
 ## 0.2.1 - 2022-07-13
+
 + Add - Adopt `black` formatting
 + Add - Code of Conduct
 
 ## 0.2.0 - 2022-07-06
+
 + First release of `element-interface`.
 + Bugfix - Fix for `tifffile` import.
 + Add - Function `run_caiman` to trigger CNMF algorithm.
@@ -19,9 +23,11 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Update - Remove `extras_require` feature to allow this package to be published to PyPI.
 
 ## 0.1.0a1 - 2022-01-12
+
 + Change - Rename the package `element-data-loader` to `element-interface`.
 
 ## 0.1.0a0 - 2021-06-21
+
 + Add - Readers for: `ScanImage`, `Suite2p`, `CaImAn`.
 
 [0.3.0]: https://github.com/datajoint/element-interface/releases/tag/0.3.0
