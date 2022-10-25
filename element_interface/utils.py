@@ -111,7 +111,7 @@ def ingest_csv_to_table(
     """Inserts data from a series of csvs into their corresponding table:
 
     Example:
-        >>> ingest_csv_to_table(['./lab_data.csv', './proj_data.csv'],
+        > ingest_csv_to_table(['./lab_data.csv', './proj_data.csv'],
                                  [lab.Lab(),lab.Project()]
 
     Args:

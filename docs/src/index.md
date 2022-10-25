@@ -12,8 +12,8 @@ a number of other Elements.
 
 - Calcium imaging loaders: Suite2p, CaImAn, PrairieView
   
-- File management, see [`find_full_path` API](./api/utils#find_full_path])
+- File management, see [`find_full_path` API](./api/element_interface/utils/#element_interface.utils.find_full_path)
 
-- Data ingestion, see [`ingest_csv_to_table` API](./api/utils#ingest_csv_to_table)
+- Data ingestion, see [`ingest_csv_to_table` API](./api/element_interface/utils/#element_interface.utils.ingest_csv_to_table)
 
 Visit the [Concepts page](./concepts.md) for more information on these tools.

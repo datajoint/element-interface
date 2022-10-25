@@ -40,7 +40,7 @@ class Suite2p:
              -- ...
 
     Example:
-        >>> loaded_dataset = suite2p_loader.Suite2p(output_dir)
+        > loaded_dataset = suite2p_loader.Suite2p(output_dir)
 
     """
 

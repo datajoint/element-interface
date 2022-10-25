@@ -6,8 +6,8 @@ def parse_scanimage_header(scan):
     """Parse ScanImage header
 
     Example:
-        >>> loaded_scan = scanreader.read_scan(scan_filepath)
-        >>> recording_time = scanimage_utils.get_scanimage_acq_time(loaded_scan)
+        > loaded_scan = scanreader.read_scan(scan_filepath)
+        > recording_time = scanimage_utils.get_scanimage_acq_time(loaded_scan)
 
     Args:
         scan (scanimage object): ScanImage object including a header property
@@ -30,8 +30,8 @@ def get_scanimage_acq_time(scan):
     """Return ScanImage acquisition time
 
     Example:
-        >>> loaded_scan = scanreader.read_scan(scan_filepath)
-        >>> header = scanimage_utils.parse_scanimage_header(loaded_scan)
+        > loaded_scan = scanreader.read_scan(scan_filepath)
+        > header = scanimage_utils.parse_scanimage_header(loaded_scan)
 
     Args:
         scan (scanimage object): ScanImage object with header

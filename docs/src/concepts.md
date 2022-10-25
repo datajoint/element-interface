@@ -47,10 +47,15 @@ module.
 
 - Acquisition packages: `scanimage_utils.py`
 - Analysis packages:
+  
     + `suite2p_loader.py`
+  
     + `suite2p_trigger.py`
+    
     + `caiman_loader.py`
+    
     + `run_caiman.py`
+
 - Data upload: `dandi.py` 
 
 ## Roadmap

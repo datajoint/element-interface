@@ -32,8 +32,8 @@ class CaImAn:
         - 'motion_correction':      Motion correction shifts and summary images
 
     Example:
-        >>> output_dir = '<imaging_root_data_dir>/subject1/session0/caiman'
-        >>> loaded_dataset = caiman_loader.CaImAn(output_dir)
+        > output_dir = '<imaging_root_data_dir>/subject1/session0/caiman'
+        > loaded_dataset = caiman_loader.CaImAn(output_dir)
 
     Attributes:
         alignment_channel: hard-coded to 0
