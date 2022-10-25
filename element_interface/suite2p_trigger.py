@@ -7,6 +7,24 @@ import warnings
 def motion_correction_suite2p(ops: dict, db: dict) -> tuple:
     """Performs motion correction (i.e. registration) using the Suite2p package.
 
+    Example:
+        >>> ops = dict(suite2p.default_ops(), nonrigid=False, two_step_registration=False)
+        >>> db = {
+            'h5py': [], # single h5 file path
+            'h5py_key': 'data',
+            'look_one_level_down': False, # search for TIFFs in all subfolders
+            'data_path': ['/test_data'], # list of folders with tiffs
+            'subfolders': [], # choose subfolders of 'data_path'
+            'fast-disk': '/test_data' # string path for storing binary file
+            }
+        >>> ops.update(do_registration=1, roidetect=False, spikedetect=False)
+        >>> motion_correction_ops = element_interface.suite2p_trigger.motion_correction_suite2p(ops, db)
+        >>> motion_correction_ops.update(do_registration=0, roidetect=True, spikedetect=False)
+        >>> segmentation_ops = element_interface.suite2p_trigger.segmentation_suite2p(motion_correction_ops, db)
+        >>> segmentation_ops.update(do_registration=0, roidetect=False, spikedetect=True)
+        >>> spikes = element_interface.suite2p_trigger.deconvolution_suite2p(segmentation_ops, db)
+
+
     Args:
         ops (dict): ops dictionary can be obtained by using `suite2p.default_ops()`
             function. It contains all options and default values used

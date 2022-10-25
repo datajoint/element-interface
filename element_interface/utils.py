@@ -158,7 +158,7 @@ def recursive_search(key: str, dictionary: dict):
         dictionary (dict): Nested dictionary
 
     Returns:
-        any: value of the input argument `key`
+        value (any): value of the input argument `key`
     """
     if key in dictionary:
         return dictionary[key]

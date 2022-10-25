@@ -38,6 +38,10 @@ class Suite2p:
              -- ops.npy
              -- F.npy
              -- ...
+
+    Example:
+        >>> loaded_dataset = suite2p_loader.Suite2p(output_dir)
+
     """
 
     def __init__(self, suite2p_dir: str):
