@@ -4,21 +4,25 @@ import os
 import warnings
 
 
-def motion_correction_suite2p(ops, db):
+def motion_correction_suite2p(ops: dict, db: dict) -> tuple:
     """Performs motion correction (i.e. registration) using the Suite2p package.
+
     Args:
         ops (dict): ops dictionary can be obtained by using `suite2p.default_ops()`
-                    function. It contains all options and default values used
-                    to perform preprocessing. ops['do_registration'] should be
-                    set to 1.
+            function. It contains all options and default values used
+            to perform preprocessing. ops['do_registration'] should be
+            set to 1.
         db (dict): dictionary that includes paths pointing towards the input
-                   data, and path to store outputs
+            data, and path to store outputs
+
     Returns:
-        motion_correction_ops (dict): Returns a dictionary that includes x and y shifts.
-                                      A subset of the ops dictionary returned from `suite2p.run_s2p()` that is required for the segmentation step.
-        data.bin: Binary file of the data.  If delete_bin is set to True (default: False), the binary file is deleted after processing.
+        motion_correction_ops (dict): Dictionary that includes x and y shifts.
+            A subset of the ops dictionary returned from `suite2p.run_s2p()` that is
+            required for the segmentation step.
+        data.bin: Binary file of the data. If delete_bin is set to True (default False),
+            the binary file is deleted after processing.
         ops.npy: Options dictionary. This file gets updated during the
-                 segmentation and deconvolution steps.
+            segmentation and deconvolution steps.
     """
 
     if (not ops["do_registration"]) or ops["roidetect"] or ops["spikedetect"]:
@@ -75,26 +79,32 @@ def motion_correction_suite2p(ops, db):
     return motion_correction_ops
 
 
-def segmentation_suite2p(motion_correction_ops, db):
+def segmentation_suite2p(motion_correction_ops: dict, db: dict) -> tuple:
     """Performs cell segmentation (i.e. roi detection) using Suite2p package.
+
     Args:
-        motion_correction_ops (dict): options dictionary. Requirements:
-                                 - x and y shifts
-                                 - do_registration=0
-                                 - two_step_registration=False
-                                 - roidetect=True
-                                 - spikedetect=False
+        motion_correction_ops (dict): options dictionary.
+            Requirements:
+                - x and y shifts
+                - do_registration=0
+                - two_step_registration=False
+                - roidetect=True
+                - spikedetect=False
         db (dict): dictionary that includes paths pointing towards the input
-                   data, and path to store outputs
+            data, and path to store outputs
+
     Returns:
-        segmentation_ops (dict): A subset of the ops dictionary returned from `suite2p.run_s2p()` that is required for the deconvolution step.
-        data.bin: Binary file if the one created during motion correction is deleted. If delete_bin=True, the binary file is deleted after processing.
+        segmentation_ops (dict): A subset of the ops dictionary returned from
+            `suite2p.run_s2p()` that is required for the deconvolution step.
+        data.bin: Binary file if the one created during motion correction is deleted.
+            If delete_bin=True, the binary file is deleted after processing.
         ops.npy: Updated ops dictionary created by suite2p.run_s2p()
         F.npy: Array of fluorescence traces
         Fneu.npy: Array of neuropil fluorescence traces
         iscell.npy: Specifies whether a region of interest is a cell and the probability
         stat.npy: List of statistics computed for each cell
-        spks.npy: Empty file. This file is updated with deconvolved traces during the deconvolution step.
+        spks.npy: Empty file. This file is updated with deconvolved traces during the
+            deconvolution step.
     """
 
     if (
@@ -133,24 +143,29 @@ def segmentation_suite2p(motion_correction_ops, db):
     return segmentation_ops
 
 
-def deconvolution_suite2p(segmentation_ops, db):
+def deconvolution_suite2p(segmentation_ops: dict, db: dict) -> np.ndarray:
     """Performs deconvolution using the Suite2p package for single plane tiff files.
+
     The code to run deconvolution separately can be found here
     </https://suite2p.readthedocs.io/en/latest/deconvolution.html>.
+
     Args:
-        segmentation_ops (dict): options dictionary. Requirements:
-                        - baseline - setting that describes how to compute the baseline of each trace
-                        - win_baseline - window for max filter in seconds
-                        - sig_baseline - width of Gaussian filter in seconds
-                        - fs - sampling rate per plane
-                        - prctile_baseline - percentile of trace to use as baseline if using `constant_prctile` for baseline
-                        - batch_size - number of frames processed per batch
-                        - tau - timescale of the sensor, used for the deconvolution kernel
-                        - neucoeff - neuropil coefficient for all regions of interest
-                        - do_registration=0
-                        - two_step_registration=False
-                        - roidetect=False
-                        - spikedetect=True
+        segmentation_ops (dict): options dictionary.
+            Requirements:
+                - baseline - how to compute baseline of each trace
+                - win_baseline - window for max filter in seconds
+                - sig_baseline - width of Gaussian filter in seconds
+                - fs - sampling rate per plane
+                - prctile_baseline - percentile of trace to use as baseline
+                    if using `constant_prctile` for baseline
+                - batch_size - number of frames processed per batch
+                - tau - timescale of the sensor, used for the deconvolution kernel
+                - neucoeff - neuropil coefficient for all regions of interest
+                - do_registration=0
+                - two_step_registration=False
+                - roidetect=False
+                - spikedetect=True
+
     Returns:
         spks.npy: Updates the file with an array of deconvolved traces
     """
