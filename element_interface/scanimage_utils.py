@@ -7,6 +7,7 @@ def parse_scanimage_header(scan):
 
     Example:
         > loaded_scan = scanreader.read_scan(scan_filepath)
+
         > recording_time = scanimage_utils.get_scanimage_acq_time(loaded_scan)
 
     Args:
@@ -31,6 +32,7 @@ def get_scanimage_acq_time(scan):
 
     Example:
         > loaded_scan = scanreader.read_scan(scan_filepath)
+
         > header = scanimage_utils.parse_scanimage_header(loaded_scan)
 
     Args:

@@ -25,16 +25,16 @@ how to use various Elements.
 
 This Element provides functions to independently run Suite2p's motion correction,
 segmentation, and deconvolution steps. These functions currently work for single plane
-tiff files. If running all Suite2p pre-processing steps concurrently, these functions
-are not required and one can run `suite2p.run_s2p()`.
-
-These wrapper functions were developed primarily because `run_s2p` cannot individually
+tiff files. If one is running all Suite2p pre-processing steps concurrently, these functions
+are not required and one can run `suite2p.run_s2p()`. The wrapper functions here were developed primarily because `run_s2p` cannot individually
 run deconvolution using the `spikedetect` flag (
 [Suite2p Issue #718](https://github.com/MouseLand/suite2p/issues/718)).
 
 **Requirements**
-+ [ops dictionary](https://suite2p.readthedocs.io/en/latest/settings.html)
-+ [db dictionary](https://github.com/MouseLand/suite2p/blob/4b6c3a95b53e5581dbab1feb26d67878db866068/jupyter/run_pipeline_tiffs_or_batch.ipynb)
+
+- [ops dictionary](https://suite2p.readthedocs.io/en/latest/settings.html)
+  
+- [db dictionary](https://github.com/MouseLand/suite2p/blob/4b6c3a95b53e5581dbab1feb26d67878db866068/jupyter/run_pipeline_tiffs_or_batch.ipynb)
 
 **Note:** The ops dictionary returned from the `motion_correction_suite2p` and
 `segmentation_suite2p` functions is only a subset of the keys generated with the
@@ -45,18 +45,14 @@ run deconvolution using the `spikedetect` flag (
 The functions for each acquisition and analysis package are stored within a separate
 module.
 
-- Acquisition packages: `scanimage_utils.py`
+- Acquisition packages: [ScanImage](../api/element_interface/scanimage_utils)
 - Analysis packages:
   
-    + `suite2p_loader.py`
-  
-    + `suite2p_trigger.py`
+    - Suite2p [loader](../api/element_interface/suite2p_loader) and [trigger](../api/element_interface/suite2p_trigger)
     
-    + `caiman_loader.py`
-    
-    + `run_caiman.py`
+    - CaImAn [loader](../api/element_interface/caiman_loader) and [trigger](../api/element_interface/run_caiman)
 
-- Data upload: `dandi.py` 
+- Data upload: [DANDI](../api/element_interface/dandi/)
 
 ## Roadmap
 

@@ -20,19 +20,21 @@ _required_hdf5_fields = [
 class CaImAn:
     """Parse the CaImAn output file
 
-    CaImAn results doc: https://caiman.readthedocs.io/en/master/Getting_Started.html#result-variables-for-2p-batch-analysis
+    [CaImAn results doc](https://caiman.readthedocs.io/en/master/Getting_Started.html#result-variables-for-2p-batch-analysis)
+
     Expecting the following objects:
-        - 'dims':
-        - 'dview':
-        - 'estimates':              Segmentations and traces
-        - 'mmap_file':
-        - 'params':                 Input parameters
-        - 'remove_very_bad_comps':
-        - 'skip_refinement':
-        - 'motion_correction':      Motion correction shifts and summary images
+        - dims:
+        - dview:
+        - estimates:              Segmentations and traces
+        - mmap_file:
+        - params:                 Input parameters
+        - remove_very_bad_comps:
+        - skip_refinement:
+        - motion_correction:      Motion correction shifts and summary images
 
     Example:
         > output_dir = '<imaging_root_data_dir>/subject1/session0/caiman'
+
         > loaded_dataset = caiman_loader.CaImAn(output_dir)
 
     Attributes:

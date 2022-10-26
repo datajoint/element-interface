@@ -24,20 +24,10 @@ class Suite2p:
     starting from 0 Plane index of -1 indicates a suite2p "combined" outputs from all
     planes, thus saved in the "planes_combined" attribute. See also PlaneSuite2p class.
 
-    A 'suite2p_dir' example:
-        -- suite2p_dir
-          -- plane0
-             -- ops.npy
-             -- F.npy
-             -- ...
-          -- plane1
-             -- ops.npy
-             -- F.npy
-             -- ...
-          -- combined
-             -- ops.npy
-             -- F.npy
-             -- ...
+    Directory example:
+        - plane0: ops.npy, F.npy, etc.
+        - plane1: ops.npy, F.npy, etc.
+        - combined: ops.npy, F.npy, etc.
 
     Example:
         > loaded_dataset = suite2p_loader.Suite2p(output_dir)
@@ -86,15 +76,15 @@ class PlaneSuite2p:
     Suite2p output doc: https://suite2p.readthedocs.io/en/latest/outputs.html
 
     Expecting the following files:
-        - 'ops':        Options file
-        - 'Fneu':       Neuropil traces file for functional channel
-        - 'Fneu_chan2': Neuropil traces file for channel 2
-        - 'F':          Fluorescence traces for functional channel
-        - 'F_chan2':    Fluorescence traces for channel 2
-        - 'iscell':     Array of (user curated) cells and probability of being a cell
-        - 'spks':       Spikes (raw deconvolved with OASIS package)
-        - 'stat':       Various statistics for each cell
-        - 'redcell':    "Red cell" (second channel) stats
+        - ops:        Options file
+        - Fneu:       Neuropil traces file for functional channel
+        - Fneu_chan2: Neuropil traces file for channel 2
+        - F:          Fluorescence traces for functional channel
+        - F_chan2:    Fluorescence traces for channel 2
+        - iscell:     Array of (user curated) cells and probability of being a cell
+        - spks:       Spikes (raw deconvolved with OASIS package)
+        - stat:       Various statistics for each cell
+        - redcell:    "Red cell" (second channel) stats
 
     Attributes:
         alignment_channel: ops["align_by_chan"] as zero-indexed
@@ -138,7 +128,7 @@ class PlaneSuite2p:
         """
         self.fpath = pathlib.Path(suite2p_plane_dir)
 
-        # ---- Verify dataset exists ----
+        # -- Verify dataset exists --
         ops_fp = self.fpath / "ops.npy"
         if not ops_fp.exists():
             raise FileNotFoundError(
@@ -157,7 +147,7 @@ class PlaneSuite2p:
             )
         self.curation_time = datetime.fromtimestamp(iscell_fp.stat().st_ctime)
 
-        # ---- Initialize attributes ----
+        # -- Initialize attributes --
         for s2p_type in _suite2p_ftypes:
             setattr(self, "_{}".format(s2p_type), None)
         self._cell_prob = None
@@ -168,7 +158,7 @@ class PlaneSuite2p:
             else int(self.fpath.name.replace("plane", ""))
         )
 
-    # ---- load core files ----
+    # -- load core files --
 
     @property
     def ops(self):
@@ -245,7 +235,7 @@ class PlaneSuite2p:
             self._redcell = np.load(fp) if fp.exists() else []
         return self._redcell
 
-    # ---- image property ----
+    # -- image property --
 
     @property
     def ref_image(self):
