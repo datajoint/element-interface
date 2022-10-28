@@ -16,7 +16,7 @@ across many Elements and Workflows to allow for the flexibility of providing
 one or more root directories in the user's config, and extrapolating from a relative
 path at runtime.
 
-`utils.ingest_csv_to_table` is used across didactic workflows to ingest from example
+`utils.ingest_csv_to_table` is used across workflow examples to ingest from sample data from 
 local CSV files into sets of manual tables. While researchers may wish to manually 
 insert for day-to-day operations, it helps to have a more complete dataset when learning
 how to use various Elements.
