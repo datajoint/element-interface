@@ -146,7 +146,7 @@ def ingest_csv_to_table(
             )
 
 
-def recursive_search(key: str, dictionary: dict):
+def recursive_search(key: str, dictionary: dict) -> any:
     """Return value for key in a nested dictionary
 
     Search through a nested dictionary for a key and returns its value.  If there are
