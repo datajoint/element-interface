@@ -2,6 +2,11 @@
 
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.3.1] - Unreleased
+
++ Add - mkdocs documentation
++ Add - improved docstrings for mkdocs
+
 ## [0.3.0] - 2022-10-7
 
 + Add - Function `prairieviewreader` to parse metadata from Bruker PrarieView acquisition system

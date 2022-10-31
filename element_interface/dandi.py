@@ -5,31 +5,25 @@ from dandi.upload import upload
 
 
 def upload_to_dandi(
-    data_directory,
-    dandiset_id,
-    staging=True,
-    working_directory=None,
-    api_key=None,
-    sync=False,
+    data_directory: str,
+    dandiset_id: str,
+    staging: bool = True,
+    working_directory: str = None,
+    api_key: str = None,
+    sync: bool = False,
 ):
-    """
+    """Upload NWB files to DANDI Archive
 
-    Parameters
-    ----------
-    data_directory: str
-        directory that contains source data
-    dandiset_id: str
-        6-digit zero-padded string
-    staging: bool
-        If true, use the staging server. If false, use production server.
-    working_directory: str, optional
-        Directory in which to create symlinked dandiset.
-        Must have write permissions to this directory.
-        Default is current working directory
-    api_key: str, optional
-        Provide the DANDI API key if not already in environmental variable DANDI_API_KEY
-    sync: str, optional
-        If True, delete all files in archive that are not present in local directory.
+    Args:
+        data_directory (str): directory that contains source data
+        dandiset_id (str): 6-digit zero-padded string
+        staging (bool): If true, use staging server. If false, use production server.
+        working_directory (str, optional): Dir in which to create symlinked dandiset.
+            Must have write permissions to this directory. Default is current directory.
+        api_key (str, optional): Provide the DANDI API key if not already in an
+            environmental variable DANDI_API_KEY
+        sync (str, optional): If True, delete all files in archive that are not present
+            in the local directory.
     """
 
     working_directory = working_directory or os.path.curdir

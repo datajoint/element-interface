@@ -18,30 +18,31 @@ _suite2p_ftypes = (
 
 
 class Suite2p:
-    """
-    Wrapper class containing all suite2p outputs from one suite2p analysis routine.
-    This includes outputs from the individual plane, with plane indexing starting from 0
-    Plane index of -1 indicates a suite2p "combined" outputs from all planes,
-     thus saved in the "planes_combined" attribute
+    """Wrapper class containing all suite2p outputs from one suite2p analysis routine.
 
-    A 'suite2p_dir' example:
+    This wrapper includes outputs from the individual plane, with plane indexing
+    starting from 0 Plane index of -1 indicates a suite2p "combined" outputs from all
+    planes, thus saved in the "planes_combined" attribute. See also PlaneSuite2p class.
 
-        -- suite2p_dir
-          -- plane0
-             -- ops.npy
-             -- F.npy
-             -- ...
-          -- plane1
-             -- ops.npy
-             -- F.npy
-             -- ...
-          -- combined
-             -- ops.npy
-             -- F.npy
-             -- ...
+    Directory example:
+        - plane0: ops.npy, F.npy, etc.
+        - plane1: ops.npy, F.npy, etc.
+        - combined: ops.npy, F.npy, etc.
+
+    Example:
+        > loaded_dataset = suite2p_loader.Suite2p(output_dir)
+
     """
 
-    def __init__(self, suite2p_dir):
+    def __init__(self, suite2p_dir: str):
+        """Initialize Suite2p class
+
+        Args:
+            suite2p_dir (str): Suite2p directory
+
+        Raises:
+            FileNotFoundError: Could not find Suite2p results
+        """
         self.suite2p_dir = pathlib.Path(suite2p_dir)
 
         ops_filepaths = list(self.suite2p_dir.rglob("*ops.npy"))
@@ -70,26 +71,64 @@ class Suite2p:
 
 
 class PlaneSuite2p:
-    """
-    Parse the suite2p output directory and load data, ***per plane***.
-    Expecting the following files:
-    - 'ops':        Options file
-    - 'Fneu':       Neuropil traces file for functional channel
-    - 'Fneu_chan2': Neuropil traces file for channel 2
-    - 'F':          Fluorescence traces for functional channel
-    - 'F_chan2':    Fluorescence traces for channel 2
-    - 'iscell':     Array of (user curated) cells and probability of being a cell
-    - 'spks':       Spikes (raw deconvolved with OASIS package)
-    - 'stat':       Various statistics for each cell
-    - 'redcell':    "Red cell" (second channel) stats
+    """Parse the suite2p output directory and load data, ***per plane***.
 
     Suite2p output doc: https://suite2p.readthedocs.io/en/latest/outputs.html
+
+    Expecting the following files:
+        - ops:        Options file
+        - Fneu:       Neuropil traces file for functional channel
+        - Fneu_chan2: Neuropil traces file for channel 2
+        - F:          Fluorescence traces for functional channel
+        - F_chan2:    Fluorescence traces for channel 2
+        - iscell:     Array of (user curated) cells and probability of being a cell
+        - spks:       Spikes (raw deconvolved with OASIS package)
+        - stat:       Various statistics for each cell
+        - redcell:    "Red cell" (second channel) stats
+
+    Attributes:
+        alignment_channel: ops["align_by_chan"] as zero-indexed
+        cell_prob:
+        correlation_map: ops["Vcorr"]
+        creation_time: earliest file creation time across planes
+        curation_time: latest curation time across planes
+        F: Fluorescence traces for functional channel as numpy array if exists
+            If does not exist, returns empty list
+        F_chan2: Fluorescence traces for channel 2 as numpy array if exists
+            If does not exist, returns empty lists
+        Fneu: Neuropil traces file for functional channel as numpy array if exists
+            If does not exist, returns empty list
+        Fneu_chan2: Neuropil traces file for channel 2 as numpy array if exists
+            If does not exist, returns empty list
+        fpath: path to plane folder
+        iscell:
+        max_proj_image: ops["max_proj"] if exists. Else np.full_like(mean_image))
+        mean_image: ops["meanImg"]
+        ops: Options file as numpy array
+        plane_idx: plane index. -1 if combined, else number in path
+        redcell: "Red cell" (second channel) stats as numpy array if exists
+            If does not exist, returns empty list
+        ref_image: ops["refImg"]
+        segmentation_channel: ops["functional_chan"] as zero-indexed
+        spks: Spikes (raw deconvolved with OASIS package) as numpy array if exists
+            If does not exist, returns empty lists
+        stat:  Various statistics for each cell as numpy array if exists
+            If does not exist, returns empty lists
     """
 
-    def __init__(self, suite2p_plane_dir):
+    def __init__(self, suite2p_plane_dir: str):
+        """Initialize PlaneSuite2p class given a plane directory
+
+        Args:
+            suite2p_plane_dir (str): Suite2p plane directory
+
+        Raises:
+            FileNotFoundError: No "ops.npy" found. Invalid suite2p plane folder
+            FileNotFoundError: No "iscell.npy" found. Invalid suite2p plane folder
+        """
         self.fpath = pathlib.Path(suite2p_plane_dir)
 
-        # ---- Verify dataset exists ----
+        # -- Verify dataset exists --
         ops_fp = self.fpath / "ops.npy"
         if not ops_fp.exists():
             raise FileNotFoundError(
@@ -108,7 +147,7 @@ class PlaneSuite2p:
             )
         self.curation_time = datetime.fromtimestamp(iscell_fp.stat().st_ctime)
 
-        # ---- Initialize attributes ----
+        # -- Initialize attributes --
         for s2p_type in _suite2p_ftypes:
             setattr(self, "_{}".format(s2p_type), None)
         self._cell_prob = None
@@ -119,7 +158,7 @@ class PlaneSuite2p:
             else int(self.fpath.name.replace("plane", ""))
         )
 
-    # ---- load core files ----
+    # -- load core files --
 
     @property
     def ops(self):
@@ -196,7 +235,7 @@ class PlaneSuite2p:
             self._redcell = np.load(fp) if fp.exists() else []
         return self._redcell
 
-    # ---- image property ----
+    # -- image property --
 
     @property
     def ref_image(self):
