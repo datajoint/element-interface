@@ -1,4 +1,4 @@
-#  Elements Interface for external analysis packages
+# Elements Interface for external analysis packages
 
 DataJoint Element for interoperability with other software. DataJoint Elements
 collectively standardize and automate data collection and analysis for neuroscience
