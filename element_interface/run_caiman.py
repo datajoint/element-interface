@@ -30,23 +30,25 @@ def run_caiman(file_paths, parameters, sampling_rate, output_dir, is3D):
     is3D: bool
         Whether the data is 3D
     """
-    parameters['is3D'] = is3D
-    parameters['fnames'] = file_paths
-    parameters['fr'] = sampling_rate
+    parameters["is3D"] = is3D
+    parameters["fnames"] = file_paths
+    parameters["fr"] = sampling_rate
 
     opts = params.CNMFParams(params_dict=parameters)
 
     c, dview, n_processes = cm.cluster.setup_cluster(
-        backend='local', n_processes=None, single_thread=False)
+        backend="local", n_processes=None, single_thread=False
+    )
 
     cnm = CNMF(n_processes, params=opts, dview=dview)
     cnmf_output, mc_output = cnm.fit_file(
-        motion_correct=True, include_eval=True, output_dir=output_dir, return_mc=True)
+        motion_correct=True, include_eval=True, output_dir=output_dir, return_mc=True
+    )
 
     cm.stop_server(dview=dview)
 
-    cnmf_output_file = pathlib.Path(cnmf_output.mmap_file[:-4] + 'hdf5')
+    cnmf_output_file = pathlib.Path(cnmf_output.mmap_file[:-4] + "hdf5")
     assert cnmf_output_file.exists()
     assert cnmf_output_file.parent == pathlib.Path(output_dir)
 
-    _save_mc(mc_output, cnmf_output_file.as_posix(), parameters['is3D'])
+    _save_mc(mc_output, cnmf_output_file.as_posix(), parameters["is3D"])
