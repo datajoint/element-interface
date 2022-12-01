@@ -1,4 +1,5 @@
 import os
+from typing import Union
 from pathlib import Path
 from datetime import datetime
 
@@ -18,7 +19,19 @@ output = extractor(M, config);
 write({output_fullpath})
 """
 
-    def __init__(self, scanfile_fullpath, parameters, output_dir) -> None:
+    def __init__(
+        self,
+        scanfile_fullpath: Union[str, Path],
+        parameters: dict,
+        output_dir: Union[str, Path],
+    ) -> None:
+        """A helper class to trigger EXTRACT analysis as well as to load its results.
+
+        Args:
+            scanfile_fullpath (Union[str, Path]): Full path of the scan
+            parameters (dict): EXTRACT input paramaters.
+            output_dir (Union[str, Path]): Directory to store the outputs of EXTRACT analysis.
+        """
         assert isinstance(self.parameters, dict)
 
         self.scanfile = Path(scanfile_fullpath)
@@ -26,7 +39,9 @@ write({output_fullpath})
         self.parameters = parameters
 
     def write_matlab_run_script(self):
-        """Compose the matlab script, run_extract.m, that would run the EXTRACT trigger."""
+        """Compose a matlab script and save in the run_extract.m file.
+
+        The composed script is basically the formatted version of the m_template attrribute."""
 
         assert self.scanfile.exists()
 
@@ -79,6 +94,7 @@ write({output_fullpath})
         return run_status
 
     def load_results(self):
+        """Load the EXTRACT results"""
         from scipy.io import loadmat
 
         self.results = loadmat(self.output_fullpath)
