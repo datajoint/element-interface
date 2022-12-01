@@ -2,10 +2,7 @@ import csv
 import uuid
 import pathlib
 import hashlib
-import logging
 import datajoint as dj
-
-logger = logging.getLogger("DataJoint")
 
 
 def find_full_path(root_directories: list, relative_path: str) -> pathlib.PosixPath:
@@ -148,34 +145,6 @@ def ingest_csv_to_table(
                 f"\n---- Inserting {insert_len} entry(s) "
                 + f"into {table.table_name} ----"
             )
-
-
-def recursive_search(key: str, dictionary: dict) -> any:
-    """Return value for key in a nested dictionary
-
-    Search through a nested dictionary for a key and returns its value.  If there are
-    more than one key with the same name at different depths, the algorithm returns the
-    value of the least nested key.
-
-    Args:
-        key (str): Key used to search through a nested dictionary
-        dictionary (dict): Nested dictionary
-
-    Returns:
-        value (any): value of the input argument `key`
-    """
-    logger.warn(
-        "The `recursive_search` function is depreciated and will be removed from "
-        + "`element-interface` v0.3.0"
-    )
-    if key in dictionary:
-        return dictionary[key]
-    for value in dictionary.values():
-        if isinstance(value, dict):
-            a = recursive_search(key, value)
-            if a is not None:
-                return a
-    return None
 
 
 def insert1_skip_full_duplicates(table, entry):
