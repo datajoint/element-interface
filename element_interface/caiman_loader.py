@@ -18,21 +18,54 @@ _required_hdf5_fields = [
 
 
 class CaImAn:
-    """
-    Parse the CaImAn output file
+    """Parse the CaImAn output file
+
+    [CaImAn results doc](https://caiman.readthedocs.io/en/master/Getting_Started.html#result-variables-for-2p-batch-analysis)
+
     Expecting the following objects:
-    - 'dims':
-    - 'dview':
-    - 'estimates':              Segmentations and traces
-    - 'mmap_file':
-    - 'params':                 Input parameters
-    - 'remove_very_bad_comps':
-    - 'skip_refinement':
-    - 'motion_correction':      Motion correction shifts and summary images
-    CaImAn results doc: https://caiman.readthedocs.io/en/master/Getting_Started.html#result-variables-for-2p-batch-analysis
+        - dims:
+        - dview:
+        - estimates:              Segmentations and traces
+        - mmap_file:
+        - params:                 Input parameters
+        - remove_very_bad_comps:
+        - skip_refinement:
+        - motion_correction:      Motion correction shifts and summary images
+
+    Example:
+        > output_dir = '<imaging_root_data_dir>/subject1/session0/caiman'
+
+        > loaded_dataset = caiman_loader.CaImAn(output_dir)
+
+    Attributes:
+        alignment_channel: hard-coded to 0
+        caiman_fp: file path with all required files:
+            "/motion_correction/reference_image",
+            "/motion_correction/correlation_image",
+            "/motion_correction/average_image",
+            "/motion_correction/max_image",
+            "/estimates/A",
+        cnmf: loaded caiman object; cm.source_extraction.cnmf.cnmf.load_CNMF(caiman_fp)
+        creation_time: file creation time
+        curation_time: file creation time
+        extract_masks: function to extract masks
+        h5f: caiman_fp read as h5py file
+        masks: dict result of extract_masks
+        motion_correction: h5f "motion_correction" property
+        params: cnmf.params
+        segmentation_channel: hard-coded to 0
     """
 
-    def __init__(self, caiman_dir):
+    def __init__(self, caiman_dir: str):
+        """Initialize CaImAn loader class
+
+        Args:
+            caiman_dir (str): string, absolute file path to CaIman directory
+
+        Raises:
+            FileNotFoundError: No CaImAn analysis output file found
+            FileNotFoundError: No CaImAn analysis output found, missing required fields
+        """
         # ---- Search and verify CaImAn output file exists ----
         caiman_dir = pathlib.Path(caiman_dir)
         if not caiman_dir.exists():
@@ -77,7 +110,17 @@ class CaImAn:
     def segmentation_channel(self):
         return 0  # hard-code to channel index 0
 
-    def extract_masks(self):
+    def extract_masks(self) -> dict:
+        """Extract masks from CaImAn object
+
+        Raises:
+            NotImplemented: Not yet implemented for 3D datasets
+
+        Returns:
+            dict: Mask attributes - mask_id, mask_npix, mask_weights,
+                mask_center_x, mask_center_y, mask_center_z,
+                mask_xpix, mask_ypix, mask_zpix, inferred_trace, dff, spikes
+        """
         if self.params.motion["is3D"]:
             raise NotImplemented(
                 "CaImAn mask extraction for volumetric data not yet implemented"
@@ -120,7 +163,7 @@ class CaImAn:
 
 def _process_scanimage_tiff(scan_filenames, output_dir="./"):
     """
-    Read ScanImage TIFF - reshape into volumetric data based on scanning depths and channels
+    Read ScanImage TIFF - reshape into volumetric data based on scanning depths/channels
     Save new TIFF files for each channel - with shape (frame x height x width x depth)
     """
     from tifffile import imsave
@@ -173,20 +216,20 @@ def _process_scanimage_tiff(scan_filenames, output_dir="./"):
             imsave(save_fp.as_posix(), chn_vol)
 
 
-def _save_mc(mc, caiman_fp, is3D):
-    """
-    DataJoint Imaging Element - CaImAn Integration
+def _save_mc(mc, caiman_fp: str, is3D: bool):
+    """Save motion correction to hdf5 output
+
     Run these commands after the CaImAn analysis has completed.
     This will save the relevant motion correction data into the '*.hdf5' file.
     Please do not clear variables from memory prior to running these commands.
     The motion correction (mc) object will be read from memory.
 
-    'mc' :                CaImAn motion correction object
-    'caiman_fp' :         CaImAn output (*.hdf5) file path
-
-    'shifts_rig' :        Rigid transformation x and y shifts per frame
-    'x_shifts_els' :      Non rigid transformation x shifts per frame per block
-    'y_shifts_els' :      Non rigid transformation y shifts per frame per block
+    Args:
+        mc : CaImAn motion correction object, including the following properties:
+            shifts_rig :   Rigid transformation x and y shifts per frame
+            x_shifts_els : Non rigid transformation x shifts per frame per block
+            y_shifts_els : Non rigid transformation y shifts per frame per block
+        caiman_fp (str): CaImAn output (*.hdf5) file path
     """
 
     # Load motion corrected mmap image
