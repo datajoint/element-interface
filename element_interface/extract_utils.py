@@ -2,22 +2,25 @@ import os
 from typing import Union
 from pathlib import Path
 from datetime import datetime
+from textwrap import dedent
 
 
 class EXTRACT:
-    m_template = r"""
-% Load Data
-data = load('{scanfile}');
-M = data.M;
-
-% Input Paramaters
-config = struct();
-{parameters_list_string}
-
-% Perform Extraction
-output = extractor(M, config);
-write({output_fullpath})
-"""
+    m_template = dedent(
+        """
+        % Load Data
+        data = load('{scanfile}');
+        M = data.M;
+        
+        % Input Paramaters
+        config = struct();
+        {parameters_list_string}
+        
+        % Perform Extraction
+        output = extractor(M, config);
+        write({output_fullpath})
+        """
+    )
 
     def __init__(
         self,
@@ -32,7 +35,7 @@ write({output_fullpath})
             parameters (dict): EXTRACT input paramaters.
             output_dir (Union[str, Path]): Directory to store the outputs of EXTRACT analysis.
         """
-        assert isinstance(self.parameters, dict)
+        assert isinstance(parameters, dict)
 
         self.scanfile = Path(scanfile_fullpath)
         self.output_dir = Path(output_dir)
@@ -43,7 +46,7 @@ write({output_fullpath})
 
         The composed script is basically the formatted version of the m_template attrribute."""
 
-        assert self.scanfile.exists()
+        # assert self.scanfile.exists()
 
         self.output_fullpath = (
             Path(self.output_dir) / f"{self.scanfile.stem}_extract_output.mat",
@@ -64,7 +67,7 @@ write({output_fullpath})
                 scanfile=self.scanfile,
                 output_fullpath=self.output_fullpath,
             )
-        )
+        ).lstrip()
 
         self.m_file_fp = self.output_dir / "run_extract.m"
 
