@@ -6,12 +6,12 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 + Add - mkdocs documentation
 + Add - improved docstrings for mkdocs
++ Add - `ingest_csv_to_table` can now accept one CSV for many tables
 
 ## [0.3.0] - 2022-10-7
 
 + Add - Function `prairieviewreader` to parse metadata from Bruker PrarieView acquisition system
 + Update - Changelog with tag links
-
 
 ## [0.2.1] - 2022-07-13
 
