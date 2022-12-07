@@ -108,7 +108,9 @@ def ingest_csv_to_table(
     ignore_extra_fields: bool = True,
     allow_direct_insert: bool = False,
 ):
-    """Inserts data from a series of csvs into their corresponding table:
+    """Inserts data from a series of csvs into their corresponding table.
+
+    If only one CSV path is provided, will attempt insert into all provided tables.
 
     Example:
         > ingest_csv_to_table(['./lab_data.csv', './proj_data.csv'],
@@ -116,7 +118,7 @@ def ingest_csv_to_table(
 
     Args:
         csvs (list): list of paths to CSV files relative to current directory.
-            CSV are delimited by commas.
+            CSVs are comma-delimited files. If only one, insert into all tables.
         tables (list): list of datajoint tables with terminal `()`
         verbose (bool): print number inserted (i.e., table length change)
         skip_duplicates (bool): skip duplicate entries. See DataJoint's `insert`
@@ -125,6 +127,13 @@ def ingest_csv_to_table(
         allow_direct_insert (bool): permit insertion into Imported and Computed tables
             See DataJoint's `insert`.
     """
+    if not isinstance(csvs, list):  # Ensure each input is a list
+        csvs = [csvs]
+    if not isinstance(tables, list):  # Ensure each input is a list
+        tables = [tables]
+    if len(csvs) == 1:  # If only one CSV, assume it applies to all tables
+        csvs = csvs * len(tables)
+
     for csv_filepath, table in zip(csvs, tables):
         with open(csv_filepath, newline="") as f:
             data = list(csv.DictReader(f, delimiter=","))
