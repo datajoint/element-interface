@@ -127,10 +127,6 @@ def ingest_csv_to_table(
         allow_direct_insert (bool): permit insertion into Imported and Computed tables
             See DataJoint's `insert`.
     """
-    if not isinstance(csvs, list):  # Ensure each input is a list
-        csvs = [csvs]
-    if not isinstance(tables, list):  # Ensure each input is a list
-        tables = [tables]
     if len(csvs) == 1:  # If only one CSV, assume it applies to all tables
         csvs = csvs * len(tables)
 
