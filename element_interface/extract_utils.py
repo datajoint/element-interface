@@ -18,7 +18,7 @@ class EXTRACT:
         
         % Perform Extraction
         output = extractor(M, config);
-        write({output_fullpath})
+        write({output_fullpath});
         """
     )
 
@@ -28,7 +28,7 @@ class EXTRACT:
         parameters: dict,
         output_dir: Union[str, Path],
     ) -> None:
-        """A helper class to trigger EXTRACT analysis as well as to load its results.
+        """A helper class to trigger EXTRACT analysis in element-calcium-imaging.
 
         Args:
             scanfile_fullpath (Union[str, Path]): Full path of the scan
@@ -65,7 +65,7 @@ class EXTRACT:
                     ]
                 ),
                 scanfile=self.scanfile,
-                output_fullpath=self.output_fullpath,
+                output_fullpath=self.output_fullpath.as_posix(),
             )
         ).lstrip()
 
@@ -77,10 +77,12 @@ class EXTRACT:
     def run(self):
         """Run run_extract.m script."""
 
+        self.write_matlab_run_script()
+
         current_dir = Path.cwd()
         os.chdir(self.output_dir)
 
-        run_status = {"execution_time": datetime.utcnow()}
+        run_status = {"processing_time": datetime.utcnow()}
         try:
             import matlab.engine
 
@@ -92,9 +94,8 @@ class EXTRACT:
             os.chdir(current_dir)
 
         run_status["execution_duration"] = (
-            datetime.utcnow() - run_status["execution_time"]
+            datetime.utcnow() - run_status["processing_time"]
         ).total_seconds()
-        return run_status
 
     def load_results(self):
         """Load the EXTRACT results"""
