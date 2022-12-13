@@ -18,7 +18,7 @@ class EXTRACT:
         
         % Perform Extraction
         output = extractor(M, config);
-        write({output_fullpath});
+        save('{output_fullpath}', 'output');
         """
     )
 
@@ -49,7 +49,7 @@ class EXTRACT:
         # assert self.scanfile.exists()
 
         self.output_fullpath = (
-            Path(self.output_dir) / f"{self.scanfile.stem}_extract_output.mat",
+            self.output_dir / f"{self.scanfile.stem}_extract_output.mat"
         )
 
         m_file_content = self.m_template.format(
