@@ -44,6 +44,8 @@ def get_pv_metadata(pvtiffile: str) -> dict:
 
     n_fields = 1  # Always contains 1 field
 
+    record_start_time = root.findall(".//Sequence/[@cycle='1']").attrib.get("time")
+
     # Get all channels and find unique values
     channel_list = [
         int(channel.attrib.get("channel"))
@@ -148,6 +150,7 @@ def get_pv_metadata(pvtiffile: str) -> dict:
         fieldX=x_field,
         fieldY=y_field,
         fieldZ=z_fields,
+        recording_time = record_start_time,
     )
 
     return metainfo
