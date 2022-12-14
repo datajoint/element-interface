@@ -31,7 +31,7 @@ class EXTRACT_trigger:
         """A helper class to trigger EXTRACT analysis in element-calcium-imaging.
 
         Args:
-            scanfile_fullpath (Union[str, Path]): Full path of the scan
+            scanfile (Union[str, Path]): Full path of the scan
             parameters (dict): EXTRACT input paramaters.
             output_dir (Union[str, Path]): Directory to store the outputs of EXTRACT analysis.
         """
