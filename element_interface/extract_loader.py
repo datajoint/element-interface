@@ -1,5 +1,6 @@
 import numpy as np
 from pathlib import Path
+from datetime import datetime
 
 
 class EXTRACT_loader:
@@ -22,6 +23,8 @@ class EXTRACT_loader:
             )
 
         results = loadmat(output_file[0])
+
+        self.creation_time = datetime.utcnow()
         self.S = results["output"][0]["spatial_weights"][0]  # (Height, Width, Time)
         self.T = results["output"][0]["temporal_weights"][0]  # (Time, MaskId)
 
