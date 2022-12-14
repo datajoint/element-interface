@@ -6,6 +6,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 + Add - mkdocs documentation
 + Add - improved docstrings for mkdocs
++ Add - EXTRACT trigger and loader tools
 
 ## [0.3.0] - 2022-10-7
 
