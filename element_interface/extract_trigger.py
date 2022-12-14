@@ -1,11 +1,11 @@
 import os
 from typing import Union
 from pathlib import Path
-from datetime import datetime
 from textwrap import dedent
+from datetime import datetime
 
 
-class EXTRACT:
+class EXTRACT_trigger:
     m_template = dedent(
         """
         % Load Data
@@ -42,11 +42,9 @@ class EXTRACT:
         self.parameters = parameters
 
     def write_matlab_run_script(self):
-        """Compose a matlab script and save in the run_extract.m file.
+        """Compose a matlab script and save it with the name run_extract.m.
 
-        The composed script is basically the formatted version of the m_template attrribute."""
-
-        # assert self.scanfile.exists()
+        The composed script is basically the formatted version of the m_template attribute."""
 
         self.output_fullpath = (
             self.output_dir / f"{self.scanfile.stem}_extract_output.mat"
@@ -75,7 +73,7 @@ class EXTRACT:
             f.write(m_file_content)
 
     def run(self):
-        """Run run_extract.m script."""
+        """Run the matlab run_extract.m script."""
 
         self.write_matlab_run_script()
 
@@ -96,9 +94,3 @@ class EXTRACT:
         run_status["execution_duration"] = (
             datetime.utcnow() - run_status["processing_time"]
         ).total_seconds()
-
-    def load_results(self):
-        """Load the EXTRACT results"""
-        from scipy.io import loadmat
-
-        self.results = loadmat(self.output_fullpath)
