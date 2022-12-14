@@ -8,7 +8,7 @@ class EXTRACT_loader:
         """Initialize EXTRACT loader class
 
         Args:
-            extract_dir (str): string, absolute file path to Extract directory
+            extract_dir (str): string, absolute file path to EXTRACT directory
 
         Raises:
             FileNotFoundError: Could not find EXTRACT results
