@@ -24,20 +24,20 @@ class EXTRACT_trigger:
 
     def __init__(
         self,
-        scanfile_fullpath: Union[str, Path],
+        scanfile: Union[str, Path],
         parameters: dict,
         output_dir: Union[str, Path],
     ) -> None:
         """A helper class to trigger EXTRACT analysis in element-calcium-imaging.
 
         Args:
-            scanfile_fullpath (Union[str, Path]): Full path of the scan
+            scanfile (Union[str, Path]): Full path of the scan
             parameters (dict): EXTRACT input paramaters.
             output_dir (Union[str, Path]): Directory to store the outputs of EXTRACT analysis.
         """
         assert isinstance(parameters, dict)
 
-        self.scanfile = Path(scanfile_fullpath)
+        self.scanfile = Path(scanfile)
         self.output_dir = Path(output_dir)
         self.parameters = parameters
 
@@ -80,7 +80,6 @@ class EXTRACT_trigger:
         current_dir = Path.cwd()
         os.chdir(self.output_dir)
 
-        run_status = {"processing_time": datetime.utcnow()}
         try:
             import matlab.engine
 

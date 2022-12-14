@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from pathlib import Path
 from datetime import datetime
@@ -8,35 +9,39 @@ class EXTRACT_loader:
         """Initialize EXTRACT loader class
 
         Args:
-            extract_dir (str): string, absolute file path to Extract directory
+            extract_dir (str): string, absolute file path to EXTRACT directory
 
         Raises:
             FileNotFoundError: Could not find EXTRACT results
         """
         from scipy.io import loadmat
 
-        output_file = list(Path(extract_dir).glob("*_extract_output.mat"))
-
-        if not output_file:
+        try:
+            extract_file = next(Path(extract_dir).glob("*_extract_output.mat"))
+        except StopInteration:
             raise FileNotFoundError(
-                "EXTRACT output result files not found at {}".format(extract_dir)
+                f"EXTRACT output result file is not found at {extract_dir}."
             )
 
-        results = loadmat(output_file[0])
+        results = loadmat(extract_file)
 
         self.creation_time = datetime.utcnow()
-        self.S = results["output"][0]["spatial_weights"][0]  # (Height, Width, Time)
+        self.S = results["output"][0]["spatial_weights"][0]  # (Height, Width, MaskId)
         self.T = results["output"][0]["temporal_weights"][0]  # (Time, MaskId)
 
     def load_results(self):
-        """Load the EXTRACT results"""
+        """Load the EXTRACT results
+        
+        Returns:
+            masks (dict): Details of the masks identified with the EXTRACT segmentation package.
+        """
         from scipy.sparse import find
 
-        S_tr = self.S.transpose([2, 0, 1])  # Mask_no, Height, Width
+        S_transposed = self.S.transpose([2, 0, 1])  # MaskId, Height, Width
 
         masks = []
 
-        for mask_id, s in enumerate(S_tr):
+        for mask_id, s in enumerate(S_transposed):
             ypixels, xpixels, weights = find(s)
             masks.append(
                 dict(
