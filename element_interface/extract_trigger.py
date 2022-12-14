@@ -24,7 +24,7 @@ class EXTRACT_trigger:
 
     def __init__(
         self,
-        scanfile_fullpath: Union[str, Path],
+        scanfile: Union[str, Path],
         parameters: dict,
         output_dir: Union[str, Path],
     ) -> None:
