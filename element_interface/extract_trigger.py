@@ -62,7 +62,7 @@ class EXTRACT_trigger:
                         for k, v in self.parameters.items()
                     ]
                 ),
-                scanfile=self.scanfile,
+                scanfile=self.scanfile.as_posix(),
                 output_fullpath=self.output_fullpath.as_posix(),
             )
         ).lstrip()
