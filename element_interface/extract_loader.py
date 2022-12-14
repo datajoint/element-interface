@@ -40,7 +40,7 @@ class EXTRACT_loader:
 
         masks = []
 
-        for mask_id, s in enumerate(S_tr):
+        for mask_id, s in enumerate(S_transposed):
             ypixels, xpixels, weights = find(s)
             masks.append(
                 dict(
