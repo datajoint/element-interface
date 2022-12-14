@@ -29,7 +29,11 @@ class EXTRACT_loader:
         self.T = results["output"][0]["temporal_weights"][0]  # (Time, MaskId)
 
     def load_results(self):
-        """Load the EXTRACT results"""
+        """Load the EXTRACT results
+        
+        Returns:
+            masks (dict): Details of the masks identified with the EXTRACT segmentation package.
+        """
         from scipy.sparse import find
 
         S_tr = self.S.transpose([2, 0, 1])  # Mask_no, Height, Width
