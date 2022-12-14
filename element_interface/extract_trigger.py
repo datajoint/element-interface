@@ -16,7 +16,7 @@ class EXTRACT_trigger:
         config = struct();
         {parameters_list_string}
         
-        % Perform Extraction
+        % Run EXTRACT
         output = extractor(M, config);
         save('{output_fullpath}', 'output');
         """
