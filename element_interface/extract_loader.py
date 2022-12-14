@@ -16,14 +16,14 @@ class EXTRACT_loader:
         """
         from scipy.io import loadmat
 
-        output_file = list(Path(extract_dir).glob("*_extract_output.mat"))
-
-        if not output_file:
+        try:
+            extract_file = next(Path(extract_dir).glob("*_extract_output.mat"))
+        except StopInteration:
             raise FileNotFoundError(
-                "EXTRACT output result files not found at {}".format(extract_dir)
+                f"EXTRACT output result file is not found at {extract_dir}."
             )
 
-        results = loadmat(output_file[0])
+        results = loadmat(extract_file)
 
         self.creation_time = datetime.utcnow()
         self.S = results["output"][0]["spatial_weights"][0]  # (Height, Width, MaskId)
