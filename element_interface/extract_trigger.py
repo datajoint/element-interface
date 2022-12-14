@@ -37,7 +37,7 @@ class EXTRACT_trigger:
         """
         assert isinstance(parameters, dict)
 
-        self.scanfile = Path(scanfile_fullpath)
+        self.scanfile = Path(scanfile)
         self.output_dir = Path(output_dir)
         self.parameters = parameters
 
