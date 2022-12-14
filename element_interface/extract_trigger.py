@@ -80,7 +80,6 @@ class EXTRACT_trigger:
         current_dir = Path.cwd()
         os.chdir(self.output_dir)
 
-        run_status = {"processing_time": datetime.utcnow()}
         try:
             import matlab.engine
 
