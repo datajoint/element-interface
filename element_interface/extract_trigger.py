@@ -89,7 +89,3 @@ class EXTRACT_trigger:
             raise e
         finally:
             os.chdir(current_dir)
-
-        run_status["execution_duration"] = (
-            datetime.utcnow() - run_status["processing_time"]
-        ).total_seconds()
