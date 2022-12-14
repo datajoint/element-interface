@@ -36,7 +36,7 @@ class EXTRACT_loader:
         """
         from scipy.sparse import find
 
-        S_tr = self.S.transpose([2, 0, 1])  # Mask_no, Height, Width
+        S_transposed = self.S.transpose([2, 0, 1])  # MaskId, Height, Width
 
         masks = []
 
