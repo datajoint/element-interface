@@ -25,7 +25,7 @@ class EXTRACT_loader:
 
         results = loadmat(extract_file)
 
-        self.creation_time = datetime.utcnow()
+        self.creation_time = datetime.fromtimestamp(os.stat(extract_file).st_ctime)
         self.S = results["output"][0]["spatial_weights"][0]  # (Height, Width, MaskId)
         self.T = results["output"][0]["temporal_weights"][0]  # (Time, MaskId)
 
