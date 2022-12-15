@@ -2,14 +2,11 @@
 
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
-## [0.3.2] - 2022-12-14
-
-+ Update - PrairieView metadata includes recording start time
-
-## [0.3.1] - Unreleased
+## [0.4.0] - 2022-12-14
 
 + Add - mkdocs documentation
 + Add - improved docstrings for mkdocs
++ Add - EXTRACT trigger and loader tools
 
 ## [0.3.0] - 2022-10-7
 
@@ -40,6 +37,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 + Add - Readers for: `ScanImage`, `Suite2p`, `CaImAn`.
 
+[0.4.0]: https://github.com/datajoint/element-interface/releases/tag/0.4.0
 [0.3.0]: https://github.com/datajoint/element-interface/releases/tag/0.3.0
 [0.2.1]: https://github.com/datajoint/element-interface/releases/tag/0.2.1
 [0.2.0]: https://github.com/datajoint/element-interface/releases/tag/0.2.0
