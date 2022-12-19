@@ -40,6 +40,16 @@ run deconvolution using the `spikedetect` flag (
 `segmentation_suite2p` functions is only a subset of the keys generated with the
 `suite2p.default_ops()` function.
 
+### PrairieView Reader
+
+This Element provides a function to read the PrairieView Scanner's metadata
+file. The PrairieView software generates one `.ome.tif` imaging file per frame acquired. The
+metadata for all frames is contained in one `.xml` file. This function locates the `.xml`
+file and generates a dictionary necessary to populate the DataJoint ScanInfo and
+Field tables. PrairieView works with resonance scanners with a single field,
+does not support bidirectional x and y scanning, and the `.xml` file does not
+contain ROI information.
+
 ## Element Architecture
 
 The functions for each acquisition and analysis package are stored within a separate
