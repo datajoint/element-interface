@@ -100,7 +100,6 @@ def get_pv_metadata(pvtiffile: str) -> dict:
             ".//PVStateValue/[@key='currentScanCenter']/IndexedValue/[@index='YAxis']"
         ).attrib.get("value")
     )
-
     if root.find(".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']") is None:
 
         z_fields = np.float64(
@@ -110,7 +109,7 @@ def get_pv_metadata(pvtiffile: str) -> dict:
         n_depths = 1
         assert z_fields.size == n_depths
         bidirection_z = False
-        
+
     else:
 
         bidirection_z = bool(
@@ -122,7 +121,6 @@ def get_pv_metadata(pvtiffile: str) -> dict:
             for plane in root.findall(".//Sequence/[@cycle='1']/Frame")
         ]
         n_depths = len(set(planes))
-
         z_min = float(
             root.findall(
                 ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/SubindexedValue/[@subindex='0']"
