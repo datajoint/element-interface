@@ -16,10 +16,20 @@ across many Elements and Workflows to allow for the flexibility of providing
 one or more root directories in the user's config, and extrapolating from a relative
 path at runtime.
 
-`utils.ingest_csv_to_table` is used across workflow examples to ingest from sample data from
-local CSV files into sets of manual tables. While researchers may wish to manually
+`utils.ingest_csv_to_table` is used across workflow examples to ingest from sample data
+from local CSV files into sets of manual tables. While researchers may wish to manually
 insert for day-to-day operations, it helps to have a more complete dataset when learning
 how to use various Elements.
+
+`str_to_bool` converts a set of strings to boolean True or False. This is implemented
+as the equivalent item in Python's `distutils` will be removed in future versions.
+
+`insert1_skip_full_duplicates` is a utility for inserting into parameter set lookup tables.
+It is often cumbersome to carry many primary keys across table inheritance, especially
+when analysis methods have many unique parameters. Instead, these items can be collapsed
+into a unique identifier. This function is useful for inserting into parameter sets,
+as it checks for both the existence of a current matching entry, and for a match
+across all secondary attributes.
 
 ### Suite2p
 

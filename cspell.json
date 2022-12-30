@@ -19,6 +19,7 @@
         "Bruker",
         "Neurodata",
         "Prarie",
-        "CNMF"
+        "CNMF",
+        "deconvolution"
     ]
 }
