@@ -147,7 +147,7 @@ def ingest_csv_to_table(
         )
         if verbose:
             insert_len = len(table) - prev_len
-            print(
+            logger.info(
                 f"\n---- Inserting {insert_len} entry(s) "
                 + f"into {table.table_name} ----"
             )
