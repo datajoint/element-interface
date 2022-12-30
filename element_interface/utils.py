@@ -2,6 +2,10 @@ import pathlib
 import uuid
 import hashlib
 import csv
+from datajoint.table import Table
+import logging
+
+logger = logging.getLogger("datajoint")
 
 
 def find_full_path(root_directories: list, relative_path: str) -> pathlib.PosixPath:
@@ -146,25 +150,58 @@ def ingest_csv_to_table(
             )
 
 
-def recursive_search(key: str, dictionary: dict) -> any:
-    """Return value for key in a nested dictionary
-
-    Search through a nested dictionary for a key and returns its value.  If there are
-    more than one key with the same name at different depths, the algorithm returns the
-    value of the least nested key.
+def str_to_bool(value) -> bool:
+    """Return whether the provided string represents true. Otherwise false.
 
     Args:
-        key (str): Key used to search through a nested dictionary
-        dictionary (dict): Nested dictionary
+        value (any): Any input
 
     Returns:
-        value (any): value of the input argument `key`
+        bool (bool): True if value in ("y", "yes", "t", "true", "on", "1")
     """
-    if key in dictionary:
-        return dictionary[key]
-    for value in dictionary.values():
-        if isinstance(value, dict):
-            a = recursive_search(key, value)
-            if a is not None:
-                return a
-    return None
+    # Due to distutils equivalent depreciation in 3.10
+    # Adopted from github.com/PostHog/posthog/blob/master/posthog/utils.py
+    if not value:
+        return False
+    return str(value).lower() in ("y", "yes", "t", "true", "on", "1")
+
+
+def insert1_skip_full_duplicates(table: Table, entry: dict):
+    """Insert one entry into a table, ignoring duplicates if all entries match.
+
+    Duplicates on either primary or secondary attributes log existing entries. After
+    validation, this functionality will be integrated into core DataJoint.
+
+    Cases:
+        0. New entry: insert as normal
+        1. Entry has an exact match: return silently
+        2. Same primary key, new secondary attributes: log warning with full entry
+        3. New primary key, same secondary attributes: log warning with existing key
+
+    Arguments:
+        table (Table): datajoint Table object entry (dict): table entry as a dictionary
+    """
+    if table & entry:  # Test for 1. Return silently if exact match
+        return
+
+    existing_entry_via_secondary = table & {  # Test for Case 3
+        k: v for k, v in entry.items() if k not in table.primary_key
+    }
+    if existing_entry_via_secondary:
+        logger.warning(  # Log warning if secondary attribs already exist under diff key
+            "Entry already exists with a different primary key:\n\t"
+            + str(existing_entry_via_secondary.fetch1("KEY"))
+        )
+        return
+
+    existing_entry_via_primary = table & {  # Test for 2, existing primary key
+        k: v for k, v in entry.items() if k in table.primary_key
+    }
+    if existing_entry_via_primary:
+        logger.warning(  # Log warning if existing primary key
+            "Primary key already exists in the following entry:\n\t"
+            + str(existing_entry_via_primary.fetch1())
+        )
+        return
+
+    table.insert1(entry)  # Handles 0, full new entry
