@@ -1,7 +1,9 @@
 import csv
 import hashlib
 import logging
+import os
 import pathlib
+import sys
 import uuid
 
 from datajoint.table import Table
@@ -165,6 +167,40 @@ def str_to_bool(value) -> bool:
     if not value:
         return False
     return str(value).lower() in ("y", "yes", "t", "true", "on", "1")
+
+
+def write_csv(content: list, path: pathlib.PosixPath):
+    """General function for writing strings to lines in CSV
+
+    Args
+        content (list): list of strings, each as row of CSV
+        path (pathlib.PosixPath): where to wriite new CSV
+    """
+    with open(path, "w") as f:
+        for line in content:
+            f.write(line + "\n")
+
+
+class QuietStdOut:
+    """Context for quieting standard output, and setting datajoint loglevel to warning
+
+    Used in pytest functions to render cleaer output showing only pass/fail
+
+    Example:
+        with QuietStdOut:
+            table.delete(safemode=False)
+
+    """
+
+    def __enter__(self):
+        os.environ["DJ_LOG_LEVEL"] = "WARNING"
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, "w")
+
+    def __exit__(self):  # , exc_type, exc_val, exc_tb):
+        os.environ["DJ_LOG_LEVEL"] = "INFO"
+        sys.stdout.close()
+        sys.stdout = self._original_stdout
 
 
 def insert1_skip_full_duplicates(table: Table, entry: dict):
