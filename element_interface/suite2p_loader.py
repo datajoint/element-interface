@@ -1,8 +1,8 @@
-import numpy as np
 import pathlib
-from datetime import datetime
 from collections import OrderedDict
+from datetime import datetime
 
+import numpy as np
 
 _suite2p_ftypes = (
     "ops",

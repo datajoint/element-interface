@@ -1,9 +1,10 @@
+import csv
+import hashlib
+import logging
 import pathlib
 import uuid
-import hashlib
-import csv
+
 from datajoint.table import Table
-import logging
 
 logger = logging.getLogger("datajoint")
 

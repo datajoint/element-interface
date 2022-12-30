@@ -22,8 +22,8 @@ def parse_scanimage_header(scan):
             key, value = item.split(" = ")
             key = re.sub("^scanimage_", "", key.replace(".", "_"))
             header[key] = value
-        except:
-            pass
+        except:  # noqa E722
+            pass  # TODO: remove bare except
     return header
 
 
