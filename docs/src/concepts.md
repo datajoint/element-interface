@@ -24,13 +24,6 @@ how to use various Elements.
 `str_to_bool` converts a set of strings to boolean True or False. This is implemented
 as the equivalent item in Python's `distutils` will be removed in future versions.
 
-`insert1_skip_full_duplicates` is a utility for inserting into parameter set lookup tables.
-It is often cumbersome to carry many primary keys across table inheritance, especially
-when analysis methods have many unique parameters. Instead, these items can be collapsed
-into a unique identifier. This function is useful for inserting into parameter sets,
-as it checks for both the existence of a current matching entry, and for a match
-across all secondary attributes.
-
 ### Suite2p
 
 This Element provides functions to independently run Suite2p's motion correction,

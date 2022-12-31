@@ -6,8 +6,6 @@ import pathlib
 import sys
 import uuid
 
-from datajoint.table import Table
-
 logger = logging.getLogger("datajoint")
 
 
@@ -201,44 +199,3 @@ class QuietStdOut:
         os.environ["DJ_LOG_LEVEL"] = "INFO"
         sys.stdout.close()
         sys.stdout = self._original_stdout
-
-
-def insert1_skip_full_duplicates(table: Table, entry: dict):
-    """Insert one entry into a table, ignoring duplicates if all entries match.
-
-    Duplicates on either primary or secondary attributes log existing entries. After
-    validation, this functionality will be integrated into core DataJoint.
-
-    Cases:
-        0. New entry: insert as normal
-        1. Entry has an exact match: return silently
-        2. Same primary key, new secondary attributes: log warning with full entry
-        3. New primary key, same secondary attributes: log warning with existing key
-
-    Arguments:
-        table (Table): datajoint Table object entry (dict): table entry as a dictionary
-    """
-    if table & entry:  # Test for 1. Return silently if exact match
-        return
-
-    existing_entry_via_secondary = table & {  # Test for Case 3
-        k: v for k, v in entry.items() if k not in table.primary_key
-    }
-    if existing_entry_via_secondary:
-        logger.warning(  # Log warning if secondary attribs already exist under diff key
-            "Entry already exists with a different primary key:\n\t"
-            + str(existing_entry_via_secondary.fetch1("KEY"))
-        )
-        return
-
-    existing_entry_via_primary = table & {  # Test for 2, existing primary key
-        k: v for k, v in entry.items() if k in table.primary_key
-    }
-    if existing_entry_via_primary:
-        logger.warning(  # Log warning if existing primary key
-            "Primary key already exists in the following entry:\n\t"
-            + str(existing_entry_via_primary.fetch1())
-        )
-        return
-
-    table.insert1(entry)  # Handles 0, full new entry
