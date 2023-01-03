@@ -152,7 +152,7 @@ def ingest_csv_to_table(
 
 
 def value_to_bool(value) -> bool:
-    """Return whether the provided string represents true. Otherwise false.
+    """Return whether the provided value represents true. Otherwise false.
 
     Args:
         value (str, bool, int): Any input
