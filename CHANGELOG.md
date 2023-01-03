@@ -3,11 +3,11 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
-## [0.4.3] - Unreleased
+## [0.5.0] - 2023-01-03
 
++ Remove - `recursive_search` function
 + Add - pre-commit checks to the repo to observe flake8, black, isort
 + Add - str_to_bool utility
-+ Add - insert1_skip_full_duplicates
 
 ## [0.4.2] - 2022-12-16
 
@@ -53,7 +53,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 + Add - Readers for: `ScanImage`, `Suite2p`, `CaImAn`.
 
-[0.4.3]: https://github.com/datajoint/element-interface/releases/tag/0.4.3
+[0.5.0]: https://github.com/datajoint/element-interface/releases/tag/0.5.0
 [0.4.2]: https://github.com/datajoint/element-interface/releases/tag/0.4.2
 [0.4.1]: https://github.com/datajoint/element-interface/releases/tag/0.4.1
 [0.4.0]: https://github.com/datajoint/element-interface/releases/tag/0.4.0

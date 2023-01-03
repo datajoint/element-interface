@@ -21,8 +21,8 @@ from local CSV files into sets of manual tables. While researchers may wish to m
 insert for day-to-day operations, it helps to have a more complete dataset when learning
 how to use various Elements.
 
-`str_to_bool` converts a set of strings to boolean True or False. This is implemented
-as the equivalent item in Python's `distutils` will be removed in future versions.
+`utils.str_to_bool` converts a set of strings to boolean True or False. This is implemented
+as the equivalent item in Python's `distutils` which will be removed in future versions.
 
 ### Suite2p
 

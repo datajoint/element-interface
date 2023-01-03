@@ -151,17 +151,15 @@ def ingest_csv_to_table(
             )
 
 
-def str_to_bool(value) -> bool:
+def value_to_bool(value) -> bool:
     """Return whether the provided string represents true. Otherwise false.
 
     Args:
-        value (any): Any input
+        value (str, bool, int): Any input
 
     Returns:
         bool (bool): True if value in ("y", "yes", "t", "true", "on", "1")
     """
-    # Due to distutils equivalent depreciation in 3.10
-    # Adopted from github.com/PostHog/posthog/blob/master/posthog/utils.py
     if not value:
         return False
     return str(value).lower() in ("y", "yes", "t", "true", "on", "1")
@@ -171,8 +169,8 @@ def write_csv(content: list, path: pathlib.PosixPath):
     """General function for writing strings to lines in CSV
 
     Args
-        content (list): list of strings, each as row of CSV
-        path (pathlib.PosixPath): where to wriite new CSV
+        content (list): list of strings, each as a row of the CSV
+        path (pathlib.PosixPath): where to write new CSV
     """
     with open(path, "w") as f:
         for line in content:
@@ -182,7 +180,7 @@ def write_csv(content: list, path: pathlib.PosixPath):
 class QuietStdOut:
     """Context for quieting standard output, and setting datajoint loglevel to warning
 
-    Used in pytest functions to render cleaer output showing only pass/fail
+    Used in pytest functions to render clear output showing only pass/fail
 
     Example:
         with QuietStdOut:
@@ -195,7 +193,7 @@ class QuietStdOut:
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, "w")
 
-    def __exit__(self):  # , exc_type, exc_val, exc_tb):
+    def __exit__(self):
         os.environ["DJ_LOG_LEVEL"] = "INFO"
         sys.stdout.close()
         sys.stdout = self._original_stdout
