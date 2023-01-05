@@ -183,17 +183,17 @@ class QuietStdOut:
     Used in pytest functions to render clear output showing only pass/fail
 
     Example:
-        with QuietStdOut:
+        with QuietStdOut():
             table.delete(safemode=False)
-
     """
 
     def __enter__(self):
-        os.environ["DJ_LOG_LEVEL"] = "WARNING"
+        self.prev_log_level = logger.level
+        logger.setLevel(30)  # set DataJoint logger to warning
         self._original_stdout = sys.stdout
         sys.stdout = open(os.devnull, "w")
 
-    def __exit__(self):
-        os.environ["DJ_LOG_LEVEL"] = "INFO"
+    def __exit__(self, *args):
+        logger.setLevel(self.prev_log_level)
         sys.stdout.close()
         sys.stdout = self._original_stdout
