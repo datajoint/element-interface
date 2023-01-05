@@ -6,6 +6,8 @@ import pathlib
 import sys
 import uuid
 
+from datajoint.utils import to_camel_case
+
 logger = logging.getLogger("datajoint")
 
 
@@ -147,7 +149,7 @@ def ingest_csv_to_table(
             insert_len = len(table) - prev_len
             logger.info(
                 f"\n---- Inserting {insert_len} entry(s) "
-                + f"into {table.table_name} ----"
+                + f"into {to_camel_case(table.table_name)} ----"
             )
 
 
