@@ -3,11 +3,11 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
-## [0.5.0] - 2023-01-03
+## [0.5.0] - 2023-01-09
 
 + Remove - `recursive_search` function
 + Add - pre-commit checks to the repo to observe flake8, black, isort
-+ Add - str_to_bool utility
++ Add - `value_to_bool` and `QuietStdOut` utilities
 
 ## [0.4.2] - 2022-12-16
 
