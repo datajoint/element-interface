@@ -167,18 +167,6 @@ def value_to_bool(value) -> bool:
     return str(value).lower() in ("y", "yes", "t", "true", "on", "1")
 
 
-def write_csv(content: list, path: pathlib.PosixPath):
-    """General function for writing strings to lines in CSV
-
-    Args
-        content (list): list of strings, each as a row of the CSV
-        path (pathlib.PosixPath): where to write new CSV
-    """
-    with open(path, "w") as f:
-        for line in content:
-            f.write(line + "\n")
-
-
 class QuietStdOut:
     """Context for quieting standard output, and setting datajoint loglevel to warning
 
