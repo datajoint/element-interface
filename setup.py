@@ -12,12 +12,6 @@ with open(path.join(here, "README.md"), "r") as f:
 with open(path.join(here, "requirements.txt")) as f:
     requirements = f.read().splitlines()
 
-with urllib.request.urlopen(
-    "https://raw.githubusercontent.com/flatironinstitute/CaImAn/master/requirements.txt"
-) as f:
-    caiman_requirements = f.read().decode("UTF-8").split("\n")
-caiman_requirements.remove("")
-
 with open(path.join(here, pkg_name, "version.py")) as f:
     exec(f.read())
 
