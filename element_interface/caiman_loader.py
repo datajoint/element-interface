@@ -1,12 +1,12 @@
-import h5py
-import caiman as cm
-import scipy
-import numpy as np
-from datetime import datetime
 import os
 import pathlib
-from tqdm import tqdm
+from datetime import datetime
 
+import caiman as cm
+import h5py
+import numpy as np
+import scipy
+from tqdm import tqdm
 
 _required_hdf5_fields = [
     "/motion_correction/reference_image",
@@ -122,7 +122,7 @@ class CaImAn:
                 mask_xpix, mask_ypix, mask_zpix, inferred_trace, dff, spikes
         """
         if self.params.motion["is3D"]:
-            raise NotImplemented(
+            raise NotImplementedError(
                 "CaImAn mask extraction for volumetric data not yet implemented"
             )
 
@@ -166,8 +166,8 @@ def _process_scanimage_tiff(scan_filenames, output_dir="./"):
     Read ScanImage TIFF - reshape into volumetric data based on scanning depths/channels
     Save new TIFF files for each channel - with shape (frame x height x width x depth)
     """
-    from tifffile import imsave
     import scanreader
+    from tifffile import imsave
 
     # ------------ CaImAn multi-channel multi-plane tiff file ------------
     for scan_filename in tqdm(scan_filenames):

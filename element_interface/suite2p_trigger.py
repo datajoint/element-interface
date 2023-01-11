@@ -1,7 +1,8 @@
-import suite2p
-import numpy as np
 import os
 import warnings
+
+import numpy as np
+import suite2p
 
 
 def motion_correction_suite2p(ops: dict, db: dict) -> tuple:

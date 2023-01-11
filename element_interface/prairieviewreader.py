@@ -1,6 +1,7 @@
 import pathlib
 import xml.etree.ElementTree as ET
 from datetime import datetime
+
 import numpy as np
 
 
@@ -43,8 +44,7 @@ def get_pv_metadata(pvtiffile: str) -> dict:
     bidirectional_scan = False  # Does not support bidirectional
     roi = 1
     n_fields = 1  # Always contains 1 field
-    record_start_time = root.find(
-        ".//Sequence/[@cycle='1']").attrib.get("time")
+    record_start_time = root.find(".//Sequence/[@cycle='1']").attrib.get("time")
 
     # Get all channels and find unique values
     channel_list = [
@@ -54,8 +54,7 @@ def get_pv_metadata(pvtiffile: str) -> dict:
     n_channels = len(set(channel_list))
     n_frames = len(root.findall(".//Sequence/Frame"))
     framerate = 1 / float(
-        root.findall(
-            './/PVStateValue/[@key="framePeriod"]')[0].attrib.get("value")
+        root.findall('.//PVStateValue/[@key="framePeriod"]')[0].attrib.get("value")
     )  # rate = 1/framePeriod
 
     usec_per_line = (
@@ -67,16 +66,14 @@ def get_pv_metadata(pvtiffile: str) -> dict:
         * 1e6
     )  # Convert from seconds to microseconds
 
-    scan_datetime = datetime.strptime(
-        root.attrib.get("date"), "%m/%d/%Y %I:%M:%S %p")
+    scan_datetime = datetime.strptime(root.attrib.get("date"), "%m/%d/%Y %I:%M:%S %p")
 
     total_duration = float(
         root.findall(".//Sequence/Frame")[-1].attrib.get("relativeTime")
     )
 
     px_height = int(
-        root.findall(
-            ".//PVStateValue/[@key='pixelsPerLine']")[0].attrib.get("value")
+        root.findall(".//PVStateValue/[@key='pixelsPerLine']")[0].attrib.get("value")
     )
     # All PrairieView-acquired images have square dimensions (512 x 512; 1024 x 1024)
     px_width = px_height
@@ -100,11 +97,17 @@ def get_pv_metadata(pvtiffile: str) -> dict:
             ".//PVStateValue/[@key='currentScanCenter']/IndexedValue/[@index='YAxis']"
         ).attrib.get("value")
     )
-    if root.find(".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']") is None:
+    if (
+        root.find(
+            ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']"
+        )
+        is None
+    ):
 
         z_fields = np.float64(
             root.find(
-                ".//PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue").attrib.get("value")
+                ".//PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
+            ).attrib.get("value")
         )
         n_depths = 1
         assert z_fields.size == n_depths
@@ -112,8 +115,7 @@ def get_pv_metadata(pvtiffile: str) -> dict:
 
     else:
 
-        bidirection_z = bool(
-            root.find(".//Sequence").attrib.get("bidirectionalZ"))
+        bidirection_z = bool(root.find(".//Sequence").attrib.get("bidirectionalZ"))
 
         # One "Frame" per depth. Gets number of frames in first sequence
         planes = [

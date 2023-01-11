@@ -1,7 +1,8 @@
 import os
-import numpy as np
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import numpy as np
 
 
 class EXTRACT_loader:
@@ -18,7 +19,7 @@ class EXTRACT_loader:
 
         try:
             extract_file = next(Path(extract_dir).glob("*_extract_output.mat"))
-        except StopInteration:
+        except StopInteration:  # noqa F821
             raise FileNotFoundError(
                 f"EXTRACT output result file is not found at {extract_dir}."
             )
@@ -31,7 +32,7 @@ class EXTRACT_loader:
 
     def load_results(self):
         """Load the EXTRACT results
-        
+
         Returns:
             masks (dict): Details of the masks identified with the EXTRACT segmentation package.
         """
