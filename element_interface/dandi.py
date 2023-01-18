@@ -11,6 +11,7 @@ def upload_to_dandi(
     working_directory: str = None,
     api_key: str = None,
     sync: bool = False,
+    existing: str = "refresh",
 ):
     """Upload NWB files to DANDI Archive
 
@@ -24,6 +25,7 @@ def upload_to_dandi(
             environmental variable DANDI_API_KEY
         sync (str, optional): If True, delete all files in archive that are not present
             in the local directory.
+        existing (str, optional): see full description from `dandi upload --help`
     """
 
     working_directory = working_directory or os.path.curdir
@@ -40,9 +42,9 @@ def upload_to_dandi(
 
     download(dandiset_url, output_dir=working_directory)
 
-    subprocess.run(
-        ["nwbinspector", dandiset_directory, "--config", "dandi", "--report-file-path", os.path.join(dandiset_directory, 'nwbinspector.txt')], shell=True
-    )
+    # subprocess.run(
+    #     ["nwbinspector", data_directory, "--config", "dandi", "--report-file-path", os.path.join(data_directory, 'nwbinspector.txt')], shell=True
+    # )
 
     subprocess.run(
         ["dandi", "organize", "-d", dandiset_directory, data_directory, "-f", "dry"],
@@ -61,5 +63,6 @@ def upload_to_dandi(
     upload(
         paths=[dandiset_directory],
         dandi_instance="dandi-staging" if staging else "dandi",
+        existing=existing,
         sync=sync,
     )
