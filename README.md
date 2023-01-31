@@ -7,5 +7,5 @@ corresponding database tables that can be combined with other Elements to assemb
 fully functional pipeline. Element Interface is home to a number of utilities that make
 this possible.
 
-Installation and usage instructions can be found at the 
+Installation and usage instructions can be found at the
 [Element documentation](https://datajoint.com/docs/elements/element-interface).
