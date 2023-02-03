@@ -224,20 +224,43 @@ def read_header(fid):
     return header
 
 
-INBOX = Path("/Users/tolgadincer/ClientData/Utah_Alex/2020Data/RawData/Organoid21")
-header_filename = INBOX / "032520_US_885kHz_sham/info.rhs"
-with open(header_filename, "rb") as fid:
-    header = read_header(fid)
+def load_rhs(folder: str, file_expr: str):
+    """Load rhs data
 
+    Example:
+        # Read data
+        >>> signals, time = load_rhs("/home/inbox/organoids21/032520_US_885kHz_sham", file_expr="amp*dat")
 
-def read_time(file_paths, time_filename="time.dat", header_filename="info.rhs"):
+        # Plot data
+        >>> for signal in signals:
+        >>>     plt.plot(time, signal)
+        >>> plt.xlabel("Time (s)")
+        >>> plt.ylabel("Signal (microvolts)")
+        >>> plt.show()
+
+    Args:
+        folder (str): Folder that contains info.rhs, time.dat, and *.dat files
+        file_expr (str): regex pattern of the file names to be read.
+
+    Returns:
+        signals (np.array_like): Signal amplitudes in microvolts
+        time (np.array_like): Time stamps
+    """
+
+    header_filepath = next(Path(folder).glob("info.rhs"))
+    with open(header_filepath, "rb") as fid:
+        header = read_header(fid)
+
+    time_file = next(Path(folder).glob("time.dat"))
 
     time = (
-        np.memmap(time_filename, dtype=np.int32, offset=2_000_000, shape=10000)
+        np.memmap(time_file, dtype=np.int32, offset=2_000_000, shape=10000)
         / header["frequency_parameters"]["amplifier_sample_rate"]
     )
 
+    file_paths = list(Path(folder).glob(file_expr))
     signals = np.empty([len(file_paths), len(time)])
+
     for i, file_path in enumerate(file_paths):
         signals[i, :] = np.memmap(
             file_path, dtype=np.int16, offset=2_000_000, shape=10000
@@ -245,24 +268,3 @@ def read_time(file_paths, time_filename="time.dat", header_filename="info.rhs"):
     signals = signals * 0.195  # Convert to microvolts
 
     return signals, time
-
-
-INBOX = Path("/Users/tolgadincer/ClientData/Utah_Alex/2020Data/RawData/Organoid21")
-
-time_filename = INBOX / "032520_US_885kHz_sham/time.dat"
-header_filename = INBOX / "032520_US_885kHz_sham/info.rhs"
-
-relative_paths = [
-    "032520_US_885kHz_sham/amp-B-001.dat",
-    "032520_US_885kHz_sham/amp-B-005.dat",
-]
-file_paths = [INBOX / x for x in relative_paths]
-
-signals, time = read_time(file_paths, time_filename, header_filename)
-
-for signal in signals:
-    plt.plot(time, signal)
-# plt.title("/".join(file_path.parts[-2:]))
-plt.xlabel("Time (s)")
-plt.ylabel("Signal (microvolts)")
-plt.show()
