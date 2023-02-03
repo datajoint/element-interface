@@ -232,10 +232,9 @@ def load_rhs(folder: str, file_expr: str):
         >>> rhs_data = load_rhs("/home/inbox/organoids21/032520_US_885kHz_sham", file_expr="amp*dat")
 
         # Plot data
-        >>> for signal in rhs_data["signals"]:
-        >>>     plt.plot(rhs_data["time"], signal)
+        >>> plt.plot(rhs_data["time"], rhs_data["recordings"]["amp-B-000.dat"])
         >>> plt.xlabel("Time (s)")
-        >>> plt.ylabel("Signal (microvolts)")
+        >>> plt.ylabel("Reading")
         >>> plt.show()
 
     Args:
@@ -245,7 +244,7 @@ def load_rhs(folder: str, file_expr: str):
     Returns:
         rhs_data (dict): RHS data.
             rhs_data["header"] (dict): Header.
-            rhs_data["signals"] (np.array_like): Signal amplitudes in microvolts.
+            rhs_data["recordings"] (dict): Readings from various files
             rhs_data["timestamps"] (np.array_like): Relative timestamps in seconds.
     """
 
@@ -260,12 +259,29 @@ def load_rhs(folder: str, file_expr: str):
         / header["frequency_parameters"]["amplifier_sample_rate"]
     )
 
-    file_paths = list(Path(folder).glob(file_expr))
-    signals = np.empty([len(file_paths), len(timestamps)])
+    rhs_data = dict(header=header, timestamps=timestamps, recordings={})
 
-    for i, file_path in enumerate(file_paths):
-        signals[i, :] = np.memmap(file_path, dtype=np.int16)
-    signals = signals * 0.195  # Convert to microvolts
+    file_paths = Path(folder).glob(file_expr)
+    file_paths = [x for x in file_paths if x.as_posix() != "time.dat"]
 
-    rhs_data = dict(header=header, signals=signals, timestamps=timestamps)
+    for file_path in file_paths:
+        file_path = file_path.as_posix()
+        if "amp" in file_path:
+            signal = np.memmap(file_path, dtype=np.int16)
+            signal = signal * 0.195  # Convert to microvolts
+        elif "board-ANALOG-IN" in file_path or "board-ANALOG-OUT" in file_path:
+            signal = np.memmap(file_path, dtype=np.uint16)
+            signal = (signal - 32768) * 0.0003125  # Convert to volts
+        elif "dc-" in file_path:
+            signal = np.memmap(file_path, dtype=np.uint16)
+            signal = (signal - 512) * 19.23  # Convert to milivolts
+        elif "board-DIGITAL-IN" in file_path or "board-DIGITAL-OUT" in file_path:
+            signal = np.memmap(file_path, dtype=np.uint16)
+        elif "stim-" in file_path:
+            data = np.memmap(file_path, dtype=np.uint16)
+            i = np.bitwise_and(data, 255) * header["stim_step_size"]
+            sign = (128 - np.bitwise_and(data, 255)) / 128
+            signal = i * sign
+        rhs_data["recordings"][Path(file_path).relative_to(folder).stem] = signal
+
     return rhs_data
