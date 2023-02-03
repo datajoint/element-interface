@@ -254,7 +254,7 @@ def load_rhs(folder: str, file_expr: str):
     time_file = next(Path(folder).glob("time.dat"))
 
     time = (
-        np.memmap(time_file, dtype=np.int32, offset=2_000_000, shape=10000)
+        np.memmap(time_file, dtype=np.int32)
         / header["frequency_parameters"]["amplifier_sample_rate"]
     )
 
@@ -262,9 +262,7 @@ def load_rhs(folder: str, file_expr: str):
     signals = np.empty([len(file_paths), len(time)])
 
     for i, file_path in enumerate(file_paths):
-        signals[i, :] = np.memmap(
-            file_path, dtype=np.int16, offset=2_000_000, shape=10000
-        )
+        signals[i, :] = np.memmap(file_path, dtype=np.int16)
     signals = signals * 0.195  # Convert to microvolts
 
     return signals, time
