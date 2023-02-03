@@ -229,11 +229,11 @@ def load_rhs(folder: str, file_expr: str):
 
     Example:
         # Read data
-        >>> signals, time = load_rhs("/home/inbox/organoids21/032520_US_885kHz_sham", file_expr="amp*dat")
+        >>> rhs_data = load_rhs("/home/inbox/organoids21/032520_US_885kHz_sham", file_expr="amp*dat")
 
         # Plot data
-        >>> for signal in signals:
-        >>>     plt.plot(time, signal)
+        >>> for signal in rhs_data["signals"]:
+        >>>     plt.plot(rhs_data["time"], signal)
         >>> plt.xlabel("Time (s)")
         >>> plt.ylabel("Signal (microvolts)")
         >>> plt.show()
@@ -243,8 +243,10 @@ def load_rhs(folder: str, file_expr: str):
         file_expr (str): regex pattern of the file names to be read.
 
     Returns:
-        signals (np.array_like): Signal amplitudes in microvolts
-        time (np.array_like): Time stamps in seconds
+        rhs_data (dict): RHS data.
+            rhs_data["header"] (dict): Header.
+            rhs_data["signals"] (np.array_like): Signal amplitudes in microvolts.
+            rhs_data["timestamps"] (np.array_like): Relative timestamps in seconds.
     """
 
     header_filepath = next(Path(folder).glob("info.rhs"))
@@ -253,16 +255,17 @@ def load_rhs(folder: str, file_expr: str):
 
     time_file = next(Path(folder).glob("time.dat"))
 
-    time = (
+    timestamps = (
         np.memmap(time_file, dtype=np.int32)
         / header["frequency_parameters"]["amplifier_sample_rate"]
     )
 
     file_paths = list(Path(folder).glob(file_expr))
-    signals = np.empty([len(file_paths), len(time)])
+    signals = np.empty([len(file_paths), len(timestamps)])
 
     for i, file_path in enumerate(file_paths):
         signals[i, :] = np.memmap(file_path, dtype=np.int16)
     signals = signals * 0.195  # Convert to microvolts
 
-    return signals, time
+    rhs_data = dict(header=header, signals=signals, timestamps=timestamps)
+    return rhs_data
