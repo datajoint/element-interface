@@ -244,7 +244,7 @@ def load_rhs(folder: str, file_expr: str):
 
     Returns:
         signals (np.array_like): Signal amplitudes in microvolts
-        time (np.array_like): Time stamps
+        time (np.array_like): Time stamps in seconds
     """
 
     header_filepath = next(Path(folder).glob("info.rhs"))
