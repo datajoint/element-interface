@@ -239,7 +239,7 @@ def load_rhs(folder: str, file_expr: str = "*"):
 
     Args:
         folder (str): Folder that contains info.rhs, time.dat, and *.dat files
-        file_expr (str): regex pattern of the file names to be read.
+        file_expr (str): regex pattern of the file names to be read. Defaults to "*" (read all files).
 
     Returns:
         rhs_data (dict): RHS data.
