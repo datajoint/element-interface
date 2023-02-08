@@ -223,7 +223,7 @@ def load_rhs(folder: str, file_expr: str = "*"):
         >>> rhs_data = load_rhs("/home/inbox/organoids21/032520_US_885kHz_sham", file_expr="amp*dat")
 
         # Plot data
-        import matplotlib.pyplot as plt
+        >>> import matplotlib.pyplot as plt
         >>> plt.plot(rhs_data["time"], rhs_data["recordings"]["amp-B-000.dat"])
         >>> plt.xlabel("Time (s)")
         >>> plt.ylabel("Reading")
