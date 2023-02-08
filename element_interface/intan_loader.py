@@ -52,14 +52,6 @@ def _read_header(fid):
     (version["major"], version["minor"]) = struct.unpack("<hh", fid.read(4))
     header["version"] = version
 
-    # print("")
-    # print(
-    #     "Reading Intan Technologies RHS2000 Data File, Version {}.{}".format(
-    #         version["major"], version["minor"]
-    #     )
-    # )
-    # print("")
-
     # Read information of sampling rate and amplifier frequency settings.
     (header["sample_rate"],) = struct.unpack("<f", fid.read(4))
     (
