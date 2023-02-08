@@ -241,16 +241,15 @@ def load_rhs(folder: str, file_expr: str = "*"):
     """
 
     rhs_data = {}
-    
+
     # Get header
     header_filepath = next(Path(folder).glob("info.rhs"))
     with open(header_filepath, "rb") as fid:
         rhs_data["header"] = _read_header(fid)
 
-
     # Get timestamps
     time_file = next(Path(folder).glob("time.dat"))
-    
+
     rhs_data["timestamps"] = (
         np.memmap(time_file, dtype=np.int32)
         / rhs_data["header"]["frequency_parameters"]["amplifier_sample_rate"]
@@ -258,33 +257,31 @@ def load_rhs(folder: str, file_expr: str = "*"):
 
     # Get data files
     file_paths = Path(folder).glob(file_expr)
-    
+
     if file_expr == "*":
         file_paths = list(folder.glob("[!info|!time|!Zone]*"))
-        
+
     # Get recording data
     rhs_data["recordings"] = {}
-    
+
     for file_path in sorted(file_paths):
-
-        signal = np.memmap(file_path, dtype=np.int16)
         signal_type = file_path.stem.split("-")[0]
-        
-        if signal_type == "amp":
-            signal = signal * 0.195  # Convert to microvolts
-            
-        elif signal_type == "board": 
-            signal = (signal - 32768) * 0.0003125  # Convert to volts
-            
-        elif signal_type == "dc":
-            signal = (signal - 512) * 19.23  # Convert to milivolts
-            
-        elif signal_type == "stim":
-            
-            i = np.bitwise_and(signal, 255) * rhs_data["header"]["stim_step_size"]
-            sign = (128 - np.bitwise_and(signal, 255)) / 128
-            signal = i * sign
-            
-        rhs_data["recordings"][file_path.stem] = signal
 
+        if signal_type == "amp":
+            signal = np.memmap(file_path, dtype=np.int16)
+            signal = signal * 0.195  # Convert to microvolts
+        else:
+            signal = np.memmap(file_path, dtype=np.uint16)
+            if signal_type == "board":
+                signal = (signal - 32768) * 0.0003125  # Convert to volts
+
+            elif signal_type == "dc":
+                signal = (signal - 512) * 19.23  # Convert to milivolts
+
+            elif signal_type == "stim":
+                i = np.bitwise_and(signal, 255) * rhs_data["header"]["stim_step_size"]
+                sign = (128 - np.bitwise_and(signal, 255)) / 128
+                signal = i * sign
+
+        rhs_data["recordings"][file_path.stem] = signal
     return rhs_data
