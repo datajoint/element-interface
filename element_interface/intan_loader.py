@@ -276,18 +276,20 @@ def load_rhs(folder: str, file_expr: str = "*"):
         if signal_type == "amp":
             signal = np.memmap(file_path, dtype=np.int16)
             signal = signal * 0.195  # Convert to microvolts
-        else:
+            
+        elif signal_type == "board":
             signal = np.memmap(file_path, dtype=np.uint16)
-            if signal_type == "board":
-                signal = (signal - 32768) * 0.0003125  # Convert to volts
+            signal = (signal - 32768) * 0.0003125  # Convert to volts
 
-            elif signal_type == "dc":
-                signal = (signal - 512) * 19.23  # Convert to milivolts
+        elif signal_type == "dc":
+            signal = np.memmap(file_path, dtype=np.uint16)
+            signal = (signal - 512) * 19.23  # Convert to milivolts
 
-            elif signal_type == "stim":
-                i = np.bitwise_and(signal, 255) * rhs_data["header"]["stim_step_size"]
-                sign = (128 - np.bitwise_and(signal, 255)) / 128
-                signal = i * sign
+        elif signal_type == "stim":
+            signal = np.memmap(file_path, dtype=np.uint16)
+            i = np.bitwise_and(signal, 255) * rhs_data["header"]["stim_step_size"]
+            sign = (128 - np.bitwise_and(signal, 255)) / 128
+            signal = i * sign
 
         rhs_data["recordings"][file_path.stem] = signal
     return rhs_data
