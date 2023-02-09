@@ -259,7 +259,13 @@ def load_rhs(folder: str, file_expr: str = "*"):
     file_paths = Path(folder).glob(file_expr)
 
     if file_expr == "*":
-        file_paths = list(folder.glob("[!info|!time|!Zone]*"))
+        exclude_list = ["time", "info", "Zone.Identifier"]
+
+        file_paths = [
+            file
+            for file in file_paths
+            if not any([string in file.as_posix() for string in exclude_list])
+        ]
 
     # Get recording data
     rhs_data["recordings"] = {}
