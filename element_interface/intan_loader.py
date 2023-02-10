@@ -276,7 +276,7 @@ def load_rhs(folder: str, file_expr: str = "*"):
         if signal_type == "amp":
             signal = np.memmap(file_path, dtype=np.int16)
             signal = signal * 0.195  # Convert to microvolts
-            
+
         elif signal_type == "board":
             signal = np.memmap(file_path, dtype=np.uint16)
             signal = (signal - 32768) * 0.0003125  # Convert to volts
@@ -287,6 +287,7 @@ def load_rhs(folder: str, file_expr: str = "*"):
 
         elif signal_type == "stim":
             signal = np.memmap(file_path, dtype=np.uint16)
+            # convert the signal from 9-bit one's complement to standard encoding
             current = np.bitwise_and(signal, 255) * rhs_data["header"]["stim_step_size"]
             sign = (128 - np.bitwise_and(signal, 256)) / 128
             signal = current * sign
