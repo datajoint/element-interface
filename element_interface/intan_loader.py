@@ -264,7 +264,7 @@ def load_rhs(folder: str, file_expr: str = "*"):
         file_paths = [
             file
             for file in file_paths
-            if not any([string in file.as_posix() for string in exclude_list])
+            if not any(string in file.as_posix() for string in exclude_list)
         ]
 
     # Get recording data
