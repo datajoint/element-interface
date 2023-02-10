@@ -287,9 +287,9 @@ def load_rhs(folder: str, file_expr: str = "*"):
 
         elif signal_type == "stim":
             signal = np.memmap(file_path, dtype=np.uint16)
-            i = np.bitwise_and(signal, 255) * rhs_data["header"]["stim_step_size"]
-            sign = (128 - np.bitwise_and(signal, 255)) / 128
-            signal = i * sign
+            current = np.bitwise_and(signal, 255) * rhs_data["header"]["stim_step_size"]
+            sign = (128 - np.bitwise_and(signal, 256)) / 128
+            signal = current * sign
 
         rhs_data["recordings"][file_path.stem] = signal
     return rhs_data
