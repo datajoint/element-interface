@@ -10,6 +10,8 @@ def _read_qstring(fid):
     If this number equals 0xFFFFFFFF, the string is null.
 
     Strings are stored as unicode.
+
+    SOURCE: https://github.com/Intan-Technologies/load-rhs-notebook-python/blob/main/importrhsutilities.py
     """
 
     (length,) = struct.unpack("<I", fid.read(4))
@@ -37,7 +39,10 @@ def _read_qstring(fid):
 
 
 def _read_header(fid):
-    """Reads the Intan File Format header from the given file."""
+    """Reads the Intan File Format header from the given file.
+
+    SOURCE: https://github.com/Intan-Technologies/load-rhs-notebook-python/blob/main/importrhsutilities.py
+    """
 
     # Check 'magic number' at beginning of file to make sure this is an Intan
     # Technologies RHD2000 data file.
@@ -217,6 +222,8 @@ def _read_header(fid):
 
 def load_rhs(folder: str, file_expr: str = "*"):
     """Load rhs data
+
+    Data type and coversions are based on https://intantech.com/files/Intan_RHS2000_data_file_formats.pdf.
 
     Example:
         # Read data
