@@ -269,27 +269,30 @@ def load_rhs(folder: str, file_expr: str = "*"):
     # Get recording data
     rhs_data["recordings"] = {}
 
-    for file_path in sorted(file_paths):
-        signal_type = file_path.stem.split("-")[0]
+    if len(file_paths):
+        for file_path in sorted(file_paths):
+            signal_type = file_path.stem.split("-")[0]
 
-        if signal_type == "amp":
-            signal = np.memmap(file_path, dtype=np.int16)
-            signal = signal * 0.195  # Convert to microvolts
+            if signal_type == "amp":
+                signal = np.memmap(file_path, dtype=np.int16)
+                signal = signal * 0.195  # Convert to microvolts
 
-        elif signal_type == "board":
-            signal = np.memmap(file_path, dtype=np.uint16)
-            signal = (signal - 32768) * 0.0003125  # Convert to volts
+            elif signal_type == "board":
+                signal = np.memmap(file_path, dtype=np.uint16)
+                signal = (signal - 32768) * 0.0003125  # Convert to volts
 
-        elif signal_type == "dc":
-            signal = np.memmap(file_path, dtype=np.uint16)
-            signal = (signal - 512) * 19.23  # Convert to milivolts
+            elif signal_type == "dc":
+                signal = np.memmap(file_path, dtype=np.uint16)
+                signal = (signal - 512) * 19.23  # Convert to milivolts
 
-        elif signal_type == "stim":
-            signal = np.memmap(file_path, dtype=np.uint16)
-            # convert the signal from 9-bit one's complement to standard encoding
-            current = np.bitwise_and(signal, 255) * rhs_data["header"]["stim_step_size"]
-            sign = 1 - np.bitwise_and(signal, 256) // 128
-            signal = current * sign
+            elif signal_type == "stim":
+                signal = np.memmap(file_path, dtype=np.uint16)
+                # convert the signal from 9-bit one's complement to standard encoding
+                current = (
+                    np.bitwise_and(signal, 255) * rhs_data["header"]["stim_step_size"]
+                )
+                sign = 1 - np.bitwise_and(signal, 256) // 128
+                signal = current * sign
 
-        rhs_data["recordings"][file_path.stem] = signal
+            rhs_data["recordings"][file_path.stem] = signal
     return rhs_data
