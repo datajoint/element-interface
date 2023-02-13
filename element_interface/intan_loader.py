@@ -231,7 +231,7 @@ def load_rhs(folder: str, file_expr: str = "*"):
 
     Args:
         folder (str): Folder that contains info.rhs, time.dat, and *.dat files
-        file_expr (str): regex pattern of the file names to be read. Defaults to "*" (read all files).
+        file_expr (str): pattern matching of file names to be read. Defaults to "*" (read all files).
 
     Returns:
         rhs_data (dict): RHS data.
@@ -258,14 +258,13 @@ def load_rhs(folder: str, file_expr: str = "*"):
     # Get data files
     file_paths = Path(folder).glob(file_expr)
 
-    if file_expr == "*":
-        exclude_list = ["time", "info", "Zone.Identifier"]
+    exclude_list = ["time", "info", "Zone.Identifier"]
 
-        file_paths = [
-            file
-            for file in file_paths
-            if not any(string in file.as_posix() for string in exclude_list)
-        ]
+    file_paths = [
+        file
+        for file in file_paths
+        if not any(string in file.as_posix() for string in exclude_list)
+    ]
 
     # Get recording data
     rhs_data["recordings"] = {}
