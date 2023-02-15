@@ -2,6 +2,9 @@ import sys, struct, math, os, time
 import numpy as np
 import matplotlib.pyplot as plt
 
+# All the code in this file is taken from https://github.com/Intan-Technologies/load-rhs-notebook-python.
+# The original license of the code is the COPYING file under the same directory.
+
 # Define plural function
 def plural(n):
     """Utility function to optionally pluralize words based on the value of n."""
