@@ -987,7 +987,7 @@ def load_file(filename):
 
     print("Done!  Elapsed time: {0:0.1f} seconds".format(time.time() - tic))
 
-    return result, data_present
+    return result
 
 
 # Define function print_all_channel_names
