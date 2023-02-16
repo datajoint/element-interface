@@ -651,6 +651,7 @@ def data_to_result(header, data, data_present):
         result["amp_settle_data"] = data["amp_settle_data"]
         result["board_dig_in_data"] = data["board_dig_in_data"]
         result["board_dig_out_data"] = data["board_dig_out_data"]
+        result["header"] = header
 
     return result
 
@@ -987,7 +988,7 @@ def load_file(filename):
 
     print("Done!  Elapsed time: {0:0.1f} seconds".format(time.time() - tic))
 
-    return result, data_present
+    return result
 
 
 # Define function print_all_channel_names
