@@ -41,7 +41,8 @@ def load_rhs(folder: str, file_expr: str = "*"):
     time_file = next(Path(folder).glob("time.dat"))
 
     rhs_data["timestamps"] = (
-        np.memmap(time_file, dtype=np.int32) / rhs_data["header"]["frequency_parameters"]["amplifier_sample_rate"]
+        np.memmap(time_file, dtype=np.int32)
+        / rhs_data["header"]["frequency_parameters"]["amplifier_sample_rate"]
     )
 
     # Get data files
@@ -49,7 +50,11 @@ def load_rhs(folder: str, file_expr: str = "*"):
 
     exclude_list = ["time", "info", "Zone.Identifier"]
 
-    file_paths = [file for file in file_paths if not any(string in file.as_posix() for string in exclude_list)]
+    file_paths = [
+        file
+        for file in file_paths
+        if not any(string in file.as_posix() for string in exclude_list)
+    ]
 
     # Get recording data
     rhs_data["recordings"] = {}
