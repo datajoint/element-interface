@@ -1,8 +1,7 @@
 import os
-from typing import Union
 from pathlib import Path
 from textwrap import dedent
-from datetime import datetime
+from typing import Union
 
 
 class EXTRACT_trigger:
@@ -11,11 +10,11 @@ class EXTRACT_trigger:
         % Load Data
         data = load('{scanfile}');
         M = data.M;
-        
+
         % Input Paramaters
         config = struct();
         {parameters_list_string}
-        
+
         % Run EXTRACT
         output = extractor(M, config);
         save('{output_fullpath}', 'output');

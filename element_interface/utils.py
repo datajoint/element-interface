@@ -1,7 +1,14 @@
-import pathlib
-import uuid
-import hashlib
 import csv
+import hashlib
+import logging
+import os
+import pathlib
+import sys
+import uuid
+
+from datajoint.utils import to_camel_case
+
+logger = logging.getLogger("datajoint")
 
 
 def find_full_path(root_directories: list, relative_path: str) -> pathlib.PosixPath:
@@ -140,31 +147,43 @@ def ingest_csv_to_table(
         )
         if verbose:
             insert_len = len(table) - prev_len
-            print(
+            logger.info(
                 f"\n---- Inserting {insert_len} entry(s) "
-                + f"into {table.table_name} ----"
+                + f"into {to_camel_case(table.table_name)} ----"
             )
 
 
-def recursive_search(key: str, dictionary: dict) -> any:
-    """Return value for key in a nested dictionary
-
-    Search through a nested dictionary for a key and returns its value.  If there are
-    more than one key with the same name at different depths, the algorithm returns the
-    value of the least nested key.
+def value_to_bool(value) -> bool:
+    """Return whether the provided value represents true. Otherwise false.
 
     Args:
-        key (str): Key used to search through a nested dictionary
-        dictionary (dict): Nested dictionary
+        value (str, bool, int): Any input
 
     Returns:
-        value (any): value of the input argument `key`
+        bool (bool): True if value in ("y", "yes", "t", "true", "on", "1")
     """
-    if key in dictionary:
-        return dictionary[key]
-    for value in dictionary.values():
-        if isinstance(value, dict):
-            a = recursive_search(key, value)
-            if a is not None:
-                return a
-    return None
+    if not value:
+        return False
+    return str(value).lower() in ("y", "yes", "t", "true", "on", "1")
+
+
+class QuietStdOut:
+    """Context for quieting standard output, and setting datajoint loglevel to warning
+
+    Used in pytest functions to render clear output showing only pass/fail
+
+    Example:
+        with QuietStdOut():
+            table.delete(safemode=False)
+    """
+
+    def __enter__(self):
+        self.prev_log_level = logger.level
+        logger.setLevel(30)  # set DataJoint logger to warning
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, "w")
+
+    def __exit__(self, *args):
+        logger.setLevel(self.prev_log_level)
+        sys.stdout.close()
+        sys.stdout = self._original_stdout

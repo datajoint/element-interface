@@ -1,14 +1,15 @@
-import cv2
 import pathlib
+
+import cv2
 
 try:
     cv2.setNumThreads(0)
-except:
-    pass
+except:  # noqa E722
+    pass  # TODO: remove bare except
 
 import caiman as cm
-from caiman.source_extraction.cnmf.cnmf import *
 from caiman.source_extraction.cnmf import params as params
+from caiman.source_extraction.cnmf.cnmf import CNMF
 
 from .caiman_loader import _save_mc
 
