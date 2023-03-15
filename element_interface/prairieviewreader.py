@@ -1,3 +1,4 @@
+from collections import defaultdict
 import pathlib
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -43,8 +44,7 @@ def get_pv_metadata(pvtiffile: str) -> dict:
     bidirectional_scan = False  # Does not support bidirectional
     roi = 1
     n_fields = 1  # Always contains 1 field
-    record_start_time = root.find(
-        ".//Sequence/[@cycle='1']").attrib.get("time")
+    record_start_time = root.find(".//Sequence/[@cycle='1']").attrib.get("time")
 
     # Get all channels and find unique values
     channel_list = [
@@ -54,8 +54,7 @@ def get_pv_metadata(pvtiffile: str) -> dict:
     n_channels = len(set(channel_list))
     n_frames = len(root.findall(".//Sequence/Frame"))
     framerate = 1 / float(
-        root.findall(
-            './/PVStateValue/[@key="framePeriod"]')[0].attrib.get("value")
+        root.findall('.//PVStateValue/[@key="framePeriod"]')[0].attrib.get("value")
     )  # rate = 1/framePeriod
 
     usec_per_line = (
@@ -67,16 +66,14 @@ def get_pv_metadata(pvtiffile: str) -> dict:
         * 1e6
     )  # Convert from seconds to microseconds
 
-    scan_datetime = datetime.strptime(
-        root.attrib.get("date"), "%m/%d/%Y %I:%M:%S %p")
+    scan_datetime = datetime.strptime(root.attrib.get("date"), "%m/%d/%Y %I:%M:%S %p")
 
     total_duration = float(
         root.findall(".//Sequence/Frame")[-1].attrib.get("relativeTime")
     )
 
     px_height = int(
-        root.findall(
-            ".//PVStateValue/[@key='pixelsPerLine']")[0].attrib.get("value")
+        root.findall(".//PVStateValue/[@key='pixelsPerLine']")[0].attrib.get("value")
     )
     # All PrairieView-acquired images have square dimensions (512 x 512; 1024 x 1024)
     px_width = px_height
@@ -100,11 +97,17 @@ def get_pv_metadata(pvtiffile: str) -> dict:
             ".//PVStateValue/[@key='currentScanCenter']/IndexedValue/[@index='YAxis']"
         ).attrib.get("value")
     )
-    if root.find(".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']") is None:
+    if (
+        root.find(
+            ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']"
+        )
+        is None
+    ):
 
         z_fields = np.float64(
             root.find(
-                ".//PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue").attrib.get("value")
+                ".//PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
+            ).attrib.get("value")
         )
         n_depths = 1
         assert z_fields.size == n_depths
@@ -112,8 +115,11 @@ def get_pv_metadata(pvtiffile: str) -> dict:
 
     else:
 
-        bidirection_z = bool(
-            root.find(".//Sequence").attrib.get("bidirectionalZ"))
+        bidir_z = root.find(".//Sequence").attrib.get("bidirectionalZ")
+        if bidir_z == "False":
+            bidirection_z = False
+        elif bidir_z == "True":
+            bidirection_z = True
 
         # One "Frame" per depth. Gets number of frames in first sequence
         planes = [
@@ -121,23 +127,67 @@ def get_pv_metadata(pvtiffile: str) -> dict:
             for plane in root.findall(".//Sequence/[@cycle='1']/Frame")
         ]
         n_depths = len(set(planes))
-        z_min = float(
-            root.findall(
-                ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/SubindexedValue/[@subindex='0']"
-            )[0].attrib.get("value")
-        )
-        z_max = float(
-            root.findall(
-                ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/SubindexedValue/[@subindex='0']"
-            )[-1].attrib.get("value")
-        )
-        z_step = float(
-            root.find(
-                ".//PVStateShard/PVStateValue/[@key='micronsPerPixel']/IndexedValue/[@index='ZAxis']"
-            ).attrib.get("value")
-        )
-        z_fields = np.arange(z_min, z_max + 1, z_step)
-        assert z_fields.size == n_depths
+
+        # find z_depths controller if there is more than 1.
+        z_dicts = []
+
+        if (
+            len(
+                root.findall(
+                    ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
+                )
+            )
+            > 1
+        ):
+
+            for z_pos in root.findall(
+                ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
+            ):
+                z_dicts.append(z_pos.attrib)
+
+            z_values = [d["value"] for d in z_dicts]
+
+            zdata_dictionary = defaultdict(list)
+            for idx, val in enumerate(z_values):
+                zdata_dictionary[val].append(idx)
+            repeating_values = {k: v for k, v in zdata_dictionary.items() if len(v) > 1}
+            if len(repeating_values) > 0:
+                idx_to_drop = list(repeating_values.values())[0]
+                idx_to_drop.sort(reverse=True)
+                for idx in idx_to_drop:
+                    del z_values[idx]
+                z_values = [float(num) for num in z_values]
+                z_min = min(z_values)
+                z_max = max(z_values)
+                z_step = z_max / n_depths
+                z_fields = z_values
+                assert len(z_fields) == n_depths
+            else:
+                z_values = [float(num) for num in z_values]
+                z_min = min(z_values)
+                z_max = max(z_values)
+                z_step = z_max / n_depths
+                z_fields = z_values
+                assert len(z_fields) == n_depths
+
+        else:
+            z_min = float(
+                root.findall(
+                    ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/SubindexedValue/[@subindex='0']"
+                )[0].attrib.get("value")
+            )
+            z_max = float(
+                root.findall(
+                    ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/SubindexedValue/[@subindex='0']"
+                )[-1].attrib.get("value")
+            )
+            z_step = float(
+                root.find(
+                    ".//PVStateShard/PVStateValue/[@key='micronsPerPixel']/IndexedValue/[@index='ZAxis']"
+                ).attrib.get("value")
+            )
+            z_fields = np.arange(z_min, z_max + 1, z_step)
+            assert z_fields.size == n_depths
 
     metainfo = dict(
         num_fields=n_fields,

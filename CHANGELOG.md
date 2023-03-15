@@ -2,7 +2,12 @@
 
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.4.3] - 2023-03-15
+
++ Fix - ingestion routine for multiple Z devices in `prairieviewreader.py`.
+
 ## [0.4.2] - 2022-12-16
+
 + Update - PrairieView loader checks for multi-plane vs single-plane scans.
 
 ## [0.4.1] - 2022-12-15
@@ -44,6 +49,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 + Add - Readers for: `ScanImage`, `Suite2p`, `CaImAn`.
 
+[0.4.3]: https://github.com/datajoint/element-interface/releases/tag/0.4.3
 [0.4.2]: https://github.com/datajoint/element-interface/releases/tag/0.4.2
 [0.4.1]: https://github.com/datajoint/element-interface/releases/tag/0.4.1
 [0.4.0]: https://github.com/datajoint/element-interface/releases/tag/0.4.0
