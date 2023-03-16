@@ -144,7 +144,7 @@ def get_pv_metadata(pvtiffile: str) -> dict:
             for idx, val in enumerate(z_values):
                 zdata_dictionary[val].append(idx)
             repeating_values = {k: v for k, v in zdata_dictionary.items() if len(v) > 1}
-            if len(repeating_values) > 0:
+            if repeating_values:
                 idx_to_drop = list(repeating_values.values())[0]
                 idx_to_drop.sort(reverse=True)
                 for idx in idx_to_drop:
