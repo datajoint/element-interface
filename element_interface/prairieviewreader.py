@@ -154,19 +154,12 @@ def get_pv_metadata(pvtiffile: str) -> dict:
                 idx_to_drop.sort(reverse=True)
                 for idx in idx_to_drop:
                     del z_values[idx]
-                z_values = [float(num) for num in z_values]
-                z_min = min(z_values)
-                z_max = max(z_values)
-                z_step = z_max / n_depths
-                z_fields = z_values
-                assert len(z_fields) == n_depths
-            else:
-                z_values = [float(num) for num in z_values]
-                z_min = min(z_values)
-                z_max = max(z_values)
-                z_step = z_max / n_depths
-                z_fields = z_values
-                assert len(z_fields) == n_depths
+            z_values = [float(num) for num in z_values]
+            z_min = min(z_values)
+            z_max = max(z_values)
+            z_step = z_max / n_depths
+            z_fields = z_values
+            assert len(z_fields) == n_depths
 
         else:
             z_min = float(
