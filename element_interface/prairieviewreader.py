@@ -138,10 +138,7 @@ def get_pv_metadata(pvtiffile: str) -> dict:
             > 1
         ):
 
-            for z_pos in root.findall(
-                ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
-            ):
-                z_dicts.append(z_pos.attrib)
+            z_dicts = [z_pos.attrib for z_pos in root.findall(".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue")]
 
             z_values = [d["value"] for d in z_dicts]
 
