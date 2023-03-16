@@ -116,8 +116,7 @@ def get_pv_metadata(pvtiffile: str) -> dict:
 
     else:
 
-        bidir_z = root.find(".//Sequence").attrib.get("bidirectionalZ")
-        bidirection_z = bidir_z == 'True'
+        bidirection_z = root.find(".//Sequence").attrib.get("bidirectionalZ") == 'True'
 
         # One "Frame" per depth. Gets number of frames in first sequence
         planes = [
