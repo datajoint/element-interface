@@ -1,4 +1,3 @@
-from collections import defaultdict
 import pathlib
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -135,44 +134,15 @@ def get_pv_metadata(pvtiffile: str) -> dict:
             > 1
         ):
 
-            z_dicts = [z_pos.attrib for z_pos in root.findall(".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue")]
-
-            z_values = list(z_dicts.values())
-
-            zdata_dictionary = defaultdict(list)
-            for idx, val in enumerate(z_values):
-                zdata_dictionary[val].append(idx)
-            repeating_values = {k: v for k, v in zdata_dictionary.items() if len(v) > 1}
-            if repeating_values:
-                idx_to_drop = list(repeating_values.values())[0]
-                idx_to_drop.sort(reverse=True)
-                for idx in idx_to_drop:
-                    del z_values[idx]
-            z_values = [float(num) for num in z_values]
-            z_min = min(z_values)
-            z_max = max(z_values)
-            z_step = z_max / n_depths
-            z_fields = z_values
-            assert len(z_fields) == n_depths
+            z_repeats = [z_pos.attrib.get("value") for z_pos in root.findall(".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue")]
+            
+            z_coordinates = [float(z) for z in z_repeats if z_repeats.count(z) == 1]
 
         else:
-            z_min = float(
-                root.findall(
-                    ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/SubindexedValue/[@subindex='0']"
-                )[0].attrib.get("value")
-            )
-            z_max = float(
-                root.findall(
-                    ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/SubindexedValue/[@subindex='0']"
-                )[-1].attrib.get("value")
-            )
-            z_step = float(
-                root.find(
-                    ".//PVStateShard/PVStateValue/[@key='micronsPerPixel']/IndexedValue/[@index='ZAxis']"
-                ).attrib.get("value")
-            )
-            z_fields = np.arange(z_min, z_max + 1, z_step)
-            assert z_fields.size == n_depths
+            z_coordinates = [z_pos.attrib.get("value") for z_pos in root.findall(".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='0']")]
+
+        z_fields = z_coordinates
+        assert len(z_fields) == n_depths
 
     metainfo = dict(
         num_fields=n_fields,
