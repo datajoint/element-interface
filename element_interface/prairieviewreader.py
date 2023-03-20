@@ -124,7 +124,6 @@ def get_pv_metadata(pvtiffile: str) -> dict:
         ]
         n_depths = len(set(planes))
 
-        # find z-axis controller if there is more than 1.
         z_controllers = root.findall(
             ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
         )
