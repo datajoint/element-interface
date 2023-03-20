@@ -115,7 +115,7 @@ def get_pv_metadata(pvtiffile: str) -> dict:
 
     else:
 
-        bidirection_z = root.find(".//Sequence").attrib.get("bidirectionalZ") == 'True'
+        bidirection_z = root.find(".//Sequence").attrib.get("bidirectionalZ") == "True"
 
         # One "Frame" per depth. Gets number of frames in first sequence
         planes = [
@@ -124,25 +124,31 @@ def get_pv_metadata(pvtiffile: str) -> dict:
         ]
         n_depths = len(set(planes))
 
-        # find z_depths controller if there is more than 1.
-        if (
-            len(
-                root.findall(
-                    ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
+        # find z-axis controller if there is more than 1.
+        z_controllers = root.findall(
+            ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
+        )
+        if len(z_controllers) > 1:
+            z_repeats = [
+                z.attrib.get("value")
+                for z in root.findall(
+                    ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
                 )
-            )
-            > 1
-        ):
+            ]
 
-            z_repeats = [z_pos.attrib.get("value") for z_pos in root.findall(".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue")]
-            
-            z_coordinates = [float(z) for z in z_repeats if z_repeats.count(z) == 1]
+            z_fields = [float(z) for z in z_repeats if z_repeats.count(z) == 1]
 
         else:
-            z_coordinates = [z_pos.attrib.get("value") for z_pos in root.findall(".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='0']")]
+            z_fields = [
+                z.attrib.get("value")
+                for z in root.findall(
+                    ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='0']"
+                )
+            ]
 
-        z_fields = z_coordinates
-        assert len(z_fields) == n_depths
+        assert (
+            len(z_fields) == n_depths
+        ), "Number of z fields does not match number of depths."
 
     metainfo = dict(
         num_fields=n_fields,
