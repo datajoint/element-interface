@@ -128,34 +128,28 @@ def get_pv_metadata(pvtiffile: str) -> dict:
             ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
         )
         if len(z_controllers) > 1:
-            subindicies = [
-                subindex.attrib.get("subindex")
-                for subindex in root.findall(
-                    ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/"
-                )
-            ]
 
             z_repeats = []
-            for subindex in subindicies:
+            for controller in root.findall(
+                ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/"):
                 z_repeats.append(
                     [
                         float(z.attrib.get("value"))
                         for z in root.findall(
                             ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='{0}']".format(
-                                subindex
+                                controller.attrib.get("subindex")
                             )
                         )
                     ]
                 )
+    
 
-            z_fields = np.delete(
-                z_repeats, np.diff(z_repeats).mean(axis=1) == 0, axis=0
-            ).flatten()
+            controller_assert = [not all(z == z_controller[0] for z in z_controller) for z_controller in z_repeats]
 
-            assert (
-                z_fields.shape[1] == n_depths
-            ), "Number of z fields does not match number of depths."
+            assert sum(controller_assert)==1, "Multiple controllers changing z depth is not supported"
 
+            z_fields = z_repeats[controller_assert.index(True)]
+            
         else:
             z_fields = [
                 z.attrib.get("value")
@@ -164,9 +158,9 @@ def get_pv_metadata(pvtiffile: str) -> dict:
                 )
             ]
 
-            assert (
-                len(z_fields) == n_depths
-            ), "Number of z fields does not match number of depths."
+        assert (
+            len(z_fields) == n_depths
+        ), "Number of z fields does not match number of depths."
 
     metainfo = dict(
         num_fields=n_fields,
