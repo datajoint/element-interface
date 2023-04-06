@@ -2,82 +2,82 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>http://localhost/docs/element/element-interface/0.5/</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/element/element-interface/0.5/changelog/</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/element/element-interface/0.5/citation/</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/element/element-interface/0.5/concepts/</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>None</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/element/element-interface/0.5/api/element_interface/caiman_loader/</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/element/element-interface/0.5/api/element_interface/dandi/</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/element/element-interface/0.5/api/element_interface/extract_loader/</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/element/element-interface/0.5/api/element_interface/extract_trigger/</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/element/element-interface/0.5/api/element_interface/prairieviewreader/</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/element/element-interface/0.5/api/element_interface/run_caiman/</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/element/element-interface/0.5/api/element_interface/scanimage_utils/</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/element/element-interface/0.5/api/element_interface/suite2p_loader/</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/element/element-interface/0.5/api/element_interface/suite2p_trigger/</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/element/element-interface/0.5/api/element_interface/utils/</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>http://localhost/docs/element/element-interface/0.5/api/element_interface/version/</loc>
-         <lastmod>2023-01-12</lastmod>
+         <lastmod>2023-04-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
