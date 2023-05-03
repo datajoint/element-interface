@@ -41,7 +41,10 @@ def upload_to_dandi(
 
     dandiset_url = f"https://gui-staging.dandiarchive.org/#/dandiset/{dandiset_id}" if staging else f"https://dandiarchive.org/dandiset/{dandiset_id}/draft"
 
-    download(dandiset_url, output_dir=working_directory)
+    subprocess.run(
+        ["dandi", "download", "--download", "dandiset.yaml", "-o", working_directory, dandiset_url],
+        shell=True, 
+    )
 
     # subprocess.run(
     #     ["nwbinspector", data_directory, "--config", "dandi", "--report-file-path", os.path.join(data_directory, 'nwbinspector.txt')], shell=True
@@ -56,9 +59,8 @@ def upload_to_dandi(
         ["dandi", "organize", "-d", dandiset_directory, data_directory], shell=True
     )
 
-    print(
-        f"work_dir: {working_directory}\ndata_dir: {data_directory}\n"
-        + f"dand_dir: {dandiset_directory}"
+    subprocess.run(
+        ["dandi", "validate", dandiset_directory], shell=True
     )
 
     upload(
