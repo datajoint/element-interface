@@ -8,3 +8,5 @@ mkdocs-gen-files
 mkdocs-literate-nav
 mkdocs-exclude-search
 mkdocs-markdownextradata-plugin
+mkdocs-jupyter
+mkdocs-section-index
