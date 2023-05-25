@@ -1,6 +1,7 @@
 # User data
 .DS_Store
 temp*
+user_data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -114,4 +115,3 @@ dj_local_conf_old.json
 **/*~
 **/#*#
 **/.#*
-docker-compose.y*ml
