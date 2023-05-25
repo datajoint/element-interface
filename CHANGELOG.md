@@ -6,7 +6,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 ## [0.5.4] - 2023-05-25
 
 + Fix - DANDI URL for uploads where `staging=False`.
-+ Fix - Docs to remote Google Analytics Key and add Markdown extensions
++ Fix - Docs to remove Google Analytics Key and add Markdown extensions
 
 ## [0.5.3] - 2023-05-11
 
