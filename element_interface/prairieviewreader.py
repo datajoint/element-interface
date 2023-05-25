@@ -42,7 +42,7 @@ def get_pv_metadata(pvtiffile: str) -> dict:
         )
 
     bidirectional_scan = False  # Does not support bidirectional
-    roi = 1
+    roi = 0
     n_fields = 1  # Always contains 1 field
     record_start_time = root.find(".//Sequence/[@cycle='1']").attrib.get("time")
 
@@ -115,7 +115,7 @@ def get_pv_metadata(pvtiffile: str) -> dict:
 
     else:
 
-        bidirection_z = bool(root.find(".//Sequence").attrib.get("bidirectionalZ"))
+        bidirection_z = root.find(".//Sequence").attrib.get("bidirectionalZ") == "True"
 
         # One "Frame" per depth. Gets number of frames in first sequence
         planes = [
@@ -123,23 +123,44 @@ def get_pv_metadata(pvtiffile: str) -> dict:
             for plane in root.findall(".//Sequence/[@cycle='1']/Frame")
         ]
         n_depths = len(set(planes))
-        z_min = float(
-            root.findall(
-                ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/SubindexedValue/[@subindex='0']"
-            )[0].attrib.get("value")
+
+        z_controllers = root.findall(
+            ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
         )
-        z_max = float(
-            root.findall(
-                ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/SubindexedValue/[@subindex='0']"
-            )[-1].attrib.get("value")
-        )
-        z_step = float(
-            root.find(
-                ".//PVStateShard/PVStateValue/[@key='micronsPerPixel']/IndexedValue/[@index='ZAxis']"
-            ).attrib.get("value")
-        )
-        z_fields = np.arange(z_min, z_max + 1, z_step)
-        assert z_fields.size == n_depths
+        if len(z_controllers) > 1:
+
+            z_repeats = []
+            for controller in root.findall(
+                ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/"):
+                z_repeats.append(
+                    [
+                        float(z.attrib.get("value"))
+                        for z in root.findall(
+                            ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='{0}']".format(
+                                controller.attrib.get("subindex")
+                            )
+                        )
+                    ]
+                )
+    
+
+            controller_assert = [not all(z == z_controller[0] for z in z_controller) for z_controller in z_repeats]
+
+            assert sum(controller_assert)==1, "Multiple controllers changing z depth is not supported"
+
+            z_fields = z_repeats[controller_assert.index(True)]
+            
+        else:
+            z_fields = [
+                z.attrib.get("value")
+                for z in root.findall(
+                    ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='0']"
+                )
+            ]
+
+        assert (
+            len(z_fields) == n_depths
+        ), "Number of z fields does not match number of depths."
 
     metainfo = dict(
         num_fields=n_fields,

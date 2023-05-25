@@ -1,6 +1,7 @@
 # User data
 .DS_Store
 temp*
+user_data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

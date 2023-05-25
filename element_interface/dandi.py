@@ -39,7 +39,7 @@ def upload_to_dandi(
     download(
         f"https://gui-staging.dandiarchive.org/#/dandiset/{dandiset_id}"
         if staging
-        else dandiset_id,
+        else f"https://dandiarchive.org/dandiset/{dandiset_id}",
         output_dir=working_directory,
     )
 
