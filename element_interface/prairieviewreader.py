@@ -38,7 +38,7 @@ def get_pv_metadata(pvtiffile: str) -> dict:
             break
     else:
         raise FileNotFoundError(
-            f"No PrarieView metadata XML file found at {pvtiffile.parent}"
+            f"No PrarieView metadata XML file found at {pathlib.Path(pvtiffile).parent}"
         )
 
     bidirectional_scan = False  # Does not support bidirectional
