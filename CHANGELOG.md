@@ -8,9 +8,10 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Update - `prairieviewreader.py` -> `prairie_view_loader.py`
 + Update - Internal variable names within `prairie_view_loader.py`
 
-## [0.5.4] - 2023-05-14
+## [0.5.4] - 2023-05-25
 
 + Fix - DANDI URL for uploads where `staging=False`.
++ Fix - Docs to remove Google Analytics Key and add Markdown extensions
 
 ## [0.5.3] - 2023-05-11
 
