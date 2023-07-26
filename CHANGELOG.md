@@ -3,6 +3,11 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.5.5] - 2023-07-26
+
++ Update - `prairieviewreader.py` -> `prairie_view_loader.py`
++ Update - Internal variable names within `prairie_view_loader.py`
+
 ## [0.5.4] - 2023-05-14
 
 + Fix - DANDI URL for uploads where `staging=False`.
@@ -70,6 +75,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 + Add - Readers for: `ScanImage`, `Suite2p`, `CaImAn`.
 
+[0.5.5]: https://github.com/datajoint/element-interface/releases/tag/0.5.5
 [0.5.4]: https://github.com/datajoint/element-interface/releases/tag/0.5.4
 [0.5.3]: https://github.com/datajoint/element-interface/releases/tag/0.5.3
 [0.5.2]: https://github.com/datajoint/element-interface/releases/tag/0.5.2
