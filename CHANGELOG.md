@@ -6,6 +6,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 ## [0.6.0] - 2023-07-26
 
 + Update - `prairieviewreader.py` -> `prairie_view_loader.py`
++ Update - `get_pv_metadata()` -> `get_prairieview_metadata()`
 + Update - Internal variable names within `prairie_view_loader.py`
 
 ## [0.5.4] - 2023-05-25
