@@ -45,10 +45,6 @@ def upload_to_dandi(
         shell=True, 
     )
 
-    # subprocess.run(
-    #     ["nwbinspector", data_directory, "--config", "dandi", "--report-file-path", os.path.join(data_directory, 'nwbinspector.txt')], shell=True
-    # )
-
     subprocess.run(
         ["dandi", "organize", "-d", dandiset_directory, data_directory, "-f", "dry"],
         shell=True,  # without this param, subprocess interprets first arg as file/dir
