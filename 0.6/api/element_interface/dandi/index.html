@@ -17,7 +17,7 @@
         <link rel="next" href="../extract_loader/">
       
       <link rel="icon" href="../../../assets/images/company-logo-blue.png">
-      <meta name="generator" content="mkdocs-1.5.0, mkdocs-material-9.1.20">
+      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.1.21">
     
     
       
@@ -640,7 +640,7 @@
 
 
 <h2 id="element_interface.dandi.upload_to_dandi" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">upload_to_dandi</span><span class="p">(</span><span class="n">data_directory</span><span class="p">,</span> <span class="n">dandiset_id</span><span class="p">,</span> <span class="n">staging</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">working_directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sync</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">upload_to_dandi</span><span class="p">(</span><span class="n">data_directory</span><span class="p">,</span> <span class="n">dandiset_id</span><span class="p">,</span> <span class="n">staging</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">working_directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sync</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">existing</span><span class="o">=</span><span class="s1">&#39;refresh&#39;</span><span class="p">)</span></code>
 
 <a href="#element_interface.dandi.upload_to_dandi" class="headerlink" title="Permanent link">&para;</a></h2>
 
@@ -749,6 +749,20 @@ in the local directory.</p>
                 <code>False</code>
           </td>
         </tr>
+        <tr>
+          <td><code>existing</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>see full description from <code>dandi upload --help</code></p>
+            </div>
+          </td>
+          <td>
+                <code>&#39;refresh&#39;</code>
+          </td>
+        </tr>
     </tbody>
   </table>
 
@@ -811,13 +825,15 @@ in the local directory.</p>
 <span class="normal">62</span>
 <span class="normal">63</span>
 <span class="normal">64</span>
-<span class="normal">65</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">upload_to_dandi</span><span class="p">(</span>
+<span class="normal">65</span>
+<span class="normal">66</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">upload_to_dandi</span><span class="p">(</span>
     <span class="n">data_directory</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">dandiset_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">staging</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">working_directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">sync</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">existing</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;refresh&quot;</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Upload NWB files to DANDI Archive</span>
 
@@ -831,6 +847,7 @@ in the local directory.</p>
 <span class="sd">            environmental variable DANDI_API_KEY</span>
 <span class="sd">        sync (str, optional): If True, delete all files in archive that are not present</span>
 <span class="sd">            in the local directory.</span>
+<span class="sd">        existing (str, optional): see full description from `dandi upload --help`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">working_directory</span> <span class="o">=</span> <span class="n">working_directory</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">curdir</span>
@@ -842,11 +859,11 @@ in the local directory.</p>
         <span class="n">working_directory</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">dandiset_id</span><span class="p">)</span>
     <span class="p">)</span>  <span class="c1"># enforce str</span>
 
-    <span class="n">download</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;https://gui-staging.dandiarchive.org/#/dandiset/</span><span class="si">{</span><span class="n">dandiset_id</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">if</span> <span class="n">staging</span>
-        <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;https://dandiarchive.org/dandiset/</span><span class="si">{</span><span class="n">dandiset_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-        <span class="n">output_dir</span><span class="o">=</span><span class="n">working_directory</span><span class="p">,</span>
+    <span class="n">dandiset_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://gui-staging.dandiarchive.org/#/dandiset/</span><span class="si">{</span><span class="n">dandiset_id</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">staging</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;https://dandiarchive.org/dandiset/</span><span class="si">{</span><span class="n">dandiset_id</span><span class="si">}</span><span class="s2">/draft&quot;</span>
+
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">&quot;dandi&quot;</span><span class="p">,</span> <span class="s2">&quot;download&quot;</span><span class="p">,</span> <span class="s2">&quot;--download&quot;</span><span class="p">,</span> <span class="s2">&quot;dandiset.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">working_directory</span><span class="p">,</span> <span class="n">dandiset_url</span><span class="p">],</span>
+        <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
     <span class="p">)</span>
 
     <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
@@ -858,15 +875,14 @@ in the local directory.</p>
         <span class="p">[</span><span class="s2">&quot;dandi&quot;</span><span class="p">,</span> <span class="s2">&quot;organize&quot;</span><span class="p">,</span> <span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="n">dandiset_directory</span><span class="p">,</span> <span class="n">data_directory</span><span class="p">],</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span>
     <span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;work_dir: </span><span class="si">{</span><span class="n">working_directory</span><span class="si">}</span><span class="se">\n</span><span class="s2">data_dir: </span><span class="si">{</span><span class="n">data_directory</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;dand_dir: </span><span class="si">{</span><span class="n">dandiset_directory</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">&quot;dandi&quot;</span><span class="p">,</span> <span class="s2">&quot;validate&quot;</span><span class="p">,</span> <span class="n">dandiset_directory</span><span class="p">],</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span>
     <span class="p">)</span>
 
     <span class="n">upload</span><span class="p">(</span>
-        <span class="p">[</span><span class="n">dandiset_directory</span><span class="p">],</span>
-        <span class="c1"># dandiset_path=dandiset_directory, # dandi.upload has no such arg</span>
+        <span class="n">paths</span><span class="o">=</span><span class="p">[</span><span class="n">dandiset_directory</span><span class="p">],</span>
         <span class="n">dandi_instance</span><span class="o">=</span><span class="s2">&quot;dandi-staging&quot;</span> <span class="k">if</span> <span class="n">staging</span> <span class="k">else</span> <span class="s2">&quot;dandi&quot;</span><span class="p">,</span>
+        <span class="n">existing</span><span class="o">=</span><span class="n">existing</span><span class="p">,</span>
         <span class="n">sync</span><span class="o">=</span><span class="n">sync</span><span class="p">,</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
