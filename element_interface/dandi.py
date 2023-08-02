@@ -38,7 +38,6 @@ def upload_to_dandi(
         working_directory, str(dandiset_id)
     )  # enforce str
 
-
     dandiset_url = f"https://gui-staging.dandiarchive.org/#/dandiset/{dandiset_id}" if staging else f"https://dandiarchive.org/dandiset/{dandiset_id}/draft"
 
     subprocess.run(
