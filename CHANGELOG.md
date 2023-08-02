@@ -3,6 +3,26 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.6.0] - 2023-07-26
+
++ Update - `prairieviewreader.py` -> `prairie_view_loader.py`
++ Update - `get_pv_metadata()` -> `get_prairieview_metadata()`
++ Update - Internal variable names within `prairie_view_loader.py`
+
+## [0.5.4] - 2023-05-25
+
++ Fix - DANDI URL for uploads where `staging=False`.
++ Fix - Docs to remove Google Analytics Key and add Markdown extensions
+
+## [0.5.3] - 2023-05-11
+
++ Fix - `.ipynb` dark mode output for all notebooks.
++ Fix - Remove `GOOGLE_ANALYTICS_KEY` from `u24_element_release_call.yml`.
+
+## [0.5.2] - 2023-04-28
+
++ Fix - `.ipynb` output in tutorials is not visible in dark mode.
+
 ## [0.5.1] - 2023-03-15
 
 + Fix - ingestion routine for multiple Z devices in `prairieviewreader.py`.
@@ -57,6 +77,10 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 + Add - Readers for: `ScanImage`, `Suite2p`, `CaImAn`.
 
+[0.6.0]: https://github.com/datajoint/element-interface/releases/tag/0.6.0
+[0.5.4]: https://github.com/datajoint/element-interface/releases/tag/0.5.4
+[0.5.3]: https://github.com/datajoint/element-interface/releases/tag/0.5.3
+[0.5.2]: https://github.com/datajoint/element-interface/releases/tag/0.5.2
 [0.5.1]: https://github.com/datajoint/element-interface/releases/tag/0.5.1
 [0.5.0]: https://github.com/datajoint/element-interface/releases/tag/0.5.0
 [0.4.2]: https://github.com/datajoint/element-interface/releases/tag/0.4.2
