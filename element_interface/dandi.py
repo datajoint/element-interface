@@ -12,6 +12,7 @@ def upload_to_dandi(
     working_directory: str = None,
     api_key: str = None,
     sync: bool = False,
+    existing: str = "refresh",
 ):
     """Upload NWB files to DANDI Archive
 
@@ -25,6 +26,7 @@ def upload_to_dandi(
             environmental variable DANDI_API_KEY
         sync (str, optional): If True, delete all files in archive that are not present
             in the local directory.
+        existing (str, optional): see full description from `dandi upload --help`
     """
 
     working_directory = working_directory or os.path.curdir
@@ -36,11 +38,11 @@ def upload_to_dandi(
         working_directory, str(dandiset_id)
     )  # enforce str
 
-    download(
-        f"https://gui-staging.dandiarchive.org/#/dandiset/{dandiset_id}"
-        if staging
-        else f"https://dandiarchive.org/dandiset/{dandiset_id}",
-        output_dir=working_directory,
+    dandiset_url = f"https://gui-staging.dandiarchive.org/#/dandiset/{dandiset_id}" if staging else f"https://dandiarchive.org/dandiset/{dandiset_id}/draft"
+
+    subprocess.run(
+        ["dandi", "download", "--download", "dandiset.yaml", "-o", working_directory, dandiset_url],
+        shell=True, 
     )
 
     subprocess.run(
@@ -52,14 +54,13 @@ def upload_to_dandi(
         ["dandi", "organize", "-d", dandiset_directory, data_directory], shell=True
     )
 
-    print(
-        f"work_dir: {working_directory}\ndata_dir: {data_directory}\n"
-        + f"dand_dir: {dandiset_directory}"
+    subprocess.run(
+        ["dandi", "validate", dandiset_directory], shell=True
     )
 
     upload(
-        [dandiset_directory],
-        # dandiset_path=dandiset_directory, # dandi.upload has no such arg
+        paths=[dandiset_directory],
         dandi_instance="dandi-staging" if staging else "dandi",
+        existing=existing,
         sync=sync,
     )
