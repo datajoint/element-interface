@@ -1,7 +1,7 @@
 import os
 import pathlib
 from datetime import datetime
-
+import re
 import caiman as cm
 import h5py
 import numpy as np
@@ -71,6 +71,119 @@ class CaImAn:
         if not caiman_dir.exists():
             raise FileNotFoundError("CaImAn directory not found: {}".format(caiman_dir))
 
+        caiman_subdirs = []
+        for fp in caiman_dir.glob("*.hdf5"):
+            with h5py.File(fp, "r") as h5f:
+                if all(s in h5f for s in _required_hdf5_fields):
+                    caiman_subdirs.append(fp.parent)
+
+        if not caiman_subdirs:
+            raise FileNotFoundError(
+                "No CaImAn analysis output file found at {}"
+                " containg all required fields ({})".format(
+                    caiman_dir, _required_hdf5_fields
+                )
+            )
+
+        self.planes = {}
+        for idx, caiman_subdir in enumerate(sorted(caiman_subdirs)):
+            pln_cm = _CaImAn(caiman_subdir.as_posix())
+            pln_idx_match = re.search(r"pln(\d+)_.*")
+            pln_idx = pln_idx_match.groups()[0] if pln_idx_match else idx
+            pln_cm.plane_idx = pln_idx
+            self.planes[pln_idx] = pln_cm
+
+        self._motion_correction = None
+        self._masks = None
+
+        self.creation_time = min(
+            [p.creation_time for p in self.planes.values()]
+        )  # ealiest file creation time
+        self.curation_time = max(
+            [p.curation_time for p in self.planes.values()]
+        )  # most recent curation time
+
+    @property
+    def motion_correction(self):
+        if self._motion_correction is None:
+            self._motion_correction = self.h5f["motion_correction"]
+        return self._motion_correction
+
+    @property
+    def masks(self):
+        if self._masks is None:
+            all_masks = []
+            for pln_idx, _caiman in sorted(self.planes.items()):
+                mask_count = len(all_masks)  # increment mask id from all "plane"
+                all_masks.extend([{**m, "mask_id": m["mask_id"] + mask_count} for m in _caiman.masks])
+
+            self._masks = all_masks
+        return self._masks
+
+    @property
+    def alignment_channel(self):
+        return 0  # hard-code to channel index 0
+
+    @property
+    def segmentation_channel(self):
+        return 0  # hard-code to channel index 0
+
+
+class _CaImAn:
+    """Parse the CaImAn output file
+
+    [CaImAn results doc](https://caiman.readthedocs.io/en/master/Getting_Started.html#result-variables-for-2p-batch-analysis)
+
+    Expecting the following objects:
+        - dims:
+        - dview:
+        - estimates:              Segmentations and traces
+        - mmap_file:
+        - params:                 Input parameters
+        - remove_very_bad_comps:
+        - skip_refinement:
+        - motion_correction:      Motion correction shifts and summary images
+
+    Example:
+        > output_dir = '<imaging_root_data_dir>/subject1/session0/caiman'
+
+        > loaded_dataset = caiman_loader.CaImAn(output_dir)
+
+    Attributes:
+        alignment_channel: hard-coded to 0
+        caiman_fp: file path with all required files:
+            "/motion_correction/reference_image",
+            "/motion_correction/correlation_image",
+            "/motion_correction/average_image",
+            "/motion_correction/max_image",
+            "/estimates/A",
+        cnmf: loaded caiman object; cm.source_extraction.cnmf.cnmf.load_CNMF(caiman_fp)
+        creation_time: file creation time
+        curation_time: file creation time
+        extract_masks: function to extract masks
+        h5f: caiman_fp read as h5py file
+        masks: dict result of extract_masks
+        motion_correction: h5f "motion_correction" property
+        params: cnmf.params
+        segmentation_channel: hard-coded to 0
+        plane_idx: N/A if `is3D` else hard-coded to 0
+    """
+
+    def __init__(self, caiman_dir: str):
+        """Initialize CaImAn loader class
+
+        Args:
+            caiman_dir (str): string, absolute file path to CaIman directory
+
+        Raises:
+            FileNotFoundError: No CaImAn analysis output file found
+            FileNotFoundError: No CaImAn analysis output found, missing required fields
+        """
+        # ---- Search and verify CaImAn output file exists ----
+        caiman_dir = pathlib.Path(caiman_dir)
+        if not caiman_dir.exists():
+            raise FileNotFoundError("CaImAn directory not found: {}".format(caiman_dir))
+
         for fp in caiman_dir.glob("*.hdf5"):
             with h5py.File(fp, "r") as h5f:
                 if all(s in h5f for s in _required_hdf5_fields):
@@ -89,12 +202,19 @@ class CaImAn:
         self.params = self.cnmf.params
 
         self.h5f = h5py.File(self.caiman_fp, "r")
-        self.motion_correction = self.h5f["motion_correction"]
+        self.plane_idx = None if self.params.motion["is3D"] else 0
+        self._motion_correction = None
         self._masks = None
 
         # ---- Metainfo ----
         self.creation_time = datetime.fromtimestamp(os.stat(self.caiman_fp).st_ctime)
         self.curation_time = datetime.fromtimestamp(os.stat(self.caiman_fp).st_ctime)
+
+    @property
+    def motion_correction(self):
+        if self._motion_correction is None:
+            self._motion_correction = self.h5f["motion_correction"]
+        return self._motion_correction
 
     @property
     def masks(self):
@@ -139,7 +259,7 @@ class CaImAn:
             else:
                 xpix, ypix = np.unravel_index(ind, self.cnmf.dims, order="F")
                 center_x, center_y = comp_contour["CoM"].astype(int)
-                center_z = 0
+                center_z = self.plane_idx
                 zpix = np.full(len(weights), center_z)
 
             masks.append(
@@ -161,7 +281,7 @@ class CaImAn:
         return masks
 
 
-def _process_scanimage_tiff(scan_filenames, output_dir="./"):
+def _process_scanimage_tiff(scan_filenames, output_dir="./", split_depths=False):
     """
     Read ScanImage TIFF - reshape into volumetric data based on scanning depths/channels
     Save new TIFF files for each channel - with shape (frame x height x width x depth)
