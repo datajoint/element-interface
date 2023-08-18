@@ -1,8 +1,232 @@
 import pathlib
+from pathlib import Path
 import xml.etree.ElementTree as ET
 from datetime import datetime
-
 import numpy as np
+
+
+class PrairieViewMeta:
+
+    def __init__(self, prairieview_dir: str):
+        """Initialize PrairieViewMeta loader class
+
+        Args:
+            prairieview_dir (str): string, absolute file path to directory containing PrairieView dataset
+        """
+        # ---- Search and verify CaImAn output file exists ----
+        # May return multiple xml files. Only need one that contains scan metadata.
+        self.prairieview_dir = Path(prairieview_dir)
+
+        for file in self.prairieview_dir.glob("*.xml"):
+            xml_tree = ET.parse(file)
+            xml_root = xml_tree.getroot()
+            if xml_root.find(".//Sequence"):
+                self.xml_file = file
+                self._xml_root = xml_root
+                break
+        else:
+            raise FileNotFoundError(
+                f"No PrarieView metadata .xml file found at {prairieview_dir}"
+            )
+
+        self._meta = None
+
+    @property
+    def meta(self):
+        if self._meta is None:
+            self._meta = _extract_prairieview_metadata(self.xml_file)
+        return self._meta
+
+    def get_prairieview_files(self, plane_idx=None, channel=None):
+        if plane_idx is None:
+            if self.meta['num_planes'] > 1:
+                raise ValueError(f"Please specify 'plane_idx' - Plane indices: {self.meta['plane_indices']}")
+            else:
+                plane_idx = self.meta['plane_indices'][0]
+        else:
+            assert plane_idx in self.meta['plane_indices'], f"Invalid 'plane_idx' - Plane indices: {self.meta['plane_indices']}"
+
+        if channel is None:
+            if self.meta['num_channels'] > 1:
+                raise ValueError(f"Please specify 'channel' - Channels: {self.meta['channels']}")
+            else:
+                plane_idx = self.meta['channels'][0]
+        else:
+            assert channel in self.meta['channels'], f"Invalid 'channel' - Channels: {self.meta['channels']}"
+
+        frames = self._xml_root.findall(f".//Sequence/Frame/[@index='{plane_idx}']/File/[@channel='{channel}']")
+        return [f.attrib['filename'] for f in frames]
+
+
+def _extract_prairieview_metadata(xml_filepath: str):
+    xml_filepath = Path(xml_filepath)
+    if not xml_filepath.exists():
+        raise FileNotFoundError(f"{xml_filepath} does not exist")
+    xml_tree = ET.parse(xml_filepath)
+    xml_root = xml_tree.getroot()
+
+    bidirectional_scan = False  # Does not support bidirectional
+    roi = 0
+    n_fields = 1  # Always contains 1 field
+    recording_start_time = xml_root.find(".//Sequence/[@cycle='1']").attrib.get("time")
+
+    # Get all channels and find unique values
+    channel_list = [
+        int(channel.attrib.get("channel"))
+        for channel in xml_root.iterfind(".//Sequence/Frame/File/[@channel]")
+    ]
+    channels = set(channel_list)
+    n_channels = len(channels)
+    n_frames = len(xml_root.findall(".//Sequence/Frame"))
+    framerate = 1 / float(
+        xml_root.findall('.//PVStateValue/[@key="framePeriod"]')[0].attrib.get("value")
+    )  # rate = 1/framePeriod
+
+    usec_per_line = (
+        float(
+            xml_root.findall(".//PVStateValue/[@key='scanLinePeriod']")[0].attrib.get(
+                "value"
+            )
+        )
+        * 1e6
+    )  # Convert from seconds to microseconds
+
+    scan_datetime = datetime.strptime(
+        xml_root.attrib.get("date"), "%m/%d/%Y %I:%M:%S %p"
+    )
+
+    total_scan_duration = float(
+        xml_root.findall(".//Sequence/Frame")[-1].attrib.get("relativeTime")
+    )
+
+    pixel_height = int(
+        xml_root.findall(".//PVStateValue/[@key='pixelsPerLine']")[0].attrib.get(
+            "value"
+        )
+    )
+    # All PrairieView-acquired images have square dimensions (512 x 512; 1024 x 1024)
+    pixel_width = pixel_height
+
+    um_per_pixel = float(
+        xml_root.find(
+            ".//PVStateValue/[@key='micronsPerPixel']/IndexedValue/[@index='XAxis']"
+        ).attrib.get("value")
+    )
+
+    um_height = um_width = float(pixel_height) * um_per_pixel
+
+    # x and y coordinate values for the center of the field
+    x_field = float(
+        xml_root.find(
+            ".//PVStateValue/[@key='currentScanCenter']/IndexedValue/[@index='XAxis']"
+        ).attrib.get("value")
+    )
+    y_field = float(
+        xml_root.find(
+            ".//PVStateValue/[@key='currentScanCenter']/IndexedValue/[@index='YAxis']"
+        ).attrib.get("value")
+    )
+
+    if (
+        xml_root.find(
+            ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']"
+        )
+        is None
+    ):
+        z_fields = np.float64(
+            xml_root.find(
+                ".//PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
+            ).attrib.get("value")
+        )
+        n_depths = 1
+        plane_indices = {0}
+        assert z_fields.size == n_depths
+        bidirection_z = False
+    else:
+        bidirection_z = (
+            xml_root.find(".//Sequence").attrib.get("bidirectionalZ") == "True"
+        )
+
+        # One "Frame" per depth in the .xml file. Gets number of frames in first sequence
+        planes = [
+            int(plane.attrib.get("index"))
+            for plane in xml_root.findall(".//Sequence/[@cycle='1']/Frame")
+        ]
+        plane_indices = set(planes)
+        n_depths = len(plane_indices)
+
+        z_controllers = xml_root.findall(
+            ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
+        )
+
+        # If more than one Z-axis controllers are found, 
+        # check which controller is changing z_field depth. Only 1 controller
+        # must change depths.
+        if len(z_controllers) > 1:
+            z_repeats = []
+            for controller in xml_root.findall(
+                ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/"
+            ):
+                z_repeats.append(
+                    [
+                        float(z.attrib.get("value"))
+                        for z in xml_root.findall(
+                            ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='{0}']".format(
+                                controller.attrib.get("subindex")
+                            )
+                        )
+                    ]
+                )
+            controller_assert = [
+                not all(z == z_controller[0] for z in z_controller)
+                for z_controller in z_repeats
+            ]
+            assert (
+                sum(controller_assert) == 1
+            ), "Multiple controllers changing z depth is not supported"
+
+            z_fields = z_repeats[controller_assert.index(True)]
+
+        else:
+            z_fields = [
+                z.attrib.get("value")
+                for z in xml_root.findall(
+                    ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='0']"
+                )
+            ]
+
+        assert (
+            len(z_fields) == n_depths
+        ), "Number of z fields does not match number of depths."
+
+    metainfo = dict(
+        num_fields=n_fields,
+        num_channels=n_channels,
+        num_planes=n_depths,
+        num_frames=n_frames,
+        num_rois=roi,
+        x_pos=None,
+        y_pos=None,
+        z_pos=None,
+        frame_rate=framerate,
+        bidirectional=bidirectional_scan,
+        bidirectional_z=bidirection_z,
+        scan_datetime=scan_datetime,
+        usecs_per_line=usec_per_line,
+        scan_duration=total_scan_duration,
+        height_in_pixels=pixel_height,
+        width_in_pixels=pixel_width,
+        height_in_um=um_height,
+        width_in_um=um_width,
+        fieldX=x_field,
+        fieldY=y_field,
+        fieldZ=z_fields,
+        recording_time=recording_start_time,
+        channels=list(channels),
+        plane_indices=list(plane_indices),
+    )
+
+    return metainfo
 
 
 def get_prairieview_metadata(ome_tif_filepath: str) -> dict:
@@ -41,160 +265,4 @@ def get_prairieview_metadata(ome_tif_filepath: str) -> dict:
             f"No PrarieView metadata .xml file found at {pathlib.Path(ome_tif_filepath).parent}"
         )
 
-    bidirectional_scan = False  # Does not support bidirectional
-    roi = 0
-    n_fields = 1  # Always contains 1 field
-    recording_start_time = xml_file.find(".//Sequence/[@cycle='1']").attrib.get("time")
-
-    # Get all channels and find unique values
-    channel_list = [
-        int(channel.attrib.get("channel"))
-        for channel in xml_file.iterfind(".//Sequence/Frame/File/[@channel]")
-    ]
-    n_channels = len(set(channel_list))
-    n_frames = len(xml_file.findall(".//Sequence/Frame"))
-    framerate = 1 / float(
-        xml_file.findall('.//PVStateValue/[@key="framePeriod"]')[0].attrib.get("value")
-    )  # rate = 1/framePeriod
-
-    usec_per_line = (
-        float(
-            xml_file.findall(".//PVStateValue/[@key='scanLinePeriod']")[0].attrib.get(
-                "value"
-            )
-        )
-        * 1e6
-    )  # Convert from seconds to microseconds
-
-    scan_datetime = datetime.strptime(
-        xml_file.attrib.get("date"), "%m/%d/%Y %I:%M:%S %p"
-    )
-
-    total_scan_duration = float(
-        xml_file.findall(".//Sequence/Frame")[-1].attrib.get("relativeTime")
-    )
-
-    pixel_height = int(
-        xml_file.findall(".//PVStateValue/[@key='pixelsPerLine']")[0].attrib.get(
-            "value"
-        )
-    )
-    # All PrairieView-acquired images have square dimensions (512 x 512; 1024 x 1024)
-    pixel_width = pixel_height
-
-    um_per_pixel = float(
-        xml_file.find(
-            ".//PVStateValue/[@key='micronsPerPixel']/IndexedValue/[@index='XAxis']"
-        ).attrib.get("value")
-    )
-
-    um_height = um_width = float(pixel_height) * um_per_pixel
-
-    # x and y coordinate values for the center of the field
-    x_field = float(
-        xml_file.find(
-            ".//PVStateValue/[@key='currentScanCenter']/IndexedValue/[@index='XAxis']"
-        ).attrib.get("value")
-    )
-    y_field = float(
-        xml_file.find(
-            ".//PVStateValue/[@key='currentScanCenter']/IndexedValue/[@index='YAxis']"
-        ).attrib.get("value")
-    )
-    if (
-        xml_file.find(
-            ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']"
-        )
-        is None
-    ):
-        z_fields = np.float64(
-            xml_file.find(
-                ".//PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
-            ).attrib.get("value")
-        )
-        n_depths = 1
-        assert z_fields.size == n_depths
-        bidirection_z = False
-
-    else:
-        bidirection_z = (
-            xml_file.find(".//Sequence").attrib.get("bidirectionalZ") == "True"
-        )
-
-        # One "Frame" per depth in the .xml file. Gets number of frames in first sequence
-        planes = [
-            int(plane.attrib.get("index"))
-            for plane in xml_file.findall(".//Sequence/[@cycle='1']/Frame")
-        ]
-        n_depths = len(set(planes))
-
-        z_controllers = xml_file.findall(
-            ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
-        )
-
-        # If more than one Z-axis controllers are found, 
-        # check which controller is changing z_field depth. Only 1 controller
-        # must change depths.
-        if len(z_controllers) > 1:
-            z_repeats = []
-            for controller in xml_file.findall(
-                ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/"
-            ):
-                z_repeats.append(
-                    [
-                        float(z.attrib.get("value"))
-                        for z in xml_file.findall(
-                            ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='{0}']".format(
-                                controller.attrib.get("subindex")
-                            )
-                        )
-                    ]
-                )
-            controller_assert = [
-                not all(z == z_controller[0] for z in z_controller)
-                for z_controller in z_repeats
-            ]
-            assert (
-                sum(controller_assert) == 1
-            ), "Multiple controllers changing z depth is not supported"
-
-            z_fields = z_repeats[controller_assert.index(True)]
-
-        else:
-            z_fields = [
-                z.attrib.get("value")
-                for z in xml_file.findall(
-                    ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='0']"
-                )
-            ]
-
-        assert (
-            len(z_fields) == n_depths
-        ), "Number of z fields does not match number of depths."
-
-    metainfo = dict(
-        num_fields=n_fields,
-        num_channels=n_channels,
-        num_planes=n_depths,
-        num_frames=n_frames,
-        num_rois=roi,
-        x_pos=None,
-        y_pos=None,
-        z_pos=None,
-        frame_rate=framerate,
-        bidirectional=bidirectional_scan,
-        bidirectional_z=bidirection_z,
-        scan_datetime=scan_datetime,
-        usecs_per_line=usec_per_line,
-        scan_duration=total_scan_duration,
-        height_in_pixels=pixel_height,
-        width_in_pixels=pixel_width,
-        height_in_um=um_height,
-        width_in_um=um_width,
-        fieldX=x_field,
-        fieldY=y_field,
-        fieldZ=z_fields,
-        recording_time=recording_start_time,
-    )
-
-    return metainfo
+    return _extract_prairieview_metadata(file)
