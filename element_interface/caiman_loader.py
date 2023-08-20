@@ -93,9 +93,6 @@ class CaImAn:
             pln_cm.plane_idx = pln_idx
             self.planes[pln_idx] = pln_cm
 
-        self._motion_correction = None
-        self._masks = None
-
         self.creation_time = min(
             [p.creation_time for p in self.planes.values()]
         )  # ealiest file creation time
@@ -103,19 +100,179 @@ class CaImAn:
             [p.curation_time for p in self.planes.values()]
         )  # most recent curation time
 
+        # is this 3D CaImAn analyis or multiple 2D per-plane analysis
+        if len(self.planes) > 1:
+            # if more than one set of caiman result, likely to be multiple 2D per-plane
+            # assert that the "is3D" value are all False for each of the caiman result
+            assert all(p.params.motion["is3D"] is False for p in self.planes.values())
+            self.is3D = False
+            self.is_multiplane = True
+        else:
+            self.is3D = list(self.planes.values())[0].params.motion["is3D"]
+            self.is_multiplane = False
+
+        self._motion_correction = None
+        self._masks = None
+        self._ref_image = None
+        self._mean_image = None
+        self._max_proj_image = None
+        self._correlation_map = None
+
     @property
     def motion_correction(self):
         if self._motion_correction is None:
-            self._motion_correction = self.h5f["motion_correction"]
+            pass
         return self._motion_correction
+
+    def extract_rigid_mc(self):
+        # -- rigid motion correction --
+        rigid_correction = {}
+        for pln_idx, (plane, pln_cm) in enumerate(self.planes.items()):
+            if pln_idx == 0:
+                rigid_correction = {
+                    "x_shifts": pln_cm.motion_correction["shifts_rig"][:, 0],
+                    "y_shifts": pln_cm.motion_correction["shifts_rig"][:, 1],
+                }
+                rigid_correction["x_std"] = np.nanstd(
+                    rigid_correction["x_shifts"].flatten()
+                )
+                rigid_correction["y_std"] = np.nanstd(
+                    rigid_correction["y_shifts"].flatten()
+                )
+            else:
+                rigid_correction["x_shifts"] = np.vstack(
+                    [
+                        rigid_correction["x_shifts"],
+                        pln_cm.motion_correction["shifts_rig"][:, 0],
+                    ]
+                )
+                rigid_correction["x_std"] = np.nanstd(
+                    rigid_correction["x_shifts"].flatten()
+                )
+                rigid_correction["y_shifts"] = np.vstack(
+                    [
+                        rigid_correction["y_shifts"],
+                        pln_cm.motion_correction["shifts_rig"][:, 1],
+                    ]
+                )
+                rigid_correction["y_std"] = np.nanstd(
+                    rigid_correction["y_shifts"].flatten()
+                )
+
+        if not self.is_multiplane:
+            pln_cm = list(self.planes.values())[0]
+            rigid_correction["z_shifts"] = (
+                pln_cm.motion_correction["shifts_rig"][:, 2]
+                if self.is3D
+                else np.full_like(rigid_correction["x_shifts"], 0)
+            )
+            rigid_correction["z_std"] = (
+                np.nanstd(pln_cm.motion_correction["shifts_rig"][:, 2])
+                if self.is3D
+                else np.nan
+            )
+        else:
+            rigid_correction["z_shifts"] = np.full_like(rigid_correction["x_shifts"], 0)
+            rigid_correction["z_std"] = np.nan
+
+        rigid_correction["outlier_frames"] = None
+
+        return rigid_correction
+
+    def extract_pw_rigid_mc(self):
+        # -- piece-wise rigid motion correction --
+        nonrigid_correction, nonrigid_blocks = {}
+        for pln_idx, (plane, pln_cm) in enumerate(self.planes.items()):
+            if pln_idx == 0:
+                nonrigid_correction = {
+                    "block_height": (
+                        pln_cm.params.motion["strides"][0]
+                        + pln_cm.params.motion["overlaps"][0]
+                    ),
+                    "block_width": (
+                        pln_cm.params.motion["strides"][1]
+                        + pln_cm.params.motion["overlaps"][1]
+                    ),
+                    "block_depth": 1,
+                    "block_count_x": len(
+                        set(pln_cm.motion_correction["coord_shifts_els"][:, 0])
+                    ),
+                    "block_count_y": len(
+                        set(pln_cm.motion_correction["coord_shifts_els"][:, 2])
+                    ),
+                    "block_count_z": len(self.planes),
+                    "outlier_frames": None,
+                }
+            for b_id in range(len(pln_cm.motion_correction["x_shifts_els"][0, :])):
+                if b_id in nonrigid_blocks:
+                    nonrigid_blocks[b_id]["x_shifts"] = np.vstack(
+                        [
+                            nonrigid_blocks[b_id]["x_shifts"],
+                            pln_cm.motion_correction["x_shifts_els"][:, b_id],
+                        ]
+                    )
+                    nonrigid_blocks[b_id]["x_std"] = np.nanstd(
+                        nonrigid_blocks[b_id]["x_shifts"].flatten()
+                    )
+                    nonrigid_blocks[b_id]["y_shifts"] = np.vstack(
+                        [
+                            nonrigid_blocks[b_id]["y_shifts"],
+                            pln_cm.motion_correction["y_shifts_els"][:, b_id],
+                        ]
+                    )
+                    nonrigid_blocks[b_id]["y_std"] = np.nanstd(
+                        nonrigid_blocks[b_id]["y_shifts"].flatten()
+                    )
+                    nonrigid_blocks[b_id]["z_shifts"] = np.vstack(
+                        [
+                            nonrigid_blocks[b_id]["z_shifts"],
+                            np.full_like(
+                                pln_cm.motion_correction["x_shifts_els"][:, b_id],
+                                0,
+                            ),
+                        ]
+                    )
+                else:
+                    nonrigid_blocks[b_id] = {
+                        "block_id": b_id,
+                        "block_x": np.arange(
+                            *pln_cm.motion_correction["coord_shifts_els"][b_id, 0:2]
+                        ),
+                        "block_y": np.arange(
+                            *pln_cm.motion_correction["coord_shifts_els"][b_id, 2:4]
+                        ),
+                        "block_z": np.full_like(
+                            np.arange(
+                                *pln_cm.motion_correction["coord_shifts_els"][b_id, 0:2]
+                            ),
+                            pln_idx,
+                        ),
+                        "x_shifts": pln_cm.motion_correction["x_shifts_els"][:, b_id],
+                        "y_shifts": pln_cm.motion_correction["y_shifts_els"][:, b_id],
+                        "z_shifts": np.full_like(
+                            pln_cm.motion_correction["x_shifts_els"][:, b_id],
+                            0,
+                        ),
+                        "x_std": np.nanstd(
+                            pln_cm.motion_correction["x_shifts_els"][:, b_id]
+                        ),
+                        "y_std": np.nanstd(
+                            pln_cm.motion_correction["y_shifts_els"][:, b_id]
+                        ),
+                        "z_std": np.nan,
+                    }
+
+        return nonrigid_correction, nonrigid_blocks
 
     @property
     def masks(self):
         if self._masks is None:
             all_masks = []
-            for pln_idx, _caiman in sorted(self.planes.items()):
+            for pln_idx, pln_cm in sorted(self.planes.items()):
                 mask_count = len(all_masks)  # increment mask id from all "plane"
-                all_masks.extend([{**m, "mask_id": m["mask_id"] + mask_count} for m in _caiman.masks])
+                all_masks.extend(
+                    [{**m, "mask_id": m["mask_id"] + mask_count} for m in pln_cm.masks]
+                )
 
             self._masks = all_masks
         return self._masks
@@ -127,6 +284,47 @@ class CaImAn:
     @property
     def segmentation_channel(self):
         return 0  # hard-code to channel index 0
+
+    # -- image property --
+
+    def _get_image(self, img_type):
+        if not self.is_multiplane:
+            pln_cm = list(self.planes.values())[0]
+            _img = (
+                pln_cm.motion_correction[img_type].transpose()
+                if self.is3D
+                else pln_cm.motion_correction[img_type][...][np.newaxis, ...]
+            )
+        else:
+            _img = np.dstack(
+                pln_cm.motion_correction[img_type][...]
+                for pln_cm in self.planes.values()
+            )
+        return _img
+
+    @property
+    def ref_image(self):
+        if self._ref_image is None:
+            self._ref_image = self._get_image("reference_image")
+        return self._ref_image
+
+    @property
+    def mean_image(self):
+        if self._mean_image is None:
+            self._mean_image = self._get_image("average_image")
+        return self._mean_image
+
+    @property
+    def max_proj_image(self):
+        if self._max_proj_image is None:
+            self._max_proj_image = self._get_image("max_image")
+        return self._max_proj_image
+
+    @property
+    def correlation_map(self):
+        if self._correlation_map is None:
+            self._correlation_map = self._get_image("correlation_image")
+        return self._correlation_map
 
 
 class _CaImAn:
