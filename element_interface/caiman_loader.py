@@ -111,6 +111,11 @@ class CaImAn:
             self.is3D = list(self.planes.values())[0].params.motion["is3D"]
             self.is_multiplane = False
 
+        if self.is_multiplane and self.is3D:
+            raise NotImplementedError(
+                f"Unable to load CaImAn results mixed between 3D and multi-plane analysis"
+            )
+
         self._motion_correction = None
         self._masks = None
         self._ref_image = None
@@ -183,6 +188,7 @@ class CaImAn:
         # -- piece-wise rigid motion correction --
         nonrigid_correction, nonrigid_blocks = {}
         for pln_idx, (plane, pln_cm) in enumerate(self.planes.items()):
+            block_count = len(nonrigid_blocks)
             if pln_idx == 0:
                 nonrigid_correction = {
                     "block_height": (
@@ -204,63 +210,58 @@ class CaImAn:
                     "outlier_frames": None,
                 }
             for b_id in range(len(pln_cm.motion_correction["x_shifts_els"][0, :])):
-                if b_id in nonrigid_blocks:
-                    nonrigid_blocks[b_id]["x_shifts"] = np.vstack(
-                        [
-                            nonrigid_blocks[b_id]["x_shifts"],
-                            pln_cm.motion_correction["x_shifts_els"][:, b_id],
-                        ]
-                    )
-                    nonrigid_blocks[b_id]["x_std"] = np.nanstd(
-                        nonrigid_blocks[b_id]["x_shifts"].flatten()
-                    )
-                    nonrigid_blocks[b_id]["y_shifts"] = np.vstack(
-                        [
-                            nonrigid_blocks[b_id]["y_shifts"],
-                            pln_cm.motion_correction["y_shifts_els"][:, b_id],
-                        ]
-                    )
-                    nonrigid_blocks[b_id]["y_std"] = np.nanstd(
-                        nonrigid_blocks[b_id]["y_shifts"].flatten()
-                    )
-                    nonrigid_blocks[b_id]["z_shifts"] = np.vstack(
-                        [
-                            nonrigid_blocks[b_id]["z_shifts"],
-                            np.full_like(
-                                pln_cm.motion_correction["x_shifts_els"][:, b_id],
-                                0,
-                            ),
-                        ]
-                    )
-                else:
-                    nonrigid_blocks[b_id] = {
-                        "block_id": b_id,
-                        "block_x": np.arange(
-                            *pln_cm.motion_correction["coord_shifts_els"][b_id, 0:2]
-                        ),
-                        "block_y": np.arange(
-                            *pln_cm.motion_correction["coord_shifts_els"][b_id, 2:4]
-                        ),
-                        "block_z": np.full_like(
+                b_id += block_count
+                nonrigid_blocks[b_id] = {
+                    "block_id": b_id,
+                    "block_x": np.arange(
+                        *pln_cm.motion_correction["coord_shifts_els"][b_id, 0:2]
+                    ),
+                    "block_y": np.arange(
+                        *pln_cm.motion_correction["coord_shifts_els"][b_id, 2:4]
+                    ),
+                    "block_z": (
+                        np.arange(
+                            *pln_cm.motion_correction["coord_shifts_els"][b_id, 4:6]
+                        )
+                        if self.is3D
+                        else np.full_like(
                             np.arange(
                                 *pln_cm.motion_correction["coord_shifts_els"][b_id, 0:2]
                             ),
                             pln_idx,
-                        ),
-                        "x_shifts": pln_cm.motion_correction["x_shifts_els"][:, b_id],
-                        "y_shifts": pln_cm.motion_correction["y_shifts_els"][:, b_id],
-                        "z_shifts": np.full_like(
+                        )
+                    ),
+                    "x_shifts": pln_cm.motion_correction["x_shifts_els"][:, b_id],
+                    "y_shifts": pln_cm.motion_correction["y_shifts_els"][:, b_id],
+                    "z_shifts": (
+                        pln_cm.motion_correction["z_shifts_els"][:, b_id]
+                        if self.is3D
+                        else np.full_like(
                             pln_cm.motion_correction["x_shifts_els"][:, b_id],
                             0,
-                        ),
-                        "x_std": np.nanstd(
-                            pln_cm.motion_correction["x_shifts_els"][:, b_id]
-                        ),
-                        "y_std": np.nanstd(
-                            pln_cm.motion_correction["y_shifts_els"][:, b_id]
-                        ),
-                        "z_std": np.nan,
-                    }
+                        )
+                    ),
+                    "x_std": np.nanstd(
+                        pln_cm.motion_correction["x_shifts_els"][:, b_id]
+                    ),
+                    "y_std": np.nanstd(
+                        pln_cm.motion_correction["y_shifts_els"][:, b_id]
+                    ),
+                    "z_std": (
+                        np.nanstd(pln_cm.motion_correction["z_shifts_els"][:, b_id])
+                        if self.is3D
+                        else np.nan
+                    ),
+                }
+
+        if not self.is_multiplane and self.is3D:
+            pln_cm = list(self.planes.values())[0]
+            nonrigid_correction["block_depth"] = (
+                pln_cm.params.motion["strides"][2] + pln_cm.params.motion["overlaps"][2]
+            )
+            nonrigid_correction["block_count_z"] = len(
+                set(pln_cm.motion_correction["coord_shifts_els"][:, 4])
+            )
 
         return nonrigid_correction, nonrigid_blocks
 
