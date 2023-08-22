@@ -291,17 +291,17 @@ class CaImAn:
     def _get_image(self, img_type):
         if not self.is_multiplane:
             pln_cm = list(self.planes.values())[0]
-            _img = (
+            img_ = (
                 pln_cm.motion_correction[img_type].transpose()
                 if self.is3D
                 else pln_cm.motion_correction[img_type][...][np.newaxis, ...]
             )
         else:
-            _img = np.dstack(
+            img_ = np.dstack(
                 pln_cm.motion_correction[img_type][...]
                 for pln_cm in self.planes.values()
             )
-        return _img
+        return img_
 
     @property
     def ref_image(self):

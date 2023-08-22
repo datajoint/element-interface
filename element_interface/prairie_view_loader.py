@@ -1,12 +1,13 @@
+import os
 import pathlib
 from pathlib import Path
 import xml.etree.ElementTree as ET
 from datetime import datetime
 import numpy as np
+import tifffile
 
 
 class PrairieViewMeta:
-
     def __init__(self, prairieview_dir: str):
         """Initialize PrairieViewMeta loader class
 
@@ -37,25 +38,72 @@ class PrairieViewMeta:
             self._meta = _extract_prairieview_metadata(self.xml_file)
         return self._meta
 
-    def get_prairieview_files(self, plane_idx=None, channel=None):
+    def get_prairieview_filenames(
+        self, plane_idx=None, channel=None, return_pln_chn=False
+    ):
+        """
+        Extract from metadata the set of tiff files specific to the specified "plane_idx" and "channel"
+        Args:
+            plane_idx: int - plane index
+            channel: int - channel
+            return_pln_chn: bool - if True, returns (filenames, plane_idx, channel), else returns `filenames`
+
+        Returns: List[str] - the set of tiff files specific to the specified "plane_idx" and "channel"
+        """
         if plane_idx is None:
-            if self.meta['num_planes'] > 1:
-                raise ValueError(f"Please specify 'plane_idx' - Plane indices: {self.meta['plane_indices']}")
+            if self.meta["num_planes"] > 1:
+                raise ValueError(
+                    f"Please specify 'plane_idx' - Plane indices: {self.meta['plane_indices']}"
+                )
             else:
-                plane_idx = self.meta['plane_indices'][0]
+                plane_idx = self.meta["plane_indices"][0]
         else:
-            assert plane_idx in self.meta['plane_indices'], f"Invalid 'plane_idx' - Plane indices: {self.meta['plane_indices']}"
+            assert (
+                plane_idx in self.meta["plane_indices"]
+            ), f"Invalid 'plane_idx' - Plane indices: {self.meta['plane_indices']}"
 
         if channel is None:
-            if self.meta['num_channels'] > 1:
-                raise ValueError(f"Please specify 'channel' - Channels: {self.meta['channels']}")
+            if self.meta["num_channels"] > 1:
+                raise ValueError(
+                    f"Please specify 'channel' - Channels: {self.meta['channels']}"
+                )
             else:
-                plane_idx = self.meta['channels'][0]
+                plane_idx = self.meta["channels"][0]
         else:
-            assert channel in self.meta['channels'], f"Invalid 'channel' - Channels: {self.meta['channels']}"
+            assert (
+                channel in self.meta["channels"]
+            ), f"Invalid 'channel' - Channels: {self.meta['channels']}"
 
-        frames = self._xml_root.findall(f".//Sequence/Frame/[@index='{plane_idx}']/File/[@channel='{channel}']")
-        return [f.attrib['filename'] for f in frames]
+        frames = self._xml_root.findall(
+            f".//Sequence/Frame/[@index='{plane_idx}']/File/[@channel='{channel}']"
+        )
+
+        fnames = [f.attrib["filename"] for f in frames]
+        return fnames if not return_pln_chn else (fnames, plane_idx, channel)
+
+    def write_single_tiff(
+        self, plane_idx=None, channel=None, output_prefix=None, output_dir="./"
+    ):
+        tiff_names, plane_idx, channel = self.get_prairieview_filenames(
+            plane_idx=plane_idx, channel=channel, return_pln_chn=True
+        )
+        combined_data = []
+        for input_file in tiff_names:
+            with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
+                assert len(tffl.pages) == 1
+                combined_data.append(tffl.asarray())
+        combined_data = np.dstack(combined_data).transpose(
+            2, 0, 1
+        )  # (frame x height x width)
+
+        if output_prefix is None:
+            output_prefix = os.path.commonprefix(tiff_names)
+
+        tifffile.imwrite(
+            Path(output_dir) / f"{output_prefix}_pln{plane_idx}_chn{channel}",
+            combined_data,
+            metadata={"axes": "TXY", "'fps'": self.meta["frame_rate"]},
+        )
 
 
 def _extract_prairieview_metadata(xml_filepath: str):
@@ -159,7 +207,7 @@ def _extract_prairieview_metadata(xml_filepath: str):
             ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
         )
 
-        # If more than one Z-axis controllers are found, 
+        # If more than one Z-axis controllers are found,
         # check which controller is changing z_field depth. Only 1 controller
         # must change depths.
         if len(z_controllers) > 1:
