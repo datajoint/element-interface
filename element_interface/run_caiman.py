@@ -41,12 +41,19 @@ def run_caiman(
         backend="local", n_processes=None, single_thread=False
     )
 
-    cnm = CNMF(n_processes, params=opts, dview=dview)
-    cnmf_output, mc_output = cnm.fit_file(
-        motion_correct=True, include_eval=True, output_dir=output_dir, return_mc=True
-    )
-
-    cm.stop_server(dview=dview)
+    try:
+        cnm = CNMF(n_processes, params=opts, dview=dview)
+        cnmf_output, mc_output = cnm.fit_file(
+            motion_correct=True,
+            include_eval=True,
+            output_dir=output_dir,
+            return_mc=True,
+        )
+    except Exception as e:
+        dview.terminate()
+        raise e
+    else:
+        cm.stop_server(dview=dview)
 
     cnmf_output_file = pathlib.Path(cnmf_output.mmap_file[:-4] + "hdf5")
     assert cnmf_output_file.exists()
