@@ -68,7 +68,7 @@ class PrairieViewMeta:
                     f"Please specify 'channel' - Channels: {self.meta['channels']}"
                 )
             else:
-                plane_idx = self.meta["channels"][0]
+                channel = self.meta["channels"][0]
         else:
             assert (
                 channel in self.meta["channels"]
@@ -82,28 +82,56 @@ class PrairieViewMeta:
         return fnames if not return_pln_chn else (fnames, plane_idx, channel)
 
     def write_single_tiff(
-        self, plane_idx=None, channel=None, output_prefix=None, output_dir="./"
+        self,
+        plane_idx=None,
+        channel=None,
+        output_prefix=None,
+        output_dir="./",
+        caiman_compatible=False,  # if True, save the movie as a single page (frame x height x width)
+        overwrite=False,
     ):
         tiff_names, plane_idx, channel = self.get_prairieview_filenames(
             plane_idx=plane_idx, channel=channel, return_pln_chn=True
         )
-        combined_data = []
-        for input_file in tiff_names:
-            with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
-                assert len(tffl.pages) == 1
-                combined_data.append(tffl.asarray())
-        combined_data = np.dstack(combined_data).transpose(
-            2, 0, 1
-        )  # (frame x height x width)
-
         if output_prefix is None:
             output_prefix = os.path.commonprefix(tiff_names)
-
-        tifffile.imwrite(
-            Path(output_dir) / f"{output_prefix}_pln{plane_idx}_chn{channel}",
-            combined_data,
-            metadata={"axes": "TXY", "'fps'": self.meta["frame_rate"]},
+        output_tiff_fullpath = (
+            Path(output_dir)
+            / f"{output_prefix}_pln{plane_idx}_chn{channel}{'.ome' if not caiman_compatible else ''}.tif"
         )
+        if output_tiff_fullpath.exists() and not overwrite:
+            return output_tiff_fullpath
+
+        if not caiman_compatible:
+            with tifffile.TiffWriter(
+                output_tiff_fullpath,
+                bigtiff=True,
+            ) as tiff_writer:
+                for input_file in tiff_names:
+                    with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
+                        assert len(tffl.pages) == 1
+                        tiff_writer.write(
+                            tffl.pages[0].asarray(),
+                            metadata={"axes": "YX", "'fps'": self.meta["frame_rate"]},
+                        )
+        else:
+            combined_data = []
+            for input_file in tiff_names:
+                with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
+                    assert len(tffl.pages) == 1
+                    combined_data.append(tffl.pages[0].asarray())
+            combined_data = np.dstack(combined_data).transpose(
+                2, 0, 1
+            )  # (frame x height x width)
+
+            tifffile.imwrite(
+                output_tiff_fullpath,
+                combined_data,
+                metadata={"axes": "TYX", "'fps'": self.meta["frame_rate"]},
+                bigtiff=True,
+            )
+
+        return output_tiff_fullpath
 
 
 def _extract_prairieview_metadata(xml_filepath: str):
