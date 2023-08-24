@@ -81,7 +81,7 @@ class PrairieViewMeta:
         fnames = [f.attrib["filename"] for f in frames]
         return fnames if not return_pln_chn else (fnames, plane_idx, channel)
 
-    def write_single_tiff(
+    def write_single_bigtiff(
         self,
         plane_idx=None,
         channel=None,
