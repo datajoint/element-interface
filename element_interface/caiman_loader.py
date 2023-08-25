@@ -18,42 +18,10 @@ _required_hdf5_fields = [
 
 
 class CaImAn:
-    """Parse the CaImAn output file
-
-    [CaImAn results doc](https://caiman.readthedocs.io/en/master/Getting_Started.html#result-variables-for-2p-batch-analysis)
-
-    Expecting the following objects:
-        - dims:
-        - dview:
-        - estimates:              Segmentations and traces
-        - mmap_file:
-        - params:                 Input parameters
-        - remove_very_bad_comps:
-        - skip_refinement:
-        - motion_correction:      Motion correction shifts and summary images
-
-    Example:
-        > output_dir = '<imaging_root_data_dir>/subject1/session0/caiman'
-
-        > loaded_dataset = caiman_loader.CaImAn(output_dir)
-
-    Attributes:
-        alignment_channel: hard-coded to 0
-        caiman_fp: file path with all required files:
-            "/motion_correction/reference_image",
-            "/motion_correction/correlation_image",
-            "/motion_correction/average_image",
-            "/motion_correction/max_image",
-            "/estimates/A",
-        cnmf: loaded caiman object; cm.source_extraction.cnmf.cnmf.load_CNMF(caiman_fp)
-        creation_time: file creation time
-        curation_time: file creation time
-        extract_masks: function to extract masks
-        h5f: caiman_fp read as h5py file
-        masks: dict result of extract_masks
-        motion_correction: h5f "motion_correction" property
-        params: cnmf.params
-        segmentation_channel: hard-coded to 0
+    """
+    Loader class for CaImAn analysis results
+    A top level aggregator of multiple set of CaImAn results (e.g. multi-plane analysis)
+    Calling _CaImAn (see below) under the hood
     """
 
     def __init__(self, caiman_dir: str):
@@ -85,13 +53,16 @@ class CaImAn:
                 )
             )
 
-        self.planes = {}
+        # Extract CaImAn results from all planes, sorted by plane index
+        _planes_caiman = {}
         for idx, caiman_subdir in enumerate(sorted(caiman_subdirs)):
             pln_cm = _CaImAn(caiman_subdir.as_posix())
             pln_idx_match = re.search(r"pln(\d+)_.*")
             pln_idx = pln_idx_match.groups()[0] if pln_idx_match else idx
             pln_cm.plane_idx = pln_idx
-            self.planes[pln_idx] = pln_cm
+            _planes_caiman[pln_idx] = pln_cm
+        sorted_pln_ind = sorted(list(_planes_caiman.keys()))
+        self.planes = {k: _planes_caiman[k] for k in sorted_pln_ind}
 
         self.creation_time = min(
             [p.creation_time for p in self.planes.values()]
@@ -124,9 +95,21 @@ class CaImAn:
         self._correlation_map = None
 
     @property
+    def is_pw_rigid(self):
+        pw_rigid = set(p.params.motion["pw_rigid"] for p in self.planes.values())
+        assert (
+            len(pw_rigid) == 1
+        ), f"Unable to load CaImAn results mixed between rigid and pw_rigid motion correction"
+        return pw_rigid.pop()
+
+    @property
     def motion_correction(self):
         if self._motion_correction is None:
-            pass
+            self._motion_correction = (
+                self.extract_pw_rigid_mc()
+                if self.is_pw_rigid
+                else self.extract_rigid_mc()
+            )
         return self._motion_correction
 
     def extract_rigid_mc(self):
@@ -272,7 +255,19 @@ class CaImAn:
             for pln_idx, pln_cm in sorted(self.planes.items()):
                 mask_count = len(all_masks)  # increment mask id from all "plane"
                 all_masks.extend(
-                    [{**m, "mask_id": m["mask_id"] + mask_count} for m in pln_cm.masks]
+                    [
+                        {
+                            **m,
+                            "mask_id": m["mask_id"] + mask_count,
+                            "orig_mask_id": m["mask_id"],
+                            "accepted": (
+                                m["mask_id"] in pln_cm.cnmf.estimates.idx_components
+                                if pln_cm.cnmf.estimates.idx_components is not None
+                                else False
+                            ),
+                        }
+                        for m in pln_cm.masks
+                    ]
                 )
 
             self._masks = all_masks
