@@ -57,7 +57,7 @@ class CaImAn:
         _planes_caiman = {}
         for idx, caiman_subdir in enumerate(sorted(caiman_subdirs)):
             pln_cm = _CaImAn(caiman_subdir.as_posix())
-            pln_idx_match = re.search(r"pln(\d+)_.*")
+            pln_idx_match = re.search(r"pln(\d+)_.*", caiman_subdir)
             pln_idx = pln_idx_match.groups()[0] if pln_idx_match else idx
             pln_cm.plane_idx = pln_idx
             _planes_caiman[pln_idx] = pln_cm
