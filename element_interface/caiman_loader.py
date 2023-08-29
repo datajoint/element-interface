@@ -40,7 +40,7 @@ class CaImAn:
             raise FileNotFoundError("CaImAn directory not found: {}".format(caiman_dir))
 
         caiman_subdirs = []
-        for fp in caiman_dir.glob("*.hdf5"):
+        for fp in caiman_dir.rglob("*.hdf5"):
             with h5py.File(fp, "r") as h5f:
                 if all(s in h5f for s in _required_hdf5_fields):
                     caiman_subdirs.append(fp.parent)
