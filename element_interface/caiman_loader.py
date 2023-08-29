@@ -296,6 +296,7 @@ class CaImAn:
                 pln_cm.motion_correction[img_type][...]
                 for pln_cm in self.planes.values()
             )
+            raise Exception("Debug summary images")
         return img_
 
     @property
