@@ -1,7 +1,6 @@
 import os
 import subprocess
 
-from dandi.download import download
 from dandi.upload import upload
 
 
@@ -64,7 +63,18 @@ def upload_to_dandi(
     )
 
     subprocess.run(
-        ["dandi", "organize", "-d", dandiset_directory, data_directory], shell=shell
+        [
+            "dandi",
+            "organize",
+            "-d",
+            dandiset_directory,
+            data_directory,
+            "--required-field",
+            "subject_id",
+            "--required-field",
+            "session_id",
+        ],
+        shell=shell,
     )
 
     subprocess.run(["dandi", "validate", dandiset_directory], shell=shell)
