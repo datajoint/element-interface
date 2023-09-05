@@ -1,6 +1,7 @@
 import os
 import subprocess
 
+from dandi.download import download
 from dandi.upload import upload
 
 
@@ -12,7 +13,6 @@ def upload_to_dandi(
     api_key: str = None,
     sync: bool = False,
     existing: str = "refresh",
-    shell=True,  # without this param, subprocess interprets first arg as file/dir
 ):
     """Upload NWB files to DANDI Archive
 
@@ -38,46 +38,25 @@ def upload_to_dandi(
         working_directory, str(dandiset_id)
     )  # enforce str
 
-    dandiset_url = (
-        f"https://gui-staging.dandiarchive.org/#/dandiset/{dandiset_id}"
-        if staging
-        else f"https://dandiarchive.org/dandiset/{dandiset_id}/draft"
-    )
+    dandiset_url = f"https://gui-staging.dandiarchive.org/#/dandiset/{dandiset_id}" if staging else f"https://dandiarchive.org/dandiset/{dandiset_id}/draft"
 
     subprocess.run(
-        [
-            "dandi",
-            "download",
-            "--download",
-            "dandiset.yaml",
-            "-o",
-            working_directory,
-            dandiset_url,
-        ],
-        shell=shell,
+        ["dandi", "download", "--download", "dandiset.yaml", "-o", working_directory, dandiset_url],
+        shell=True, 
     )
 
     subprocess.run(
         ["dandi", "organize", "-d", dandiset_directory, data_directory, "-f", "dry"],
-        shell=shell,  # without this param, subprocess interprets first arg as file/dir
+        shell=True,  # without this param, subprocess interprets first arg as file/dir
     )
 
     subprocess.run(
-        [
-            "dandi",
-            "organize",
-            "-d",
-            dandiset_directory,
-            data_directory,
-            "--required-field",
-            "subject_id",
-            "--required-field",
-            "session_id",
-        ],
-        shell=shell,
+        ["dandi", "organize", "-d", dandiset_directory, data_directory], shell=True
     )
 
-    subprocess.run(["dandi", "validate", dandiset_directory], shell=shell)
+    subprocess.run(
+        ["dandi", "validate", dandiset_directory], shell=True
+    )
 
     upload(
         paths=[dandiset_directory],

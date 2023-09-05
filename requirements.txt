@@ -1,2 +1,2 @@
-dandi>=0.56.0
+dandi
 numpy
