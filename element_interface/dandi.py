@@ -12,6 +12,7 @@ def upload_to_dandi(
     api_key: str = None,
     sync: bool = False,
     existing: str = "refresh",
+    validation: str = "required",
     shell=True,  # without this param, subprocess interprets first arg as file/dir
 ):
     """Upload NWB files to DANDI Archive
@@ -27,6 +28,7 @@ def upload_to_dandi(
         sync (str, optional): If True, delete all files in archive that are not present
             in the local directory.
         existing (str, optional): see full description from `dandi upload --help`
+        validation (str, optional): [require|skip|ignore] see full description from `dandi upload --help`
     """
 
     working_directory = working_directory or os.path.curdir
@@ -84,4 +86,5 @@ def upload_to_dandi(
         dandi_instance="dandi-staging" if staging else "dandi",
         existing=existing,
         sync=sync,
+        validation=validation,
     )
