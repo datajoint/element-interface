@@ -4,6 +4,11 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
 
+## [0.7.0] - 2023-09-05
+
++ Add - multi-plane `caiman_loader.py` to process multi-plane tiffs
++ Update - DANDI upload utility
+
 ## [0.6.1] - 2023-08-02
 
 + Update DANDI upload funtionality to improve useability
@@ -83,6 +88,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 + Add - Readers for: `ScanImage`, `Suite2p`, `CaImAn`.
 
+[0.7.0]: https://github.com/datajoint/element-interface/releases/tag/0.7.0
 [0.6.0]: https://github.com/datajoint/element-interface/releases/tag/0.6.0
 [0.5.4]: https://github.com/datajoint/element-interface/releases/tag/0.5.4
 [0.5.3]: https://github.com/datajoint/element-interface/releases/tag/0.5.3
