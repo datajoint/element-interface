@@ -205,7 +205,7 @@ def _extract_prairieview_metadata(xml_filepath: str):
 
     if (
         xml_root.find(
-            ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']"
+            ".//Sequence/[@cycle='2']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']"
         )
         is None
     ):
@@ -232,7 +232,7 @@ def _extract_prairieview_metadata(xml_filepath: str):
         n_depths = len(plane_indices)
 
         z_controllers = xml_root.findall(
-            ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
+            ".//Sequence/[@cycle='2']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
         )
 
         # If more than one Z-axis controllers are found,
@@ -241,13 +241,13 @@ def _extract_prairieview_metadata(xml_filepath: str):
         if len(z_controllers) > 1:
             z_repeats = []
             for controller in xml_root.findall(
-                ".//Sequence/[@cycle='1']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/"
+                ".//Sequence/[@cycle='2']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/"
             ):
                 z_repeats.append(
                     [
                         float(z.attrib.get("value"))
                         for z in xml_root.findall(
-                            ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='{0}']".format(
+                            ".//Sequence/[@cycle='2']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='{0}']".format(
                                 controller.attrib.get("subindex")
                             )
                         )
@@ -267,7 +267,7 @@ def _extract_prairieview_metadata(xml_filepath: str):
             z_fields = [
                 z.attrib.get("value")
                 for z in xml_root.findall(
-                    ".//Sequence/[@cycle='1']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='0']"
+                    ".//Sequence/[@cycle='2']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='0']"
                 )
             ]
 
