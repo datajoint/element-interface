@@ -35,6 +35,13 @@ def run_caiman(
     parameters["fnames"] = file_paths
     parameters["fr"] = sampling_rate
 
+    if "indicies" in parameters:
+        indices = params.pop("indicies")
+        indicies = slice(*indices[0]), slice(*indices[1])
+        parameters['motion'] = {**parameters.get('motion', {}), "indicies": indicies}
+    else:
+        indicies = None
+
     opts = params.CNMFParams(params_dict=parameters)
 
     c, dview, n_processes = cm.cluster.setup_cluster(
@@ -45,6 +52,7 @@ def run_caiman(
         cnm = CNMF(n_processes, params=opts, dview=dview)
         cnmf_output, mc_output = cnm.fit_file(
             motion_correct=True,
+            indices=indicies,
             include_eval=True,
             output_dir=output_dir,
             return_mc=True,
