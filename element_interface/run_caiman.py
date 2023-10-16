@@ -36,9 +36,9 @@ def run_caiman(
     parameters["fr"] = sampling_rate
 
     if "indices" in parameters:
-        indices = params.pop("indices")
+        indices = parameters.pop("indices")
         indices = slice(*indices[0]), slice(*indices[1])
-        parameters['motion'] = {**parameters.get('motion', {}), "indices": indices}
+        parameters["motion"] = {**parameters.get("motion", {}), "indices": indices}
     else:
         indices = None
 
