@@ -35,12 +35,12 @@ def run_caiman(
     parameters["fnames"] = file_paths
     parameters["fr"] = sampling_rate
 
-    if "indicies" in parameters:
-        indices = params.pop(
-            "indicies"
+    if "indices" in parameters:
+        indices = parameters.pop(
+            "indices"
         )  # Indices that restrict FOV for motion correction.
-        indicies = slice(*indices[0]), slice(*indices[1])
-        parameters["motion"] = {**parameters.get("motion", {}), "indicies": indicies}
+        indices = slice(*indices[0]), slice(*indices[1])
+        parameters["motion"] = {**parameters.get("motion", {}), "indices": indices}
 
     opts = params.CNMFParams(params_dict=parameters)
 
