@@ -1,7 +1,6 @@
 import os
 import subprocess
 
-from dandi.download import download
 from dandi.upload import upload
 
 
@@ -13,6 +12,8 @@ def upload_to_dandi(
     api_key: str = None,
     sync: bool = False,
     existing: str = "refresh",
+    validation: str = "required",
+    shell=True,  # without this param, subprocess interprets first arg as file/dir
 ):
     """Upload NWB files to DANDI Archive
 
@@ -27,6 +28,7 @@ def upload_to_dandi(
         sync (str, optional): If True, delete all files in archive that are not present
             in the local directory.
         existing (str, optional): see full description from `dandi upload --help`
+        validation (str, optional): [require|skip|ignore] see full description from `dandi upload --help`
     """
 
     working_directory = working_directory or os.path.curdir
@@ -38,29 +40,51 @@ def upload_to_dandi(
         working_directory, str(dandiset_id)
     )  # enforce str
 
-    dandiset_url = f"https://gui-staging.dandiarchive.org/#/dandiset/{dandiset_id}" if staging else f"https://dandiarchive.org/dandiset/{dandiset_id}/draft"
+    dandiset_url = (
+        f"https://gui-staging.dandiarchive.org/#/dandiset/{dandiset_id}"
+        if staging
+        else f"https://dandiarchive.org/dandiset/{dandiset_id}/draft"
+    )
 
     subprocess.run(
-        ["dandi", "download", "--download", "dandiset.yaml", "-o", working_directory, dandiset_url],
-        shell=True, 
+        [
+            "dandi",
+            "download",
+            "--download",
+            "dandiset.yaml",
+            "-o",
+            working_directory,
+            dandiset_url,
+        ],
+        shell=shell,
     )
 
     subprocess.run(
         ["dandi", "organize", "-d", dandiset_directory, data_directory, "-f", "dry"],
-        shell=True,  # without this param, subprocess interprets first arg as file/dir
+        shell=shell,  # without this param, subprocess interprets first arg as file/dir
     )
 
     subprocess.run(
-        ["dandi", "organize", "-d", dandiset_directory, data_directory], shell=True
+        [
+            "dandi",
+            "organize",
+            "-d",
+            dandiset_directory,
+            data_directory,
+            "--required-field",
+            "subject_id",
+            "--required-field",
+            "session_id",
+        ],
+        shell=shell,
     )
 
-    subprocess.run(
-        ["dandi", "validate", dandiset_directory], shell=True
-    )
+    subprocess.run(["dandi", "validate", dandiset_directory], shell=shell)
 
     upload(
         paths=[dandiset_directory],
         dandi_instance="dandi-staging" if staging else "dandi",
         existing=existing,
         sync=sync,
+        validation=validation,
     )
