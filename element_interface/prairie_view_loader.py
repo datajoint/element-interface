@@ -75,7 +75,7 @@ class PrairieViewMeta:
             ), f"Invalid 'channel' - Channels: {self.meta['channels']}"
 
         frames = self._xml_root.findall(
-            f".//Sequence/Frame/[@index='{plane_idx}']/File/[@channel='{channel}']"
+            f".//Sequence/Frame/File/[@channel='{channel}']"
         )
 
         fnames = [f.attrib["filename"] for f in frames]
