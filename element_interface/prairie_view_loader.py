@@ -73,9 +73,11 @@ class PrairieViewMeta:
             assert (
                 channel in self.meta["channels"]
             ), f"Invalid 'channel' - Channels: {self.meta['channels']}"
+        
 
+        plane_search_string = f"[@index='{plane_idx}']/" if self.meta["num_planes"] > 1 else "" 
         frames = self._xml_root.findall(
-            f".//Sequence/Frame/[@index='{plane_idx}']/File/[@channel='{channel}']"
+            f".//Sequence/Frame/{plane_search_string}File/[@channel='{channel}']"
         )
 
         fnames = [f.attrib["filename"] for f in frames]
