@@ -36,6 +36,13 @@ class PrairieViewMeta:
     def meta(self):
         if self._meta is None:
             self._meta = _extract_prairieview_metadata(self.xml_file)
+            # adjust for the different definition of "frames"
+            # from the ome meta - "frame" refers to an image at a given scanning depth, time step combination
+            # in the imaging pipeline - "frame" refers to video frames - i.e. time steps
+            num_frames = self._meta.pop("num_frames") / self._meta["num_planes"]
+
+            self._meta["num_frames"] = int(num_frames)
+
         return self._meta
 
     def get_prairieview_filenames(
@@ -74,8 +81,13 @@ class PrairieViewMeta:
                 channel in self.meta["channels"]
             ), f"Invalid 'channel' - Channels: {self.meta['channels']}"
 
+        # single-plane ome.tif does not have "@index" under Frame to search for
+        plane_search = f"/[@index='{plane_idx}']" if self.meta["num_planes"] > 1 else ""
+        # ome.tif does have "@channel" under File regardless of single or multi channel
+        channel_search = f"/[@channel='{channel}']"
+
         frames = self._xml_root.findall(
-            f".//Sequence/Frame/[@index='{plane_idx}']/File/[@channel='{channel}']"
+            f".//Sequence/Frame{plane_search}/File{channel_search}"
         )
 
         fnames = [f.attrib["filename"] for f in frames]
