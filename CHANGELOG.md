@@ -8,6 +8,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 + Add - multi-plane `caiman_loader.py` to process multi-plane tiffs
 + Update - DANDI upload utility
++ Fix - `n_fields` == 1 -> `n_fields` == `n_depths` in `prairie_view_loader.py`
 
 ## [0.6.1] - 2023-08-02
 

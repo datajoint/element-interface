@@ -155,7 +155,6 @@ def _extract_prairieview_metadata(xml_filepath: str):
 
     bidirectional_scan = False  # Does not support bidirectional
     roi = 0
-    n_fields = 1  # Always contains 1 field
     recording_start_time = xml_root.find(".//Sequence/[@cycle='1']").attrib.get("time")
 
     # Get all channels and find unique values
@@ -288,7 +287,7 @@ def _extract_prairieview_metadata(xml_filepath: str):
         ), "Number of z fields does not match number of depths."
 
     metainfo = dict(
-        num_fields=n_fields,
+        num_fields=n_depths,
         num_channels=n_channels,
         num_planes=n_depths,
         num_frames=n_frames,
