@@ -119,13 +119,16 @@ class PrairieViewMeta:
                 output_tiff_fullpath,
                 bigtiff=True,
             ) as tiff_writer:
-                for input_file in tiff_names:
-                    with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
-                        assert len(tffl.pages) == 1
-                        tiff_writer.write(
-                            tffl.pages[0].asarray(),
-                            metadata={"axes": "YX", "'fps'": self.meta["frame_rate"]},
-                        )
+                try:
+                    for input_file in tiff_names:
+                        with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
+                            assert len(tffl.pages) == 1
+                            tiff_writer.write(
+                                tffl.pages[0].asarray(),
+                                metadata={"axes": "YX", "'fps'": self.meta["frame_rate"]},
+                            )
+                except Exception as e:
+                    raise f"Error in processing tiff file {input_file}: {e}"
         else:
             combined_data = []
             for input_file in tiff_names:
