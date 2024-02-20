@@ -128,7 +128,7 @@ class PrairieViewMeta:
                                 metadata={"axes": "YX", "'fps'": self.meta["frame_rate"]},
                             )
                 except Exception as e:
-                    raise f"Errow creating big tiff for {input_file}: {e}"
+                    raise f"Error in processing tiff file {input_file}: {e}"
         else:
             combined_data = []
             for input_file in tiff_names:
