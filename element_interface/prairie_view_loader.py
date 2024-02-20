@@ -121,20 +121,29 @@ class PrairieViewMeta:
             ) as tiff_writer:
                 try:
                     for input_file in tiff_names:
-                        with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
+                        with tifffile.TiffFile(
+                            self.prairieview_dir / input_file
+                        ) as tffl:
                             assert len(tffl.pages) == 1
                             tiff_writer.write(
                                 tffl.pages[0].asarray(),
-                                metadata={"axes": "YX", "'fps'": self.meta["frame_rate"]},
+                                metadata={
+                                    "axes": "YX",
+                                    "'fps'": self.meta["frame_rate"],
+                                },
                             )
                 except Exception as e:
                     raise f"Error in processing tiff file {input_file}: {e}"
         else:
             combined_data = []
-            for input_file in tiff_names:
-                with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
-                    assert len(tffl.pages) == 1
-                    combined_data.append(tffl.pages[0].asarray())
+            try:
+                for input_file in tiff_names:
+                    with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
+                        assert len(tffl.pages) == 1
+                        combined_data.append(tffl.pages[0].asarray())
+            except Exception as e:
+                raise f"Error in processing tiff file {input_file}: {e}"
+
             combined_data = np.dstack(combined_data).transpose(
                 2, 0, 1
             )  # (frame x height x width)
