@@ -133,7 +133,7 @@ class PrairieViewMeta:
                                 },
                             )
                 except Exception as e:
-                    raise f"Error in processing tiff file {input_file}: {e}"
+                    raise Exception(f"Error in processing tiff file {input_file}: {e}")
         else:
             combined_data = []
             try:
@@ -142,7 +142,7 @@ class PrairieViewMeta:
                         assert len(tffl.pages) == 1
                         combined_data.append(tffl.pages[0].asarray())
             except Exception as e:
-                raise f"Error in processing tiff file {input_file}: {e}"
+                raise Exception(f"Error in processing tiff file {input_file}: {e}")
 
             combined_data = np.dstack(combined_data).transpose(
                 2, 0, 1
