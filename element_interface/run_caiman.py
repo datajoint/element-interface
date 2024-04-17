@@ -35,18 +35,33 @@ def run_caiman(
     parameters["fnames"] = file_paths
     parameters["fr"] = sampling_rate
 
+    if "indices" in parameters:
+        indices = parameters.pop(
+            "indices"
+        )  # Indices that restrict FOV for motion correction.
+        indices = slice(*indices[0]), slice(*indices[1])
+        parameters["motion"] = {**parameters.get("motion", {}), "indices": indices}
+
     opts = params.CNMFParams(params_dict=parameters)
 
     c, dview, n_processes = cm.cluster.setup_cluster(
         backend="local", n_processes=None, single_thread=False
     )
 
-    cnm = CNMF(n_processes, params=opts, dview=dview)
-    cnmf_output, mc_output = cnm.fit_file(
-        motion_correct=True, include_eval=True, output_dir=output_dir, return_mc=True
-    )
-
-    cm.stop_server(dview=dview)
+    try:
+        cnm = CNMF(n_processes, params=opts, dview=dview)
+        cnmf_output, mc_output = cnm.fit_file(
+            motion_correct=True,
+            indices=None,  # Indices defined here restrict FOV for segmentation. `None` uses the full image for segmentation.
+            include_eval=True,
+            output_dir=output_dir,
+            return_mc=True,
+        )
+    except Exception as e:
+        dview.terminate()
+        raise e
+    else:
+        cm.stop_server(dview=dview)
 
     cnmf_output_file = pathlib.Path(cnmf_output.mmap_file[:-4] + "hdf5")
     assert cnmf_output_file.exists()
