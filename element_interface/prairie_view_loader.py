@@ -39,9 +39,9 @@ class PrairieViewMeta:
             # adjust for the different definition of "frames"
             # from the ome meta - "frame" refers to an image at a given scanning depth, time step combination
             # in the imaging pipeline - "frame" refers to video frames - i.e. time steps
-            num_frames = self._meta.pop("num_frames") / self._meta["num_planes"]
-
-            self._meta["num_frames"] = int(num_frames)
+            num_frames = int(self._meta.pop("num_frames") / self._meta["num_planes"])
+            self._meta["num_frames"] = num_frames
+            self._meta["frame_rate"] = num_frames / self._meta["scan_duration"]
 
         return self._meta
 
@@ -177,9 +177,9 @@ def _extract_prairieview_metadata(xml_filepath: str):
     channels = set(channel_list)
     n_channels = len(channels)
     n_frames = len(xml_root.findall(".//Sequence/Frame"))
-    framerate = 1 / float(
+    frame_period = float(
         xml_root.findall('.//PVStateValue/[@key="framePeriod"]')[0].attrib.get("value")
-    )  # rate = 1/framePeriod
+    )
 
     usec_per_line = (
         float(
@@ -307,7 +307,7 @@ def _extract_prairieview_metadata(xml_filepath: str):
         x_pos=None,
         y_pos=None,
         z_pos=None,
-        frame_rate=framerate,
+        frame_period=frame_period,
         bidirectional=bidirectional_scan,
         bidirectional_z=bidirection_z,
         scan_datetime=scan_datetime,
