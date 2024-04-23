@@ -167,6 +167,7 @@ def _extract_prairieview_metadata(xml_filepath: str):
 
     bidirectional_scan = False  # Does not support bidirectional
     roi = 0
+    multi_tiff = xml_root.find(".//Sequence/Frame/File/[@page]") is not None
     recording_start_time = xml_root.find(".//Sequence/[@cycle='1']").attrib.get("time")
 
     # Get all channels and find unique values
@@ -310,6 +311,7 @@ def _extract_prairieview_metadata(xml_filepath: str):
         frame_period=frame_period,
         bidirectional=bidirectional_scan,
         bidirectional_z=bidirection_z,
+        multi_tiff=multi_tiff,
         scan_datetime=scan_datetime,
         usecs_per_line=usec_per_line,
         scan_duration=total_scan_duration,
