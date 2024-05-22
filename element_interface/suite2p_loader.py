@@ -138,15 +138,6 @@ class PlaneSuite2p:
             )
         self.creation_time = datetime.fromtimestamp(ops_fp.stat().st_ctime)
 
-        iscell_fp = self.fpath / "iscell.npy"
-        if not iscell_fp.exists():
-            raise FileNotFoundError(
-                'No "iscell.npy" found. Invalid suite2p plane folder: {}'.format(
-                    self.fpath
-                )
-            )
-        self.curation_time = datetime.fromtimestamp(iscell_fp.stat().st_ctime)
-
         # -- Initialize attributes --
         for s2p_type in _suite2p_ftypes:
             setattr(self, "_{}".format(s2p_type), None)
@@ -159,6 +150,11 @@ class PlaneSuite2p:
         )
 
     # -- load core files --
+
+    @property
+    def curation_time(self):
+        print("DeprecationWarning: 'curation_time' is deprecated, set to be the same as 'creation time', no longer reliable.")
+        return self.creation_time
 
     @property
     def ops(self):
