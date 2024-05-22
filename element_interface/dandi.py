@@ -60,11 +60,6 @@ def upload_to_dandi(
     )
 
     subprocess.run(
-        ["dandi", "organize", "-d", dandiset_directory, data_directory, "-f", "dry"],
-        shell=shell,  # without this param, subprocess interprets first arg as file/dir
-    )
-
-    subprocess.run(
         [
             "dandi",
             "organize",
