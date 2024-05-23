@@ -247,7 +247,7 @@ class PlaneSuite2p:
 
     @property
     def correlation_map(self):
-        return self.ops["Vcorr"]
+        return self.ops.get("VCorr", np.full_like(self.mean_image, np.nan))
 
     @property
     def alignment_channel(self):
