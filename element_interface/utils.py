@@ -191,14 +191,14 @@ class QuietStdOut:
         sys.stdout = self._original_stdout
 
 
-def memoized_result(parameters: dict, output_directory: str):
+def memoized_result(uniqueness_dict: dict, output_directory: str):
     """
     This is a decorator factory designed to cache the results of a function based on its input parameters and the state of the output directory.
      If the function is called with the same parameters and the output files in the directory remain unchanged,
       it returns the cached results; otherwise, it executes the function and caches the new results along with metadata.
 
     Args:
-        parameters: parameters that would identify a unique function call
+        uniqueness_dict: a dictionary that would identify a unique function call
         output_directory: directory location for the output files
 
     Returns: a decorator to enable a function call to memoize/cached the resulting files
@@ -211,7 +211,7 @@ def memoized_result(parameters: dict, output_directory: str):
     def decorator(func):
         def wrapped(*args, **kwargs):
             output_dir = _to_Path(output_directory)
-            input_hash = dict_to_uuid(parameters)
+            input_hash = dict_to_uuid(uniqueness_dict)
             input_hash_fp = output_dir / f".{input_hash}.json"
             # check if results already exist (from previous identical run)
             output_dir_files_hash = dict_to_uuid(
