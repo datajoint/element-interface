@@ -90,7 +90,7 @@ class PrairieViewMeta:
             f".//Sequence/Frame{plane_search}/File{channel_search}"
         )
 
-        fnames = [f.attrib["filename"] for f in frames]
+        fnames = np.unique([f.attrib["filename"] for f in frames]).tolist()
         return fnames if not return_pln_chn else (fnames, plane_idx, channel)
 
     def write_single_bigtiff(
@@ -114,39 +114,42 @@ class PrairieViewMeta:
         if output_tiff_fullpath.exists() and not overwrite:
             return output_tiff_fullpath
 
-        if not caiman_compatible:
-            with tifffile.TiffWriter(
-                output_tiff_fullpath,
-                bigtiff=True,
-            ) as tiff_writer:
-                try:
-                    for input_file in tiff_names:
-                        with tifffile.TiffFile(
-                            self.prairieview_dir / input_file
-                        ) as tffl:
-                            assert len(tffl.pages) == 1
-                            tiff_writer.write(
-                                tffl.pages[0].asarray(),
-                                metadata={
-                                    "axes": "YX",
-                                    "'fps'": self.meta["frame_rate"],
-                                },
-                            )
-                except Exception as e:
-                    raise Exception(f"Error in processing tiff file {input_file}: {e}")
-        else:
-            combined_data = []
+        if self.meta["is_multipage"]:
+            # For multi-page tiff - the pages are organized as:
+            # (channel x slice x frame) - each page is (height x width)
+            # - TODO: verify this is the case for Bruker multi-page tiff
+            # This implementation is partially based on the reference code from `scanreader` package - https://github.com/atlab/scanreader
+            # See: https://github.com/atlab/scanreader/blob/2a021a85fca011c17e553d0e1c776998d3f2b2d8/scanreader/scans.py#L337
+            slice_step = self.meta["num_channels"]
+            frame_step = self.meta["num_channels"] * self.meta["num_planes"]
+            slice_idx = self.meta["plane_indices"].index(plane_idx)
+            channel_idx = self.meta["channels"].index(channel)
+
+            page_indices = [frame_idx * frame_step + slice_idx * slice_step + channel_idx
+                            for frame_idx in range(self.meta["num_frames"])]
+
+            combined_data = np.empty([self.meta["num_frames"],
+                                      self.meta["height_in_pixels"],
+                                      self.meta["width_in_pixels"]],
+                                     dtype=int)
+            start_page = 0
             try:
                 for input_file in tiff_names:
                     with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
-                        assert len(tffl.pages) == 1
-                        combined_data.append(tffl.pages[0].asarray())
+                        # Get indices in this tiff file and in output array
+                        final_page_in_file = start_page + len(tffl.pages)
+                        is_page_in_file = lambda page: page in range(start_page, final_page_in_file)
+                        pages_in_file = filter(is_page_in_file, page_indices)
+                        file_indices = [page - start_page for page in pages_in_file]
+                        global_indices = [is_page_in_file(page) for page in page_indices]
+
+                        # Read from this tiff file (if needed)
+                        if len(file_indices) > 0:
+                            # this line looks a bit ugly but is memory efficient. Do not separate
+                            combined_data[global_indices] = tffl.asarray(key=file_indices)
+                        start_page += len(tffl.pages)
             except Exception as e:
                 raise Exception(f"Error in processing tiff file {input_file}: {e}")
-
-            combined_data = np.dstack(combined_data).transpose(
-                2, 0, 1
-            )  # (frame x height x width)
 
             tifffile.imwrite(
                 output_tiff_fullpath,
@@ -154,6 +157,47 @@ class PrairieViewMeta:
                 metadata={"axes": "TYX", "'fps'": self.meta["frame_rate"]},
                 bigtiff=True,
             )
+        else:
+            if not caiman_compatible:
+                with tifffile.TiffWriter(
+                    output_tiff_fullpath,
+                    bigtiff=True,
+                ) as tiff_writer:
+                    try:
+                        for input_file in tiff_names:
+                            with tifffile.TiffFile(
+                                self.prairieview_dir / input_file
+                            ) as tffl:
+                                assert len(tffl.pages) == 1
+                                tiff_writer.write(
+                                    tffl.pages[0].asarray(),
+                                    metadata={
+                                        "axes": "YX",
+                                        "'fps'": self.meta["frame_rate"],
+                                    },
+                                )
+                    except Exception as e:
+                        raise Exception(f"Error in processing tiff file {input_file}: {e}")
+            else:
+                combined_data = []
+                try:
+                    for input_file in tiff_names:
+                        with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
+                            assert len(tffl.pages) == 1
+                            combined_data.append(tffl.pages[0].asarray())
+                except Exception as e:
+                    raise Exception(f"Error in processing tiff file {input_file}: {e}")
+
+                combined_data = np.dstack(combined_data).transpose(
+                    2, 0, 1
+                )  # (frame x height x width)
+
+                tifffile.imwrite(
+                    output_tiff_fullpath,
+                    combined_data,
+                    metadata={"axes": "TYX", "'fps'": self.meta["frame_rate"]},
+                    bigtiff=True,
+                )
 
         return output_tiff_fullpath
 
@@ -167,7 +211,7 @@ def _extract_prairieview_metadata(xml_filepath: str):
 
     bidirectional_scan = False  # Does not support bidirectional
     roi = 0
-    multi_tiff = xml_root.find(".//Sequence/Frame/File/[@page]") is not None
+    is_multipage = xml_root.find(".//Sequence/Frame/File/[@page]") is not None
     recording_start_time = xml_root.find(".//Sequence/[@cycle='1']").attrib.get("time")
 
     # Get all channels and find unique values
@@ -311,7 +355,7 @@ def _extract_prairieview_metadata(xml_filepath: str):
         frame_period=frame_period,
         bidirectional=bidirectional_scan,
         bidirectional_z=bidirection_z,
-        multi_tiff=multi_tiff,
+        is_multipage=is_multipage,
         scan_datetime=scan_datetime,
         usecs_per_line=usec_per_line,
         scan_duration=total_scan_duration,
