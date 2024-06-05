@@ -1,6 +1,7 @@
-import pathlib
-
 import cv2
+import os
+import pathlib
+import shutil
 
 try:
     cv2.setNumThreads(0)
@@ -65,6 +66,11 @@ def run_caiman(
 
     cnmf_output_file = pathlib.Path(cnmf_output.mmap_file[:-4] + "hdf5")
     assert cnmf_output_file.exists()
-    assert cnmf_output_file.parent == pathlib.Path(output_dir)
+    output_files = os.listdir(cnmf_output_file.parent)
+    for output_file in output_files:
+        try:
+            shutil.copy(cnmf_output_file.parent / output_file, output_dir)
+        except FileExistsError:
+            print(f"File {output_file.name} already exists in {output_dir}. Skipping.")
 
     _save_mc(mc_output, cnmf_output_file.as_posix(), parameters["is3D"])
