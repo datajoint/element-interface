@@ -69,7 +69,7 @@ def run_caiman(
     output_files = os.listdir(cnmf_output_file.parent)
     for output_file in output_files:
         try:
-            shutil.move(output_file, output_dir)
+            shutil.move(cnmf_output_file.parent / output_file, output_dir)
         except FileExistsError:
             print(f"File {output_file.name} already exists in {output_dir}. Skipping.")
 
