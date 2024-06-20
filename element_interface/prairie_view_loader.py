@@ -190,7 +190,6 @@ class PrairieViewMeta:
                                     data[np.newaxis, ...],  # Add a new axis to match (frame x height x width)
                                     photometric='minisblack',
                                     metadata={'axes': 'TYX', 'fps': self.meta["frame_rate"]},
-                                    ome=True
                                 )
                 except Exception as e:
                     raise Exception(f"Error in processing tiff file {input_file}: {e}")
