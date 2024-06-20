@@ -182,10 +182,16 @@ class PrairieViewMeta:
                 try:
                     with tifffile.TiffWriter(output_tiff_fullpath, bigtiff=True) as tif_writer:
                         for input_file in tiff_names:
-                            with tifffile.TiffFile(self.prairieview_dir / input_file, mode='r') as tffl:
+                            with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
                                 assert len(tffl.pages) == 1
-                                data = tffl.pages[0].asarray(out='memmap')  # Use memory-mapped array
-                                tif_writer.write(data, metadata={"axes": "TYX", "fps": self.meta["frame_rate"]})
+                                data = tffl.pages[0].asarray()
+                                # Write each image directly to the output TIFF file
+                                tif_writer.write(
+                                    data[np.newaxis, ...],  # Add a new axis to match (frame x height x width)
+                                    photometric='minisblack',
+                                    metadata={'axes': 'TYX', 'fps': self.meta["frame_rate"]},
+                                    ome=True
+                                )
                 except Exception as e:
                     raise Exception(f"Error in processing tiff file {input_file}: {e}")
                 # combined_data = []
