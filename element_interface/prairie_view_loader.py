@@ -179,25 +179,34 @@ class PrairieViewMeta:
                     except Exception as e:
                         raise Exception(f"Error in processing tiff file {input_file}: {e}")
             else:
-                combined_data = []
                 try:
-                    for input_file in tiff_names:
-                        with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
-                            assert len(tffl.pages) == 1
-                            combined_data.append(tffl.pages[0].asarray())
+                    with tifffile.TiffWriter(output_tiff_fullpath, bigtiff=True) as tif_writer:
+                        for input_file in tiff_names:
+                            with tifffile.TiffFile(self.prairieview_dir / input_file, mode='r') as tffl:
+                                assert len(tffl.pages) == 1
+                                data = tffl.pages[0].asarray(out='memmap')  # Use memory-mapped array
+                                tif_writer.write(data, metadata={"axes": "TYX", "fps": self.meta["frame_rate"]})
                 except Exception as e:
                     raise Exception(f"Error in processing tiff file {input_file}: {e}")
+                # combined_data = []
+                # try:
+                #     for input_file in tiff_names:
+                #         with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
+                #             assert len(tffl.pages) == 1
+                #             combined_data.append(tffl.pages[0].asarray())
+                # except Exception as e:
+                #     raise Exception(f"Error in processing tiff file {input_file}: {e}")
 
-                combined_data = np.dstack(combined_data).transpose(
-                    2, 0, 1
-                )  # (frame x height x width)
+                # combined_data = np.dstack(combined_data).transpose(
+                #     2, 0, 1
+                # )  # (frame x height x width)
 
-                tifffile.imwrite(
-                    output_tiff_fullpath,
-                    combined_data,
-                    metadata={"axes": "TYX", "'fps'": self.meta["frame_rate"]},
-                    bigtiff=True,
-                )
+                # tifffile.imwrite(
+                #     output_tiff_fullpath,
+                #     combined_data,
+                #     metadata={"axes": "TYX", "'fps'": self.meta["frame_rate"]},
+                #     bigtiff=True,
+                # )
 
         return output_tiff_fullpath
 
