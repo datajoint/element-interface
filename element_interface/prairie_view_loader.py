@@ -192,7 +192,7 @@ class PrairieViewMeta:
                     
                     final_image = pyvips.Image.arrayjoin(combined_data, across=1)
                     final_image.set_type(pyvips.GValue.gint_type, "page-height", self.meta["height_in_pixels"])
-                    final_image.write_to_file(output_tiff_fullpath, subifd=True)
+                    final_image.write_to_file(output_tiff_fullpath, subifd=True, bigtiff=True)
                 
                 except Exception as e:
                     raise Exception(f"Error in processing tiff file {input_file}: {e}")
