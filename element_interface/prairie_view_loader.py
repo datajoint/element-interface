@@ -157,6 +157,9 @@ class PrairieViewMeta:
                 metadata={"axes": "TYX", "'fps'": self.meta["frame_rate"]},
                 bigtiff=True,
             )
+            combined_data = np.dstack(combined_data).transpose(
+                    2, 0, 1
+                )  # (frame x height x width)
         else:
             if not caiman_compatible:
                 with tifffile.TiffWriter(
@@ -179,39 +182,20 @@ class PrairieViewMeta:
                     except Exception as e:
                         raise Exception(f"Error in processing tiff file {input_file}: {e}")
             else:
+                import pyvips
+
+
+                combined_data = []
                 try:
-                    with tifffile.TiffWriter(output_tiff_fullpath, bigtiff=True) as tif_writer:
-                        for input_file in tiff_names:
-                            with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
-                                assert len(tffl.pages) == 1
-                                data = tffl.pages[0].asarray()
-                                # Write each image directly to the output TIFF file
-                                tif_writer.write(
-                                    data[np.newaxis, ...],  # Add a new axis to match (frame x height x width)
-                                    photometric='minisblack',
-                                    metadata={'axes': 'TYX', 'fps': self.meta["frame_rate"]},
-                                )
+                    for input_file in tiff_names:
+                        combined_data.append(pyvips.Image.new_from_file(self.prairieview_dir / input_file, n=1))
+                    
+                    final_image = pyvips.Image.arrayjoin(combined_data, across=1)
+                    final_image.set_type(pyvips.GValue.gint_type, "page-height", self.meta["height_in_pixels"])
+                    final_image.write_to_file(output_tiff_fullpath, subif=True)
+                
                 except Exception as e:
                     raise Exception(f"Error in processing tiff file {input_file}: {e}")
-                # combined_data = []
-                # try:
-                #     for input_file in tiff_names:
-                #         with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
-                #             assert len(tffl.pages) == 1
-                #             combined_data.append(tffl.pages[0].asarray())
-                # except Exception as e:
-                #     raise Exception(f"Error in processing tiff file {input_file}: {e}")
-
-                # combined_data = np.dstack(combined_data).transpose(
-                #     2, 0, 1
-                # )  # (frame x height x width)
-
-                # tifffile.imwrite(
-                #     output_tiff_fullpath,
-                #     combined_data,
-                #     metadata={"axes": "TYX", "'fps'": self.meta["frame_rate"]},
-                #     bigtiff=True,
-                # )
 
         return output_tiff_fullpath
 
