@@ -182,17 +182,15 @@ class PrairieViewMeta:
                     except Exception as e:
                         raise Exception(f"Error in processing tiff file {input_file}: {e}")
             else:
-                import pyvips
-
-
                 combined_data = []
                 try:
                     for input_file in tiff_names:
-                        combined_data.append(pyvips.Image.new_from_file(self.prairieview_dir / input_file, n=1))
-                    
-                    final_image = pyvips.Image.arrayjoin(combined_data, across=1)
-                    final_image.set_type(pyvips.GValue.gint_type, "page-height", self.meta["height_in_pixels"])
-                    final_image.write_to_file(output_tiff_fullpath, subifd=True, bigtiff=True)
+                        with tifffile.TiffWriter(
+                            output_tiff_fullpath,
+                            bigtiff=True,
+                        ) as tiff_writer:
+                            img = tifffile.imread(self.prairieview_dir / input_file)
+                            tiff_writer.save(img)
                 
                 except Exception as e:
                     raise Exception(f"Error in processing tiff file {input_file}: {e}")
