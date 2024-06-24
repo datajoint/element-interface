@@ -185,12 +185,21 @@ class PrairieViewMeta:
                 combined_data = []
                 try:
                     for input_file in tiff_names:
-                        with tifffile.TiffWriter(
-                            output_tiff_fullpath,
-                            bigtiff=True,
-                        ) as tiff_writer:
-                            img = tifffile.imread(self.prairieview_dir / input_file)
-                            tiff_writer.save(img)
+                        if not output_tiff_fullpath.exists():
+                            with tifffile.TiffWriter(
+                                output_tiff_fullpath,
+                                bigtiff=True,
+                            ) as tiff_writer:
+                                img = tifffile.imread(self.prairieview_dir / input_file)
+                                tiff_writer.save(img)
+                        else:
+                            with tifffile.TiffWriter(
+                                output_tiff_fullpath,
+                                bigtiff=True,
+                                append=True,
+                            ) as tiff_writer:
+                                img = tifffile.imread(self.prairieview_dir / input_file)
+                                tiff_writer.save(img)
                 
                 except Exception as e:
                     raise Exception(f"Error in processing tiff file {input_file}: {e}")
