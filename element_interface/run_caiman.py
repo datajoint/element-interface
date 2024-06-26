@@ -1,6 +1,7 @@
-import pathlib
-
 import cv2
+import os
+import pathlib
+import shutil
 
 try:
     cv2.setNumThreads(0)
@@ -45,7 +46,7 @@ def run_caiman(
     opts = params.CNMFParams(params_dict=parameters)
 
     c, dview, n_processes = cm.cluster.setup_cluster(
-        backend="local", n_processes=None, single_thread=False
+        backend="multiprocessing", n_processes=None
     )
 
     try:
@@ -64,7 +65,7 @@ def run_caiman(
         cm.stop_server(dview=dview)
 
     cnmf_output_file = pathlib.Path(cnmf_output.mmap_file[:-4] + "hdf5")
+    cnmf_output_file = pathlib.Path(output_dir) / cnmf_output_file.name
     assert cnmf_output_file.exists()
-    assert cnmf_output_file.parent == pathlib.Path(output_dir)
 
     _save_mc(mc_output, cnmf_output_file.as_posix(), parameters["is3D"])
