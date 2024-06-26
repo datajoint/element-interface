@@ -5,6 +5,9 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 import numpy as np
 import tifffile
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class PrairieViewMeta:
@@ -102,6 +105,8 @@ class PrairieViewMeta:
         caiman_compatible=False,  # if True, save the movie as a single page (frame x height x width)
         overwrite=False,
     ):
+        logger.warning("Deprecation warning: `caiman_compatible` argument will no longer have any effect and will be removed in the future. `write_single_bigtiff` will return multi-page tiff, which is compatible with CaImAn.")
+
         tiff_names, plane_idx, channel = self.get_prairieview_filenames(
             plane_idx=plane_idx, channel=channel, return_pln_chn=True
         )
@@ -109,7 +114,7 @@ class PrairieViewMeta:
             output_prefix = os.path.commonprefix(tiff_names)
         output_tiff_fullpath = (
             Path(output_dir)
-            / f"{output_prefix}_pln{plane_idx}_chn{channel}{'.ome' if not caiman_compatible else ''}.tif"
+            / f"{output_prefix}_pln{plane_idx}_chn{channel}.tif"
         )
         if output_tiff_fullpath.exists() and not overwrite:
             return output_tiff_fullpath
@@ -158,46 +163,25 @@ class PrairieViewMeta:
                 bigtiff=True,
             )
         else:
-            if not caiman_compatible:
-                with tifffile.TiffWriter(
-                    output_tiff_fullpath,
-                    bigtiff=True,
-                ) as tiff_writer:
-                    try:
-                        for input_file in tiff_names:
-                            with tifffile.TiffFile(
-                                self.prairieview_dir / input_file
-                            ) as tffl:
-                                assert len(tffl.pages) == 1
-                                tiff_writer.write(
-                                    tffl.pages[0].asarray(),
-                                    metadata={
-                                        "axes": "YX",
-                                        "'fps'": self.meta["frame_rate"],
-                                    },
-                                )
-                    except Exception as e:
-                        raise Exception(f"Error in processing tiff file {input_file}: {e}")
-            else:
-                combined_data = []
+            with tifffile.TiffWriter(
+                output_tiff_fullpath,
+                bigtiff=True,
+            ) as tiff_writer:
                 try:
                     for input_file in tiff_names:
-                        with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
+                        with tifffile.TiffFile(
+                            self.prairieview_dir / input_file
+                        ) as tffl:
                             assert len(tffl.pages) == 1
-                            combined_data.append(tffl.pages[0].asarray())
+                            tiff_writer.write(
+                                tffl.pages[0].asarray(),
+                                metadata={
+                                    "axes": "YX",
+                                    "'fps'": self.meta["frame_rate"],
+                                },
+                            )
                 except Exception as e:
                     raise Exception(f"Error in processing tiff file {input_file}: {e}")
-
-                combined_data = np.dstack(combined_data).transpose(
-                    2, 0, 1
-                )  # (frame x height x width)
-
-                tifffile.imwrite(
-                    output_tiff_fullpath,
-                    combined_data,
-                    metadata={"axes": "TYX", "'fps'": self.meta["frame_rate"]},
-                    bigtiff=True,
-                )
 
         return output_tiff_fullpath
 
