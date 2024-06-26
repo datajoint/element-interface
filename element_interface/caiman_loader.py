@@ -293,8 +293,10 @@ class CaImAn:
             )
         else:
             img_ = np.dstack(
-                pln_cm.motion_correction[img_type][...]
-                for pln_cm in self.planes.values()
+                [
+                    pln_cm.motion_correction[img_type][...]
+                    for pln_cm in self.planes.values()
+                ]
             )
         return img_
 

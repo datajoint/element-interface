@@ -1,6 +1,7 @@
-import pathlib
-
 import cv2
+import os
+import pathlib
+import shutil
 
 try:
     cv2.setNumThreads(0)
@@ -45,7 +46,7 @@ def run_caiman(
     opts = params.CNMFParams(params_dict=parameters)
 
     c, dview, n_processes = cm.cluster.setup_cluster(
-        backend="local", n_processes=None, single_thread=False
+        backend="multiprocessing", n_processes=None
     )
 
     try:
