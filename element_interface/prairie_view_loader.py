@@ -180,6 +180,10 @@ class PrairieViewMeta:
                                     "'fps'": self.meta["frame_rate"],
                                 },
                             )
+                        # additional safeguard to close the file and delete the object
+                        # in the attempt to prevent error: `not a TIFF file b''`
+                        tffl.close()
+                        del tffl
                 except Exception as e:
                     raise Exception(f"Error in processing tiff file {input_file}: {e}")
 
