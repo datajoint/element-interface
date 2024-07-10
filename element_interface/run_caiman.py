@@ -65,12 +65,7 @@ def run_caiman(
         cm.stop_server(dview=dview)
 
     cnmf_output_file = pathlib.Path(cnmf_output.mmap_file[:-4] + "hdf5")
+    cnmf_output_file = pathlib.Path(output_dir) / cnmf_output_file.name
     assert cnmf_output_file.exists()
-    output_files = os.listdir(cnmf_output_file.parent)
-    for output_file in output_files:
-        try:
-            shutil.copy(cnmf_output_file.parent / output_file, output_dir)
-        except FileExistsError:
-            print(f"File {output_file.name} already exists in {output_dir}. Skipping.")
 
     _save_mc(mc_output, cnmf_output_file.as_posix(), parameters["is3D"])

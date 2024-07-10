@@ -5,6 +5,9 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 import numpy as np
 import tifffile
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class PrairieViewMeta:
@@ -102,6 +105,8 @@ class PrairieViewMeta:
         caiman_compatible=False,  # if True, save the movie as a single page (frame x height x width)
         overwrite=False,
     ):
+        logger.warning("Deprecation warning: `caiman_compatible` argument will no longer have any effect and will be removed in the future. `write_single_bigtiff` will return multi-page tiff, which is compatible with CaImAn.")
+
         tiff_names, plane_idx, channel = self.get_prairieview_filenames(
             plane_idx=plane_idx, channel=channel, return_pln_chn=True
         )
@@ -109,7 +114,7 @@ class PrairieViewMeta:
             output_prefix = os.path.commonprefix(tiff_names)
         output_tiff_fullpath = (
             Path(output_dir)
-            / f"{output_prefix}_pln{plane_idx}_chn{channel}{'.ome' if not caiman_compatible else ''}.tif"
+            / f"{output_prefix}_pln{plane_idx}_chn{channel}.tif"
         )
         if output_tiff_fullpath.exists() and not overwrite:
             return output_tiff_fullpath
@@ -161,46 +166,27 @@ class PrairieViewMeta:
                     2, 0, 1
                 )  # (frame x height x width)
         else:
-            if not caiman_compatible:
-                with tifffile.TiffWriter(
-                    output_tiff_fullpath,
-                    bigtiff=True,
-                ) as tiff_writer:
-                    try:
-                        for input_file in tiff_names:
-                            with tifffile.TiffFile(
-                                self.prairieview_dir / input_file
-                            ) as tffl:
-                                assert len(tffl.pages) == 1
-                                tiff_writer.write(
-                                    tffl.pages[0].asarray(),
-                                    metadata={
-                                        "axes": "YX",
-                                        "'fps'": self.meta["frame_rate"],
-                                    },
-                                )
-                    except Exception as e:
-                        raise Exception(f"Error in processing tiff file {input_file}: {e}")
-            else:
-                combined_data = []
+            with tifffile.TiffWriter(
+                output_tiff_fullpath,
+                bigtiff=True,
+            ) as tiff_writer:
                 try:
                     for input_file in tiff_names:
-                        if not output_tiff_fullpath.exists():
-                            with tifffile.TiffWriter(
-                                output_tiff_fullpath,
-                                bigtiff=True,
-                            ) as tiff_writer:
-                                img = tifffile.imread(self.prairieview_dir / input_file)
-                                tiff_writer.save(img)
-                        else:
-                            with tifffile.TiffWriter(
-                                output_tiff_fullpath,
-                                bigtiff=True,
-                                append=True,
-                            ) as tiff_writer:
-                                img = tifffile.imread(self.prairieview_dir / input_file)
-                                tiff_writer.save(img)
-                
+                        with tifffile.TiffFile(
+                            self.prairieview_dir / input_file
+                        ) as tffl:
+                            assert len(tffl.pages) == 1
+                            tiff_writer.write(
+                                tffl.pages[0].asarray(),
+                                metadata={
+                                    "axes": "YX",
+                                    "'fps'": self.meta["frame_rate"],
+                                },
+                            )
+                        # additional safeguard to close the file and delete the object
+                        # in the attempt to prevent error: `not a TIFF file b''`
+                        tffl.close()
+                        del tffl
                 except Exception as e:
                     raise Exception(f"Error in processing tiff file {input_file}: {e}")
 
