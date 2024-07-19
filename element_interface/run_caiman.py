@@ -8,6 +8,13 @@ try:
 except:  # noqa E722
     pass  # TODO: remove bare except
 
+try:
+    import torch
+    cuda_is_available = torch.cuda.is_available()
+except:
+    cuda_is_available = False
+    pass
+
 import caiman as cm
 from caiman.source_extraction.cnmf import params as params
 from caiman.source_extraction.cnmf.cnmf import CNMF
@@ -35,6 +42,8 @@ def run_caiman(
     parameters["is3D"] = is3D
     parameters["fnames"] = file_paths
     parameters["fr"] = sampling_rate
+
+    parameters["use_cuda"] = cuda_is_available  # Use CUDA if available
 
     if "indices" in parameters:
         indices = parameters.pop(
