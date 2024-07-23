@@ -104,6 +104,7 @@ class PrairieViewMeta:
         output_dir="./",
         caiman_compatible=False,  # if True, save the movie as a single page (frame x height x width)
         overwrite=False,
+        gb_per_file=None,
     ):
         logger.warning("Deprecation warning: `caiman_compatible` argument will no longer have any effect and will be removed in the future. `write_single_bigtiff` will return multi-page tiff, which is compatible with CaImAn.")
 
@@ -112,14 +113,17 @@ class PrairieViewMeta:
         )
         if output_prefix is None:
             output_prefix = os.path.commonprefix(tiff_names)
-        output_tiff_fullpath = (
-            Path(output_dir)
-            / f"{output_prefix}_pln{plane_idx}_chn{channel}.tif"
-        )
-        if output_tiff_fullpath.exists() and not overwrite:
-            return output_tiff_fullpath
+        output_tiff_stem = f"{output_prefix}_pln{plane_idx}_chn{channel}"
 
+        output_dir = Path(output_dir)
+        output_tiff_list = list(output_dir.glob(f"{output_tiff_stem}*.tif"))
+        if len(output_tiff_list) and not overwrite:
+            return output_tiff_list[0] if gb_per_file is None else output_tiff_list
+
+        output_tiff_list = []
         if self.meta["is_multipage"]:
+            if gb_per_file is not None:
+                logger.warning("Ignoring `gb_per_file` argument for multi-page tiff (NotYetImplemented)")
             # For multi-page tiff - the pages are organized as:
             # (channel x slice x frame) - each page is (height x width)
             # - TODO: verify this is the case for Bruker multi-page tiff
@@ -156,38 +160,52 @@ class PrairieViewMeta:
             except Exception as e:
                 raise Exception(f"Error in processing tiff file {input_file}: {e}")
 
+            output_tiff_fullpath = (
+                    output_dir
+                    / f"{output_tiff_stem}.tif"
+            )
             tifffile.imwrite(
                 output_tiff_fullpath,
                 combined_data,
                 metadata={"axes": "TYX", "'fps'": self.meta["frame_rate"]},
                 bigtiff=True,
             )
+            output_tiff_list.append(output_tiff_fullpath)
         else:
-            with tifffile.TiffWriter(
-                output_tiff_fullpath,
-                bigtiff=True,
-            ) as tiff_writer:
-                try:
-                    for input_file in tiff_names:
-                        with tifffile.TiffFile(
-                            self.prairieview_dir / input_file
-                        ) as tffl:
-                            assert len(tffl.pages) == 1
-                            tiff_writer.write(
-                                tffl.pages[0].asarray(),
-                                metadata={
-                                    "axes": "YX",
-                                    "'fps'": self.meta["frame_rate"],
-                                },
-                            )
-                        # additional safeguard to close the file and delete the object
-                        # in the attempt to prevent error: `not a TIFF file b''`
-                        tffl.close()
-                        del tffl
-                except Exception as e:
-                    raise Exception(f"Error in processing tiff file {input_file}: {e}")
+            while len(tiff_names):
+                output_tiff_fullpath = (
+                        output_dir
+                        / f"{output_tiff_stem}_{len(output_tiff_list):04}.tif"
+                )
+                with tifffile.TiffWriter(
+                    output_tiff_fullpath,
+                    bigtiff=True,
+                ) as tiff_writer:
+                    while len(tiff_names):
+                        input_file = tiff_names.pop(0)
+                        try:
+                            with tifffile.TiffFile(
+                                self.prairieview_dir / input_file
+                            ) as tffl:
+                                assert len(tffl.pages) == 1
+                                tiff_writer.write(
+                                    tffl.pages[0].asarray(),
+                                    metadata={
+                                        "axes": "YX",
+                                        "'fps'": self.meta["frame_rate"],
+                                    },
+                                )
+                            # additional safeguard to close the file and delete the object
+                            # in the attempt to prevent error: `not a TIFF file b''`
+                            tffl.close()
+                            del tffl
+                        except Exception as e:
+                            raise Exception(f"Error in processing tiff file {input_file}: {e}")
+                        if gb_per_file and output_tiff_fullpath.stat().st_size >= gb_per_file * 1024 ** 3:
+                            break
+                    output_tiff_list.append(output_tiff_fullpath)
 
-        return output_tiff_fullpath
+        return output_tiff_list[0] if gb_per_file is None else output_tiff_list
 
 
 def _extract_prairieview_metadata(xml_filepath: str):
