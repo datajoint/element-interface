@@ -122,6 +122,8 @@ class PrairieViewMeta:
 
         output_tiff_list = []
         if self.meta["is_multipage"]:
+            if gb_per_file is not None:
+                logger.warning("Ignoring `gb_per_file` argument for multi-page tiff (NotYetImplemented)")
             # For multi-page tiff - the pages are organized as:
             # (channel x slice x frame) - each page is (height x width)
             # - TODO: verify this is the case for Bruker multi-page tiff
