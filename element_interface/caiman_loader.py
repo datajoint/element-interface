@@ -532,7 +532,12 @@ def _process_scanimage_tiff(scan_filenames, output_dir="./", split_depths=False)
             imsave(save_fp.as_posix(), chn_vol)
 
 
-def _save_mc(mc, caiman_fp: str, is3D: bool):
+def _save_mc(
+    mc,
+    caiman_fp: str,
+    is3D: bool,
+    summary_images: dict = None,
+):
     """Save motion correction to hdf5 output
 
     Run these commands after the CaImAn analysis has completed.
@@ -545,21 +550,13 @@ def _save_mc(mc, caiman_fp: str, is3D: bool):
             shifts_rig :   Rigid transformation x and y shifts per frame
             x_shifts_els : Non rigid transformation x shifts per frame per block
             y_shifts_els : Non rigid transformation y shifts per frame per block
-        caiman_fp (str): CaImAn output (*.hdf5) file path
+        caiman_fp (str): CaImAn output (*.hdf5) file path - append if exists, else create new one
+        is3D (bool):  the data is 3D
+        summary_images(dict): dict of summary images (average_image, max_image, correlation_image) - if None, will be computed, if provided as empty dict, will not be computed
     """
-
-    # Load motion corrected mmap image
-    mc_image = cm.load(mc.mmap_file, is3D=is3D)
-
-    # Compute motion corrected summary images
-    average_image = np.mean(mc_image, axis=0)
-    max_image = np.max(mc_image, axis=0)
-
-    # Compute motion corrected correlation image
-    correlation_image = cm.local_correlations(
-        mc_image.transpose((1, 2, 3, 0) if is3D else (1, 2, 0))
-    )
-    correlation_image[np.isnan(correlation_image)] = 0
+    Yr, dims, T = cm.mmapping.load_memmap(mc.mmap_file[0])
+    # Load the first frame of the movie
+    mc_image = np.reshape(Yr[: np.product(dims), :1], [1] + list(dims), order="F")
 
     # Compute mc.coord_shifts_els
     grid = []
@@ -591,7 +588,8 @@ def _save_mc(mc, caiman_fp: str, is3D: bool):
             )
 
     # Open hdf5 file and create 'motion_correction' group
-    h5f = h5py.File(caiman_fp, "r+")
+    caiman_fp = pathlib.Path(caiman_fp)
+    h5f = h5py.File(caiman_fp, "r+" if caiman_fp.exists() else "w")
     h5g = h5f.require_group("motion_correction")
 
     # Write motion correction shifts and motion corrected summary images to hdf5 file
@@ -623,7 +621,7 @@ def _save_mc(mc, caiman_fp: str, is3D: bool):
         # For CaImAn, reference image is still a 2D array even for the case of 3D
         # Assume that the same ref image is used for all the planes
         reference_image = (
-            np.tile(mc.total_template_els, (1, 1, correlation_image.shape[-1]))
+            np.tile(mc.total_template_els, (1, 1, dims[-1]))
             if is3D
             else mc.total_template_els
         )
@@ -638,9 +636,37 @@ def _save_mc(mc, caiman_fp: str, is3D: bool):
             "coord_shifts_rig", shape=np.shape(grid), data=grid, dtype=type(grid[0][0])
         )
         reference_image = (
-            np.tile(mc.total_template_rig, (1, 1, correlation_image.shape[-1]))
+            np.tile(mc.total_template_rig, (1, 1, dims[-1]))
             if is3D
             else mc.total_template_rig
+        )
+
+    if summary_images is None:
+        # Load motion corrected mmap image
+        mc_image = cm.load(mc.mmap_file, is3D=is3D)
+
+        # Compute motion corrected summary images
+        average_image = np.mean(mc_image, axis=0)
+        max_image = np.max(mc_image, axis=0)
+
+        # Compute motion corrected correlation image
+        correlation_image = cm.local_correlations(
+            mc_image.transpose((1, 2, 3, 0) if is3D else (1, 2, 0))
+        )
+        correlation_image[np.isnan(correlation_image)] = 0
+
+        summary_images = {
+            "average_image": average_image,
+            "max_image": max_image,
+            "correlation_image": correlation_image,
+        }
+
+    for img_type, img in summary_images.items():
+        h5g.require_dataset(
+            img_type,
+            shape=np.shape(img),
+            data=img,
+            dtype=img.dtype,
         )
 
     h5g.require_dataset(
@@ -648,21 +674,6 @@ def _save_mc(mc, caiman_fp: str, is3D: bool):
         shape=np.shape(reference_image),
         data=reference_image,
         dtype=reference_image.dtype,
-    )
-    h5g.require_dataset(
-        "correlation_image",
-        shape=np.shape(correlation_image),
-        data=correlation_image,
-        dtype=correlation_image.dtype,
-    )
-    h5g.require_dataset(
-        "average_image",
-        shape=np.shape(average_image),
-        data=average_image,
-        dtype=average_image.dtype,
-    )
-    h5g.require_dataset(
-        "max_image", shape=np.shape(max_image), data=max_image, dtype=max_image.dtype
     )
 
     # Close hdf5 file
