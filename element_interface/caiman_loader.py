@@ -289,7 +289,7 @@ class CaImAn:
             img_ = (
                 pln_cm.motion_correction[img_type].transpose()
                 if self.is3D
-                else pln_cm.motion_correction[img_type][...][np.newaxis, ...]
+                else pln_cm.motion_correction[img_type][...][..., np.newaxis]
             )
         else:
             img_ = np.dstack(
