@@ -120,6 +120,9 @@ class PrairieViewMeta:
         if len(output_tiff_list) and not overwrite:
             return output_tiff_list[0] if gb_per_file is None else output_tiff_list
 
+        # delete old tif files if overwrite is True
+        [f.unlink() for f in output_tiff_list]
+
         output_tiff_list = []
         if self.meta["is_multipage"]:
             if gb_per_file is not None:
