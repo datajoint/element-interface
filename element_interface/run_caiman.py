@@ -2,6 +2,8 @@ import cv2
 import os
 import pathlib
 import shutil
+import numpy as np
+import multiprocessing
 
 try:
     cv2.setNumThreads(0)
@@ -43,7 +45,8 @@ def run_caiman(
     parameters["fnames"] = file_paths
     parameters["fr"] = sampling_rate
 
-    parameters["use_cuda"] = cuda_is_available  # Use CUDA if available
+    use_cuda = parameters.get("use_cuda")
+    parameters["use_cuda"] = cuda_is_available if use_cuda is None else use_cuda
 
     if "indices" in parameters:
         indices = parameters.pop(
@@ -52,13 +55,17 @@ def run_caiman(
         indices = slice(*indices[0]), slice(*indices[1])
         parameters["motion"] = {**parameters.get("motion", {}), "indices": indices}
 
-    opts = params.CNMFParams(params_dict=parameters)
+    caiman_temp = os.environ.get("CAIMAN_TEMP")
+    os.environ["CAIMAN_TEMP"] = str(output_dir)
 
-    c, dview, n_processes = cm.cluster.setup_cluster(
-        backend="multiprocessing", n_processes=None
+    # use 80% of available cores
+    n_processes = int(np.floor(multiprocessing.cpu_count() * 0.8))
+    _, dview, n_processes = cm.cluster.setup_cluster(
+        backend="multiprocessing", n_processes=n_processes
     )
 
     try:
+        opts = params.CNMFParams(params_dict=parameters)
         cnm = CNMF(n_processes, params=opts, dview=dview)
         cnmf_output, mc_output = cnm.fit_file(
             motion_correct=True,
@@ -72,6 +79,11 @@ def run_caiman(
         raise e
     else:
         cm.stop_server(dview=dview)
+
+    if caiman_temp is not None:
+        os.environ["CAIMAN_TEMP"] = caiman_temp
+    else:
+        del os.environ["CAIMAN_TEMP"]
 
     cnmf_output_file = pathlib.Path(cnmf_output.mmap_file[:-4] + "hdf5")
     cnmf_output_file = pathlib.Path(output_dir) / cnmf_output_file.name
