@@ -24,6 +24,12 @@ how to use various Elements.
 `utils.str_to_bool` converts a set of strings to boolean True or False. This is implemented
 as the equivalent item in Python's `distutils` which will be removed in future versions.
 
+`utils.memoized_result` is a decorator that caches the result of a function call based 
+ on input parameters and the state of the output. If the function is called with the same
+ parameters and the output files in the directory remain unchanged, it returns the 
+ cached results; otherwise, it executes the function and caches the new results along 
+ with metadata.
+
 ### Suite2p
 
 This Element provides functions to independently run Suite2p's motion correction,
@@ -46,13 +52,15 @@ Requirements:
 
 ### PrairieView Reader
 
-This Element provides a function to read the PrairieView Scanner's metadata file. The
-PrairieView software generates one `.ome.tif` imaging file per frame acquired. The
-metadata for all frames is contained in one `.xml` file. This function locates the
-`.xml` file and generates a dictionary necessary to populate the DataJoint ScanInfo and
-Field tables. PrairieView works with resonance scanners with a single field, does not
-support bidirectional x and y scanning, and the `.xml` file does not contain ROI
-information.
+This Element provides a `PrairieViewMeta` class to handle different types of output from
+ the PrairieView Scanner. The PrairieView software either generates one `.ome.tif` 
+ imaging file per frame acquired or multi-page `.ome.tif` files. The metadata for all 
+ frames is contained in one `.xml` file. This class contains methods that locate the 
+ `.xml` file and generate a dictionary necessary to populate the DataJoint ScanInfo and
+  Field tables. The class also contains methods to create a big tiff file from the 
+  individual `.ome.tif` files. PrairieView works with resonance scanners with a single 
+  field, does not support bidirectional x and y scanning, and the `.xml` file does not 
+  contain ROI information.
 
 ## Element Architecture
 

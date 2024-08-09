@@ -1,11 +1,22 @@
-import pathlib
-
 import cv2
+import os
+import pathlib
+import shutil
+import numpy as np
+import multiprocessing
 
 try:
     cv2.setNumThreads(0)
 except:  # noqa E722
     pass  # TODO: remove bare except
+
+try:
+    import torch
+
+    cuda_is_available = torch.cuda.is_available()
+except:
+    cuda_is_available = False
+    pass
 
 import caiman as cm
 from caiman.source_extraction.cnmf import params as params
@@ -35,21 +46,48 @@ def run_caiman(
     parameters["fnames"] = file_paths
     parameters["fr"] = sampling_rate
 
-    opts = params.CNMFParams(params_dict=parameters)
+    use_cuda = parameters.get("use_cuda")
+    parameters["use_cuda"] = cuda_is_available if use_cuda is None else use_cuda
 
-    c, dview, n_processes = cm.cluster.setup_cluster(
-        backend="local", n_processes=None, single_thread=False
+    if "indices" in parameters:
+        indices = parameters.pop(
+            "indices"
+        )  # Indices that restrict FOV for motion correction.
+        indices = slice(*indices[0]), slice(*indices[1])
+        parameters["motion"] = {**parameters.get("motion", {}), "indices": indices}
+
+    caiman_temp = os.environ.get("CAIMAN_TEMP")
+    os.environ["CAIMAN_TEMP"] = str(output_dir)
+
+    # use 80% of available cores
+    n_processes = int(np.floor(multiprocessing.cpu_count() * 0.8))
+    _, dview, n_processes = cm.cluster.setup_cluster(
+        backend="multiprocessing", n_processes=n_processes
     )
 
-    cnm = CNMF(n_processes, params=opts, dview=dview)
-    cnmf_output, mc_output = cnm.fit_file(
-        motion_correct=True, include_eval=True, output_dir=output_dir, return_mc=True
-    )
+    try:
+        opts = params.CNMFParams(params_dict=parameters)
+        cnm = CNMF(n_processes, params=opts, dview=dview)
+        cnmf_output, mc_output = cnm.fit_file(
+            motion_correct=True,
+            indices=None,  # Indices defined here restrict FOV for segmentation. `None` uses the full image for segmentation.
+            include_eval=True,
+            output_dir=output_dir,
+            return_mc=True,
+        )
+    except Exception as e:
+        dview.terminate()
+        raise e
+    else:
+        cm.stop_server(dview=dview)
 
-    cm.stop_server(dview=dview)
+    if caiman_temp is not None:
+        os.environ["CAIMAN_TEMP"] = caiman_temp
+    else:
+        del os.environ["CAIMAN_TEMP"]
 
     cnmf_output_file = pathlib.Path(cnmf_output.mmap_file[:-4] + "hdf5")
+    cnmf_output_file = pathlib.Path(output_dir) / cnmf_output_file.name
     assert cnmf_output_file.exists()
-    assert cnmf_output_file.parent == pathlib.Path(output_dir)
 
     _save_mc(mc_output, cnmf_output_file.as_posix(), parameters["is3D"])

@@ -16,4 +16,6 @@ a number of other Elements.
 
 - Data ingestion, see [`ingest_csv_to_table` API](./api/element_interface/utils/#element_interface.utils.ingest_csv_to_table)
 
+- Code execution, see [`memoized_result` API](./api/element_interface/utils/#element_interface.utils.memoized_result)
+
 Visit the [Concepts page](./concepts.md) for more information on these tools.

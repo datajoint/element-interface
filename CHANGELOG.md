@@ -3,11 +3,17 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.7.0] - 2024-08-09
+
++ Add - `memoized_result` decorator to cache function results
++ Update - `prairie_view_loader.py` to create big tiff files from `.ome.tif` files
++ Update - `run_caiman.py` to run latest version of CaImAn
++ Update - `caiman_loader.py` to process output of latest version of CaImAn
++ Fix - general fixes and improvements
 
 ## [0.6.1] - 2023-08-02
 
 + Update DANDI upload funtionality to improve useability
-
 
 ## [0.6.0] - 2023-07-26
 
@@ -83,6 +89,8 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 
 + Add - Readers for: `ScanImage`, `Suite2p`, `CaImAn`.
 
+
+[0.7.0]: https://github.com/datajoint/element-interface/releases/tag/0.7.0
 [0.6.0]: https://github.com/datajoint/element-interface/releases/tag/0.6.0
 [0.5.4]: https://github.com/datajoint/element-interface/releases/tag/0.5.4
 [0.5.3]: https://github.com/datajoint/element-interface/releases/tag/0.5.3
