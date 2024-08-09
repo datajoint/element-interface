@@ -153,7 +153,9 @@ class PlaneSuite2p:
 
     @property
     def curation_time(self):
-        print("DeprecationWarning: 'curation_time' is deprecated, set to be the same as 'creation time', no longer reliable.")
+        print(
+            "DeprecationWarning: 'curation_time' is deprecated, set to be the same as 'creation time', no longer reliable."
+        )
         return self.creation_time
 
     @property

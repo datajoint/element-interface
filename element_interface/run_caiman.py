@@ -12,6 +12,7 @@ except:  # noqa E722
 
 try:
     import torch
+
     cuda_is_available = torch.cuda.is_available()
 except:
     cuda_is_available = False

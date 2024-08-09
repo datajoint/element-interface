@@ -106,7 +106,9 @@ class PrairieViewMeta:
         overwrite=False,
         gb_per_file=None,
     ):
-        logger.warning("Deprecation warning: `caiman_compatible` argument will no longer have any effect and will be removed in the future. `write_single_bigtiff` will return multi-page tiff, which is compatible with CaImAn.")
+        logger.warning(
+            "Deprecation warning: `caiman_compatible` argument will no longer have any effect and will be removed in the future. `write_single_bigtiff` will return multi-page tiff, which is compatible with CaImAn."
+        )
 
         tiff_names, plane_idx, channel = self.get_prairieview_filenames(
             plane_idx=plane_idx, channel=channel, return_pln_chn=True
@@ -126,7 +128,9 @@ class PrairieViewMeta:
         output_tiff_list = []
         if self.meta["is_multipage"]:
             if gb_per_file is not None:
-                logger.warning("Ignoring `gb_per_file` argument for multi-page tiff (NotYetImplemented)")
+                logger.warning(
+                    "Ignoring `gb_per_file` argument for multi-page tiff (NotYetImplemented)"
+                )
             # For multi-page tiff - the pages are organized as:
             # (channel x slice x frame) - each page is (height x width)
             # - TODO: verify this is the case for Bruker multi-page tiff
@@ -137,36 +141,45 @@ class PrairieViewMeta:
             slice_idx = self.meta["plane_indices"].index(plane_idx)
             channel_idx = self.meta["channels"].index(channel)
 
-            page_indices = [frame_idx * frame_step + slice_idx * slice_step + channel_idx
-                            for frame_idx in range(self.meta["num_frames"])]
+            page_indices = [
+                frame_idx * frame_step + slice_idx * slice_step + channel_idx
+                for frame_idx in range(self.meta["num_frames"])
+            ]
 
-            combined_data = np.empty([self.meta["num_frames"],
-                                      self.meta["height_in_pixels"],
-                                      self.meta["width_in_pixels"]],
-                                     dtype=int)
+            combined_data = np.empty(
+                [
+                    self.meta["num_frames"],
+                    self.meta["height_in_pixels"],
+                    self.meta["width_in_pixels"],
+                ],
+                dtype=int,
+            )
             start_page = 0
             try:
                 for input_file in tiff_names:
                     with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
                         # Get indices in this tiff file and in output array
                         final_page_in_file = start_page + len(tffl.pages)
-                        is_page_in_file = lambda page: page in range(start_page, final_page_in_file)
+                        is_page_in_file = lambda page: page in range(
+                            start_page, final_page_in_file
+                        )
                         pages_in_file = filter(is_page_in_file, page_indices)
                         file_indices = [page - start_page for page in pages_in_file]
-                        global_indices = [is_page_in_file(page) for page in page_indices]
+                        global_indices = [
+                            is_page_in_file(page) for page in page_indices
+                        ]
 
                         # Read from this tiff file (if needed)
                         if len(file_indices) > 0:
                             # this line looks a bit ugly but is memory efficient. Do not separate
-                            combined_data[global_indices] = tffl.asarray(key=file_indices)
+                            combined_data[global_indices] = tffl.asarray(
+                                key=file_indices
+                            )
                         start_page += len(tffl.pages)
             except Exception as e:
                 raise Exception(f"Error in processing tiff file {input_file}: {e}")
 
-            output_tiff_fullpath = (
-                    output_dir
-                    / f"{output_tiff_stem}.tif"
-            )
+            output_tiff_fullpath = output_dir / f"{output_tiff_stem}.tif"
             tifffile.imwrite(
                 output_tiff_fullpath,
                 combined_data,
@@ -177,8 +190,7 @@ class PrairieViewMeta:
         else:
             while len(tiff_names):
                 output_tiff_fullpath = (
-                        output_dir
-                        / f"{output_tiff_stem}_{len(output_tiff_list):04}.tif"
+                    output_dir / f"{output_tiff_stem}_{len(output_tiff_list):04}.tif"
                 )
                 with tifffile.TiffWriter(
                     output_tiff_fullpath,
@@ -203,8 +215,14 @@ class PrairieViewMeta:
                             tffl.close()
                             del tffl
                         except Exception as e:
-                            raise Exception(f"Error in processing tiff file {input_file}: {e}")
-                        if gb_per_file and output_tiff_fullpath.stat().st_size >= gb_per_file * 1024 ** 3:
+                            raise Exception(
+                                f"Error in processing tiff file {input_file}: {e}"
+                            )
+                        if (
+                            gb_per_file
+                            and output_tiff_fullpath.stat().st_size
+                            >= gb_per_file * 1024**3
+                        ):
                             break
                     output_tiff_list.append(output_tiff_fullpath)
 

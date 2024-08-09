@@ -43,7 +43,8 @@ class EXTRACT_trigger:
     def write_matlab_run_script(self):
         """Compose a matlab script and save it with the name run_extract.m.
 
-        The composed script is basically the formatted version of the m_template attribute."""
+        The composed script is basically the formatted version of the m_template attribute.
+        """
 
         self.output_fullpath = (
             self.output_dir / f"{self.scanfile.stem}_extract_output.mat"
@@ -53,11 +54,15 @@ class EXTRACT_trigger:
             **dict(
                 parameters_list_string="\n".join(
                     [
-                        f"config.{k} = '{v}';"
-                        if isinstance(v, str)
-                        else f"config.{k} = {str(v).lower()};"
-                        if isinstance(v, bool)
-                        else f"config.{k} = {v};"
+                        (
+                            f"config.{k} = '{v}';"
+                            if isinstance(v, str)
+                            else (
+                                f"config.{k} = {str(v).lower()};"
+                                if isinstance(v, bool)
+                                else f"config.{k} = {v};"
+                            )
+                        )
                         for k, v in self.parameters.items()
                     ]
                 ),
