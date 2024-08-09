@@ -1,0 +1,10 @@
+name: Release
+on:
+  workflow_dispatch:
+jobs:
+  make_github_release:
+    uses: datajoint/.github/.github/workflows/make_github_release.yaml@main
+  mkdocs_release:
+    uses: datajoint/.github/.github/workflows/mkdocs_release.yaml@main
+    permissions: 
+      contents: write
