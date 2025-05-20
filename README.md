@@ -8,4 +8,4 @@ fully functional pipeline. Element Interface is home to a number of utilities th
 this possible.
 
 Installation and usage instructions can be found at the
-[Element documentation](https://datajoint.com/docs/elements/element-interface).
+[Element documentation](https://docs.datajoint.com/elements/element-interface/).
