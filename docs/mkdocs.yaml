@@ -1,7 +1,7 @@
 # ---------------------- PROJECT SPECIFIC ---------------------------
 
 site_name: DataJoint Documentation
-site_url: http://localhost/docs/element/element-interface
+site_url: https://docs.datajoint.com/elements/element-interface/
 repo_url: https://github.com/datajoint/element-interface
 repo_name: datajoint/element-interface
 nav:
