@@ -1,34 +1,37 @@
 import os
+import h5py
 from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+from scipy.io import loadmat
 
 
 class EXTRACT_loader:
-    def __init__(self, extract_dir: str):
+    def __init__(self, extract_file_path: str):
         """Initialize EXTRACT loader class
 
         Args:
-            extract_dir (str): string, absolute file path to EXTRACT directory
-
-        Raises:
-            FileNotFoundError: Could not find EXTRACT results
+            extract_file_path (str): string, absolute file path to EXTRACT output file.
         """
-        from scipy.io import loadmat
 
+        self.creation_time = datetime.fromtimestamp(os.stat(extract_file_path).st_ctime)
         try:
-            extract_file = next(Path(extract_dir).glob("*_extract_output.mat"))
-        except StopInteration:  # noqa F821
-            raise FileNotFoundError(
-                f"EXTRACT output result file is not found at {extract_dir}."
-            )
+            results = loadmat(extract_file_path)
 
-        results = loadmat(extract_file)
+            self.S = results["output"][0]["spatial_weights"][
+                0
+            ]  # (Height, Width, MaskId)
+            self.spatial_weights = self.S.transpose([2, 0, 1])  # MaskId, Height, Width
+            self.T = results["output"][0]["temporal_weights"][0]  # (Time, MaskId)
 
-        self.creation_time = datetime.fromtimestamp(os.stat(extract_file).st_ctime)
-        self.S = results["output"][0]["spatial_weights"][0]  # (Height, Width, MaskId)
-        self.T = results["output"][0]["temporal_weights"][0]  # (Time, MaskId)
+        except NotImplementedError:
+
+            results = h5py.File(extract_file_path, "r")
+            self.spatial_weights = results["output"]["spatial_weights"][
+                :
+            ]  # (MaskId, Height, Width)
+            self.T = results["output"]["temporal_weights"][:]  # (MaskId, Time)
 
     def load_results(self):
         """Load the EXTRACT results
@@ -38,11 +41,9 @@ class EXTRACT_loader:
         """
         from scipy.sparse import find
 
-        S_transposed = self.S.transpose([2, 0, 1])  # MaskId, Height, Width
-
         masks = []
 
-        for mask_id, s in enumerate(S_transposed):
+        for mask_id, s in enumerate(self.spatial_weights):
             ypixels, xpixels, weights = find(s)
             masks.append(
                 dict(
