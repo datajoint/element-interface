@@ -7,17 +7,29 @@ from typing import Union
 class EXTRACT_trigger:
     m_template = dedent(
         """
+        function dj_run_extract()
+        % Get EXTRACT_public path from environment variable or set directly
+        extractDir = '{extract_dir}';
+       
+        % Add to path if the directory exists
+        if ~isempty(extractDir) && exist(extractDir, 'dir')
+            addpath(genpath(extractDir));
+        else
+            warning('EXTRACT_public directory not found or invalid. Path: %s', extractDir);
+        end
+       
         % Load Data
         data = load('{scanfile}');
         M = data.M;
-
-        % Input Paramaters
+       
+        % Input Parameters
         config = struct();
         {parameters_list_string}
-
+       
         % Run EXTRACT
         output = extractor(M, config);
-        save('{output_fullpath}', 'output');
+        save('{output_fullpath}', 'output', '-v7.3');
+        end
         """
     )
 
@@ -26,30 +38,28 @@ class EXTRACT_trigger:
         scanfile: Union[str, Path],
         parameters: dict,
         output_dir: Union[str, Path],
+        extract_dir: Union[str, Path],
     ) -> None:
         """A helper class to trigger EXTRACT analysis in element-calcium-imaging.
-
         Args:
             scanfile (Union[str, Path]): Full path of the scan
             parameters (dict): EXTRACT input paramaters.
             output_dir (Union[str, Path]): Directory to store the outputs of EXTRACT analysis.
+            extract_dir (Union[str, Path]): Path to EXTRACT-public directory.
         """
         assert isinstance(parameters, dict)
-
         self.scanfile = Path(scanfile)
         self.output_dir = Path(output_dir)
         self.parameters = parameters
+        self.extract_dir = Path(extract_dir)
 
     def write_matlab_run_script(self):
-        """Compose a matlab script and save it with the name run_extract.m.
-
+        """Compose a matlab script and save it with the name dj_run_extract.m.
         The composed script is basically the formatted version of the m_template attribute.
         """
-
         self.output_fullpath = (
             self.output_dir / f"{self.scanfile.stem}_extract_output.mat"
         )
-
         m_file_content = self.m_template.format(
             **dict(
                 parameters_list_string="\n".join(
@@ -68,27 +78,25 @@ class EXTRACT_trigger:
                 ),
                 scanfile=self.scanfile.as_posix(),
                 output_fullpath=self.output_fullpath.as_posix(),
+                extract_dir=self.extract_dir.as_posix(),
             )
         ).lstrip()
-
-        self.m_file_fp = self.output_dir / "run_extract.m"
-
+        self.m_file_fp = self.output_dir / "dj_run_extract.m"
         with open(self.m_file_fp, "w") as f:
             f.write(m_file_content)
 
     def run(self):
-        """Run the matlab run_extract.m script."""
-
+        """Run the matlab dj_run_extract.m script."""
+        # Generate and write the script
         self.write_matlab_run_script()
 
         current_dir = Path.cwd()
         os.chdir(self.output_dir)
-
         try:
             import matlab.engine
 
             eng = matlab.engine.start_matlab()
-            eng.run_extract()
+            eng.dj_run_extract(nargout=0)
         except Exception as e:
             raise e
         finally:

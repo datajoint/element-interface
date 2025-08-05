@@ -3,6 +3,14 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.7.1] - 2025-08-05
+
++ Feature - Explicit `n_processes` arg in `run_caiman` to specify number of cores
+  to use
++ Fix - `extract_trigger.py` to correctly generate MATLAB script to run EXTRACT
++ Fix - `extract_loader.py` to correctly load spatial weights and temporal weights from
+  v7.3 `.mat` files
+
 ## [0.7.0] - 2024-08-09
 
 + Add - `memoized_result` decorator to cache function results
