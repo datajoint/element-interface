@@ -152,7 +152,7 @@ class PrairieViewMeta:
                     self.meta["height_in_pixels"],
                     self.meta["width_in_pixels"],
                 ],
-                dtype=int,
+                dtype=np.uint16, # use unsigned int 16 instead of int. int is defined as 32 or 64 bit based on the platform -> this will inflated a 16 bit tiff by 2 to 4 times!
             )
             start_page = 0
             try:
