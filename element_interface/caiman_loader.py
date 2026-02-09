@@ -594,6 +594,35 @@ def _save_mc(
 
     # Write motion correction shifts and motion corrected summary images to hdf5 file
     if mc.pw_rigid:
+        # Compute mc.coord_shifts_els
+        grid = []
+        if is3D:
+            for _, _, _, x, y, z, _ in cm.motion_correction.sliding_window_3d(
+                mc_image[0, :, :, :], mc.overlaps, mc.strides
+            ):
+                grid.append(
+                    [
+                        x,
+                        x + mc.overlaps[0] + mc.strides[0],
+                        y,
+                        y + mc.overlaps[1] + mc.strides[1],
+                        z,
+                        z + mc.overlaps[2] + mc.strides[2],
+                    ]
+                )
+        else:
+            for _, _, x, y, _ in cm.motion_correction.sliding_window(
+                mc_image[0, :, :], mc.overlaps, mc.strides
+            ):
+                grid.append(
+                    [
+                        x,
+                        x + mc.overlaps[0] + mc.strides[0],
+                        y,
+                        y + mc.overlaps[1] + mc.strides[1],
+                    ]
+                )
+        
         h5g.require_dataset(
             "x_shifts_els",
             shape=np.shape(mc.x_shifts_els),
