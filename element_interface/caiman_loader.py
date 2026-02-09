@@ -558,34 +558,34 @@ def _save_mc(
     # Load the first frame of the movie
     mc_image = np.reshape(Yr[: np.product(dims), :1], [1] + list(dims), order="F")
 
-    # Compute mc.coord_shifts_els
+    # Safe compute of mc.coord_shifts_els or mc.coord_shifts_rig
     grid = []
-    if is3D:
-        for _, _, _, x, y, z, _ in cm.motion_correction.sliding_window_3d(
-            mc_image[0, :, :, :], mc.overlaps, mc.strides
-        ):
-            grid.append(
-                [
-                    x,
-                    x + mc.overlaps[0] + mc.strides[0],
-                    y,
-                    y + mc.overlaps[1] + mc.strides[1],
-                    z,
-                    z + mc.overlaps[2] + mc.strides[2],
-                ]
-            )
+    # Only attempt to build a patch grid if both strides and overlaps are provided
+    if mc.strides is not None and mc.overlaps is not None:
+        if is3D:
+            for _, _, _, x, y, z, _ in cm.motion_correction.sliding_window_3d(
+                mc_image[0, :, :, :], mc.overlaps, mc.strides
+            ):
+                grid.append([
+                    x, x + mc.overlaps[0] + mc.strides[0],
+                    y, y + mc.overlaps[1] + mc.strides[1],
+                    z, z + mc.overlaps[2] + mc.strides[2],
+                ])
+        else:
+            for _, _, x, y, _ in cm.motion_correction.sliding_window(
+                mc_image[0, :, :], mc.overlaps, mc.strides
+            ):
+                grid.append([
+                    x, x + mc.overlaps[0] + mc.strides[0],
+                    y, y + mc.overlaps[1] + mc.strides[1],
+                ])
     else:
-        for _, _, x, y, _ in cm.motion_correction.sliding_window(
-            mc_image[0, :, :], mc.overlaps, mc.strides
-        ):
-            grid.append(
-                [
-                    x,
-                    x + mc.overlaps[0] + mc.strides[0],
-                    y,
-                    y + mc.overlaps[1] + mc.strides[1],
-                ]
-            )
+        # Fallback for Rigid correction: The grid is simply the full FOV
+        if is3D:
+            grid = [[0, dims[0], 0, dims[1], 0, dims[2]]]
+        else:
+            grid = [[0, dims[0], 0, dims[1]]]
+
 
     # Open hdf5 file and create 'motion_correction' group
     caiman_fp = pathlib.Path(caiman_fp)
