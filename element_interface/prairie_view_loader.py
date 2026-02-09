@@ -22,7 +22,7 @@ class PrairieViewMeta:
         self.prairieview_dir = Path(prairieview_dir)
 
         for file in self.prairieview_dir.glob("*.xml"):
-            xml_tree = ET.parse(file)
+            xml_tree = ET.parse(file.as_posix())
             xml_root = xml_tree.getroot()
             if xml_root.find(".//Sequence"):
                 self.xml_file = file
@@ -152,12 +152,12 @@ class PrairieViewMeta:
                     self.meta["height_in_pixels"],
                     self.meta["width_in_pixels"],
                 ],
-                dtype=int,
+                dtype=np.uint16, # use unsigned int 16 instead of int. int is defined as 32 or 64 bit based on the platform -> this will inflated a 16 bit tiff by 2 to 4 times!
             )
             start_page = 0
             try:
                 for input_file in tiff_names:
-                    with tifffile.TiffFile(self.prairieview_dir / input_file) as tffl:
+                    with tifffile.TiffFile((self.prairieview_dir / input_file).as_posix()) as tffl:
                         # Get indices in this tiff file and in output array
                         final_page_in_file = start_page + len(tffl.pages)
                         is_page_in_file = lambda page: page in range(
@@ -181,7 +181,7 @@ class PrairieViewMeta:
 
             output_tiff_fullpath = output_dir / f"{output_tiff_stem}.tif"
             tifffile.imwrite(
-                output_tiff_fullpath,
+                output_tiff_fullpath.as_posix(),
                 combined_data,
                 metadata={"axes": "TYX", "'fps'": self.meta["frame_rate"]},
                 bigtiff=True,
@@ -193,14 +193,14 @@ class PrairieViewMeta:
                     output_dir / f"{output_tiff_stem}_{len(output_tiff_list):04}.tif"
                 )
                 with tifffile.TiffWriter(
-                    output_tiff_fullpath,
+                    output_tiff_fullpath.as_posix(),
                     bigtiff=True,
                 ) as tiff_writer:
                     while len(tiff_names):
                         input_file = tiff_names.pop(0)
                         try:
                             with tifffile.TiffFile(
-                                self.prairieview_dir / input_file
+                                (self.prairieview_dir / input_file).as_posix()
                             ) as tffl:
                                 assert len(tffl.pages) == 1
                                 tiff_writer.write(
@@ -233,7 +233,7 @@ def _extract_prairieview_metadata(xml_filepath: str):
     xml_filepath = Path(xml_filepath)
     if not xml_filepath.exists():
         raise FileNotFoundError(f"{xml_filepath} does not exist")
-    xml_tree = ET.parse(xml_filepath)
+    xml_tree = ET.parse(xml_filepath.as_posix())
     xml_root = xml_tree.getroot()
 
     bidirectional_scan = False  # Does not support bidirectional
@@ -428,7 +428,7 @@ def get_prairieview_metadata(ome_tif_filepath: str) -> dict:
     xml_files_list = pathlib.Path(ome_tif_filepath).parent.glob("*.xml")
 
     for file in xml_files_list:
-        xml_tree = ET.parse(file)
+        xml_tree = ET.parse(file.as_posix())
         xml_file = xml_tree.getroot()
         if xml_file.find(".//Sequence"):
             break
