@@ -41,7 +41,7 @@ class CaImAn:
 
         caiman_subdirs = []
         for fp in caiman_dir.rglob("*.hdf5"):
-            with h5py.File(fp, "r") as h5f:
+            with h5py.File(fp.as_posix(), "r") as h5f:
                 if all(s in h5f for s in _required_hdf5_fields):
                     caiman_subdirs.append(fp.parent)
 
@@ -381,7 +381,7 @@ class _CaImAn:
             raise FileNotFoundError("CaImAn directory not found: {}".format(caiman_dir))
 
         for fp in caiman_dir.glob("*.hdf5"):
-            with h5py.File(fp, "r") as h5f:
+            with h5py.File(fp.as_posix(), "r") as h5f:
                 if all(s in h5f for s in _required_hdf5_fields):
                     self.caiman_fp = fp
                     break
@@ -394,17 +394,17 @@ class _CaImAn:
             )
 
         # ---- Initialize CaImAn's results ----
-        self.cnmf = cm.source_extraction.cnmf.cnmf.load_CNMF(self.caiman_fp)
+        self.cnmf = cm.source_extraction.cnmf.cnmf.load_CNMF(self.caiman_fp.as_posix())
         self.params = self.cnmf.params
 
-        self.h5f = h5py.File(self.caiman_fp, "r")
+        self.h5f = h5py.File(self.caiman_fp.as_posix(), "r")
         self.plane_idx = None if self.params.motion["is3D"] else 0
         self._motion_correction = None
         self._masks = None
 
         # ---- Metainfo ----
-        self.creation_time = datetime.fromtimestamp(os.stat(self.caiman_fp).st_ctime)
-        self.curation_time = datetime.fromtimestamp(os.stat(self.caiman_fp).st_ctime)
+        self.creation_time = datetime.fromtimestamp(os.stat(self.caiman_fp.as_posix()).st_ctime)
+        self.curation_time = datetime.fromtimestamp(os.stat(self.caiman_fp.as_posix()).st_ctime)
 
     @property
     def motion_correction(self):
@@ -589,7 +589,7 @@ def _save_mc(
 
     # Open hdf5 file and create 'motion_correction' group
     caiman_fp = pathlib.Path(caiman_fp)
-    h5f = h5py.File(caiman_fp, "r+" if caiman_fp.exists() else "w")
+    h5f = h5py.File(caiman_fp.as_posix(), "r+" if caiman_fp.exists() else "w")
     h5g = h5f.require_group("motion_correction")
 
     # Write motion correction shifts and motion corrected summary images to hdf5 file
