@@ -1,4 +1,5 @@
 import os
+import pathlib
 import subprocess
 
 from dandi.upload import upload
@@ -31,14 +32,14 @@ def upload_to_dandi(
         validation (str, optional): [require|skip|ignore] see full description from `dandi upload --help`
     """
 
-    working_directory = working_directory or os.path.curdir
+    working_directory = working_directory or "."
 
     if api_key is not None:
         os.environ["DANDI_API_KEY"] = api_key
 
-    dandiset_directory = os.path.join(
-        working_directory, str(dandiset_id)
-    )  # enforce str
+    dandiset_directory = (
+        pathlib.Path(working_directory) / str(dandiset_id)
+    ).as_posix()
 
     dandiset_url = (
         f"https://gui-staging.dandiarchive.org/#/dandiset/{dandiset_id}"

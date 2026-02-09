@@ -1,4 +1,5 @@
 import os
+import pathlib
 import warnings
 
 import numpy as np
@@ -206,9 +207,13 @@ def deconvolution_suite2p(segmentation_ops: dict, db: dict) -> np.ndarray:
         )
         segmentation_ops.update(do_registration=0, roidetect=False, spikedetect=True)
 
-    F = np.load(db["fast-disk"] + "/suite2p/" + "plane0" + "/F.npy", allow_pickle=True)
+    F = np.load(
+        (pathlib.Path(db["fast-disk"]) / "suite2p" / "plane0" / "F.npy").as_posix(),
+        allow_pickle=True,
+    )
     Fneu = np.load(
-        db["fast-disk"] + "/suite2p/" + "plane0" + "/Fneu.npy", allow_pickle=True
+        (pathlib.Path(db["fast-disk"]) / "suite2p" / "plane0" / "Fneu.npy").as_posix(),
+        allow_pickle=True,
     )
     Fc = F - segmentation_ops["neucoeff"] * Fneu
 
@@ -227,6 +232,8 @@ def deconvolution_suite2p(segmentation_ops: dict, db: dict) -> np.ndarray:
         tau=segmentation_ops["tau"],
         fs=segmentation_ops["fs"],
     )
-    np.save(os.path.join(segmentation_ops["save_path"], "spks.npy"), spikes)
+    np.save(
+        (pathlib.Path(segmentation_ops["save_path"]) / "spks.npy").as_posix(), spikes
+    )
 
     return spikes

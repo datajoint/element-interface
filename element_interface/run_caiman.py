@@ -58,7 +58,7 @@ def run_caiman(
         parameters["motion"] = {**parameters.get("motion", {}), "indices": indices}
 
     caiman_temp = os.environ.get("CAIMAN_TEMP")
-    os.environ["CAIMAN_TEMP"] = str(output_dir)
+    os.environ["CAIMAN_TEMP"] = pathlib.Path(output_dir).as_posix()
 
     # use 80% of available cores
     if n_processes is None:
