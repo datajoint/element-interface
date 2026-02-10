@@ -632,9 +632,12 @@ def _save_mc(
             data=mc.shifts_rig,
             dtype=mc.shifts_rig[0][0].dtype,
         )
-        h5g.require_dataset(
-            "coord_shifts_rig", shape=np.shape(grid), data=grid, dtype=type(grid[0][0])
-        )
+        
+        # Not needed for global single rigid shift - there is no grid!!!
+        # h5g.require_dataset(
+        #    "coord_shifts_rig", shape=np.shape(grid), data=grid, dtype=type(grid[0][0])
+        # )
+        
         reference_image = (
             np.tile(mc.total_template_rig, (1, 1, dims[-1]))
             if is3D
