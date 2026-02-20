@@ -558,35 +558,6 @@ def _save_mc(
     # Load the first frame of the movie
     mc_image = np.reshape(Yr[: np.product(dims), :1], [1] + list(dims), order="F")
 
-    # Compute mc.coord_shifts_els
-    grid = []
-    if is3D:
-        for _, _, _, x, y, z, _ in cm.motion_correction.sliding_window_3d(
-            mc_image[0, :, :, :], mc.overlaps, mc.strides
-        ):
-            grid.append(
-                [
-                    x,
-                    x + mc.overlaps[0] + mc.strides[0],
-                    y,
-                    y + mc.overlaps[1] + mc.strides[1],
-                    z,
-                    z + mc.overlaps[2] + mc.strides[2],
-                ]
-            )
-    else:
-        for _, _, x, y, _ in cm.motion_correction.sliding_window(
-            mc_image[0, :, :], mc.overlaps, mc.strides
-        ):
-            grid.append(
-                [
-                    x,
-                    x + mc.overlaps[0] + mc.strides[0],
-                    y,
-                    y + mc.overlaps[1] + mc.strides[1],
-                ]
-            )
-
     # Open hdf5 file and create 'motion_correction' group
     caiman_fp = pathlib.Path(caiman_fp)
     h5f = h5py.File(caiman_fp.as_posix(), "r+" if caiman_fp.exists() else "w")
@@ -594,6 +565,35 @@ def _save_mc(
 
     # Write motion correction shifts and motion corrected summary images to hdf5 file
     if mc.pw_rigid:
+        # Compute mc.coord_shifts_els
+        grid = []
+        if is3D:
+            for _, _, _, x, y, z, _ in cm.motion_correction.sliding_window_3d(
+                mc_image[0, :, :, :], mc.overlaps, mc.strides
+            ):
+                grid.append(
+                    [
+                        x,
+                        x + mc.overlaps[0] + mc.strides[0],
+                        y,
+                        y + mc.overlaps[1] + mc.strides[1],
+                        z,
+                        z + mc.overlaps[2] + mc.strides[2],
+                    ]
+                )
+        else:
+            for _, _, x, y, _ in cm.motion_correction.sliding_window(
+                mc_image[0, :, :], mc.overlaps, mc.strides
+            ):
+                grid.append(
+                    [
+                        x,
+                        x + mc.overlaps[0] + mc.strides[0],
+                        y,
+                        y + mc.overlaps[1] + mc.strides[1],
+                    ]
+                )
+        
         h5g.require_dataset(
             "x_shifts_els",
             shape=np.shape(mc.x_shifts_els),
@@ -632,9 +632,12 @@ def _save_mc(
             data=mc.shifts_rig,
             dtype=mc.shifts_rig[0][0].dtype,
         )
-        h5g.require_dataset(
-            "coord_shifts_rig", shape=np.shape(grid), data=grid, dtype=type(grid[0][0])
-        )
+        
+        # Not needed for global single rigid shift - there is no grid!!!
+        # h5g.require_dataset(
+        #    "coord_shifts_rig", shape=np.shape(grid), data=grid, dtype=type(grid[0][0])
+        # )
+        
         reference_image = (
             np.tile(mc.total_template_rig, (1, 1, dims[-1]))
             if is3D
