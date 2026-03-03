@@ -462,43 +462,34 @@ class _CaImAn:
                 center_z = self.plane_idx
                 zpix = np.full(len(weights), center_z)
 
-            if (
-                self.cnmf.estimates.F_dff is not None
-                and self.cnmf.estimates.F_dff is not None
-                and self.cnmf.estimates.S is not None
-            ):
-                masks.append(
-                    {
-                        "mask_id": comp_contour["neuron_id"],
-                        "mask_npix": len(weights),
-                        "mask_weights": weights,
-                        "mask_center_x": center_x,
-                        "mask_center_y": center_y,
-                        "mask_center_z": center_z,
-                        "mask_xpix": xpix,
-                        "mask_ypix": ypix,
-                        "mask_zpix": zpix,
-                        "inferred_trace": self.cnmf.estimates.C[comp_idx, :],
-                        "dff": self.cnmf.estimates.F_dff[comp_idx, :],
-                        "spikes": self.cnmf.estimates.S[comp_idx, :],
-                    }
-                )
-            elif self.cnmf.estimates.S is None:
-                masks.append(
-                    {
-                        "mask_id": comp_contour["neuron_id"],
-                        "mask_npix": len(weights),
-                        "mask_weights": weights,
-                        "mask_center_x": center_x,
-                        "mask_center_y": center_y,
-                        "mask_center_z": center_z,
-                        "mask_xpix": xpix,
-                        "mask_ypix": ypix,
-                        "mask_zpix": zpix,
-                        "inferred_trace": self.cnmf.estimates.C[comp_idx, :],
-                        "dff": self.cnmf.estimates.F_dff[comp_idx, :],
-                    }
-                )
+            masks.append(
+                {
+                    "mask_id": comp_contour["neuron_id"],
+                    "mask_npix": len(weights),
+                    "mask_weights": weights,
+                    "mask_center_x": center_x,
+                    "mask_center_y": center_y,
+                    "mask_center_z": center_z,
+                    "mask_xpix": xpix,
+                    "mask_ypix": ypix,
+                    "mask_zpix": zpix,
+                    "inferred_trace": (
+                        self.cnmf.estimates.C[comp_idx, :]
+                        if self.cnmf.estimates.C is not None
+                        else None
+                    ),
+                    "dff": (
+                        self.cnmf.estimates.F_dff[comp_idx, :]
+                        if self.cnmf.estimates.F_dff is not None
+                        else None
+                    ),
+                    "spikes": (
+                        self.cnmf.estimates.S[comp_idx, :]
+                        if self.cnmf.estimates.S is not None
+                        else None
+                    ),
+                }
+            )
         return masks
 
 

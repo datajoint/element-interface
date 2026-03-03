@@ -3,6 +3,10 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+[0.8.1] - 2026-03-03
+
++ Fix - `caiman_loader.py` replace branching if/elif with inline None guards for each estimate field.
+
 ## [0.8.0] - 2026-03-02
 
 + Fix - `caiman_loader.py` tuple unpacking bug in `extract_pw_rigid_mc` where
@@ -108,6 +112,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Add - Readers for: `ScanImage`, `Suite2p`, `CaImAn`.
 
 
+[0.8.1]: https://github.com/datajoint/element-interface/releases/tag/0.8.1
 [0.8.0]: https://github.com/datajoint/element-interface/releases/tag/0.8.0
 [0.7.1]: https://github.com/datajoint/element-interface/releases/tag/0.7.1
 [0.7.0]: https://github.com/datajoint/element-interface/releases/tag/0.7.0
