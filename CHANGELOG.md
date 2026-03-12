@@ -3,6 +3,18 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.8.2] - 2026-03-10
+
++ Fix - `prairie_view_loader.py` correct plane-to-file mapping for bidirectional Z scans.
+  With `bidirectionalZ="True"`, Frame[@index] alternates meaning between forward and
+  backward cycles, causing planes 1 and 3 to receive mixed data from two physical depths.
+  Now groups files by z-position using per-cycle index mapping.
++ Fix - `prairie_view_loader.py` extract `fieldZ` from cycle 1 (forward) instead of
+  cycle 2 so z-positions align with `plane_indices` ordering for bidirectional Z scans.
++ Add - `NotImplementedError` guard for multipage TIFF + bidirectional Z combination.
++ Fix - `prairie_view_loader.py` normalize `z_fields` to float in all code paths
+  (single-controller path previously returned strings).
+
 [0.8.1] - 2026-03-03
 
 + Fix - `caiman_loader.py` replace branching if/elif with inline None guards for each estimate field.
@@ -112,6 +124,7 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 + Add - Readers for: `ScanImage`, `Suite2p`, `CaImAn`.
 
 
+[0.8.2]: https://github.com/datajoint/element-interface/releases/tag/0.8.2
 [0.8.1]: https://github.com/datajoint/element-interface/releases/tag/0.8.1
 [0.8.0]: https://github.com/datajoint/element-interface/releases/tag/0.8.0
 [0.7.1]: https://github.com/datajoint/element-interface/releases/tag/0.7.1

@@ -84,16 +84,33 @@ class PrairieViewMeta:
                 channel in self.meta["channels"]
             ), f"Invalid 'channel' - Channels: {self.meta['channels']}"
 
-        # single-plane ome.tif does not have "@index" under Frame to search for
-        plane_search = f"/[@index='{plane_idx}']" if self.meta["num_planes"] > 1 else ""
-        # ome.tif does have "@channel" under File regardless of single or multi channel
         channel_search = f"/[@channel='{channel}']"
 
-        frames = self._xml_root.findall(
-            f".//Sequence/Frame{plane_search}/File{channel_search}"
-        )
+        if self.meta.get("_bidi_z_index_map") and self.meta["num_planes"] > 1:
+            # Bidirectional Z: Frame[@index] alternates meaning between
+            # forward (odd) and backward (even) cycles.  Use the stored
+            # z-position mapping to pick the correct index per direction.
+            bidi_map = self.meta["_bidi_z_index_map"]
+            fwd_idx = plane_idx
+            bwd_idx = bidi_map[plane_idx]
 
-        fnames = np.unique([f.attrib["filename"] for f in frames]).tolist()
+            fnames = []
+            for seq in self._xml_root.findall(".//Sequence[@cycle]"):
+                cycle_num = int(seq.attrib.get("cycle"))
+                target_idx = fwd_idx if cycle_num % 2 == 1 else bwd_idx
+                for frame in seq.findall(f"Frame[@index='{target_idx}']"):
+                    for f in frame.findall(f"File{channel_search}"):
+                        fnames.append(f.attrib["filename"])
+            fnames = np.unique(fnames).tolist()
+        else:
+            # Unidirectional Z or single plane: Frame[@index] is stable
+            plane_search = (
+                f"/[@index='{plane_idx}']" if self.meta["num_planes"] > 1 else ""
+            )
+            frames = self._xml_root.findall(
+                f".//Sequence/Frame{plane_search}/File{channel_search}"
+            )
+            fnames = np.unique([f.attrib["filename"] for f in frames]).tolist()
         return fnames if not return_pln_chn else (fnames, plane_idx, channel)
 
     def write_single_bigtiff(
@@ -127,6 +144,13 @@ class PrairieViewMeta:
 
         output_tiff_list = []
         if self.meta["is_multipage"]:
+            if self.meta.get("bidirectional_z"):
+                raise NotImplementedError(
+                    "Multipage TIFF extraction with bidirectional Z scanning is not "
+                    "yet supported. The page interleaving formula assumes "
+                    "unidirectional Z order. Use single-page TIFF output from "
+                    "PrairieView for bidirectional Z scans."
+                )
             if gb_per_file is not None:
                 logger.warning(
                     "Ignoring `gb_per_file` argument for multi-page tiff (NotYetImplemented)"
@@ -237,6 +261,7 @@ def _extract_prairieview_metadata(xml_filepath: str):
     xml_root = xml_tree.getroot()
 
     bidirectional_scan = False  # Does not support bidirectional
+    bidi_z_index_map = None
     roi = 0
     is_multipage = xml_root.find(".//Sequence/Frame/File/[@page]") is not None
     recording_start_time = xml_root.find(".//Sequence/[@cycle='1']").attrib.get("time")
@@ -326,23 +351,29 @@ def _extract_prairieview_metadata(xml_filepath: str):
         plane_indices = set(planes)
         n_depths = len(plane_indices)
 
+        # --- Determine which z-controller is actively changing depth ---
         z_controllers = xml_root.findall(
-            ".//Sequence/[@cycle='2']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
+            ".//Sequence/[@cycle='2']/Frame/[@index='1']/PVStateShard/PVStateValue"
+            "/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue"
         )
 
-        # If more than one Z-axis controllers are found,
-        # check which controller is changing z_field depth. Only 1 controller
-        # must change depths.
         if len(z_controllers) > 1:
+            # Multiple z-axis controllers — find the one whose values vary
+            # across frames (only one controller should be driving depth).
             z_repeats = []
+            controller_subindices = []
             for controller in xml_root.findall(
-                ".//Sequence/[@cycle='2']/Frame/[@index='1']/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/"
+                ".//Sequence/[@cycle='2']/Frame/[@index='1']/PVStateShard/PVStateValue"
+                "/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/"
             ):
+                controller_subindices.append(controller.attrib.get("subindex"))
                 z_repeats.append(
                     [
                         float(z.attrib.get("value"))
                         for z in xml_root.findall(
-                            ".//Sequence/[@cycle='2']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='{0}']".format(
+                            ".//Sequence/[@cycle='2']/Frame/PVStateShard/PVStateValue"
+                            "/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']"
+                            "/SubindexedValue/[@subindex='{0}']".format(
                                 controller.attrib.get("subindex")
                             )
                         )
@@ -356,15 +387,65 @@ def _extract_prairieview_metadata(xml_filepath: str):
                 sum(controller_assert) == 1
             ), "Multiple controllers changing z depth is not supported"
 
-            z_fields = z_repeats[controller_assert.index(True)]
-
+            active_z_idx = controller_assert.index(True)
+            active_subindex = controller_subindices[active_z_idx]
         else:
+            active_subindex = (
+                z_controllers[0].attrib.get("subindex") if z_controllers else "0"
+            )
+
+        # --- Extract z-positions per plane ---
+        _z_xpath = (
+            ".//Sequence/[@cycle='{cycle}']/Frame/PVStateShard/PVStateValue"
+            "/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']"
+            "/SubindexedValue/[@subindex='{subindex}']"
+        )
+
+        if bidirection_z:
+            # With bidirectional Z, even-numbered cycles scan planes in
+            # reverse z-order.  Extract z-positions from cycle 1 (forward)
+            # so that fieldZ aligns with the plane_indices ordering.
             z_fields = [
-                z.attrib.get("value")
+                float(z.attrib.get("value"))
                 for z in xml_root.findall(
-                    ".//Sequence/[@cycle='2']/Frame/PVStateShard/PVStateValue/[@key='positionCurrent']/SubindexedValues/[@index='ZAxis']/SubindexedValue/[@subindex='0']"
+                    _z_xpath.format(cycle="1", subindex=active_subindex)
                 )
             ]
+
+            # Build mapping: plane_idx → Frame[@index] in backward (even) cycles.
+            # In forward cycles, Frame[@index] matches the plane ordering from
+            # cycle 1 directly.  In backward cycles the z-positions are reversed,
+            # so a different index is needed to reach the same physical plane.
+            z_fields_bwd = [
+                float(z.attrib.get("value"))
+                for z in xml_root.findall(
+                    _z_xpath.format(cycle="2", subindex=active_subindex)
+                )
+            ]
+
+            fwd_indices = sorted(plane_indices)
+            fwd_z = dict(zip(fwd_indices, z_fields))
+            bwd_z = dict(zip(fwd_indices, z_fields_bwd))
+
+            bidi_z_index_map = {}
+            for fi, fz in fwd_z.items():
+                for bi, bz in bwd_z.items():
+                    if abs(fz - bz) < 0.01:
+                        bidi_z_index_map[fi] = bi
+                        break
+                else:
+                    raise ValueError(
+                        f"No backward-cycle match for plane {fi} (z={fz}). "
+                        f"Backward z-values: {bwd_z}"
+                    )
+        else:
+            z_fields = [
+                float(z.attrib.get("value"))
+                for z in xml_root.findall(
+                    _z_xpath.format(cycle="2", subindex=active_subindex)
+                )
+            ]
+            bidi_z_index_map = None
 
         assert (
             len(z_fields) == n_depths
@@ -395,7 +476,8 @@ def _extract_prairieview_metadata(xml_filepath: str):
         fieldZ=z_fields,
         recording_time=recording_start_time,
         channels=list(channels),
-        plane_indices=list(plane_indices),
+        plane_indices=sorted(plane_indices),
+        _bidi_z_index_map=bidi_z_index_map if bidirection_z else None,
     )
 
     return metainfo
