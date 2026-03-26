@@ -17,6 +17,24 @@ _required_hdf5_fields = [
 ]
 
 
+def _has_valid_estimates(h5f):
+    """Check that /estimates/A contains real segmentation data, not a None placeholder.
+
+    CaImAn's CNMF.save() writes /estimates/A even during MC-only runs, but the
+    value is a scalar dataset (e.g. b'NoneType') rather than a sparse matrix.
+    Real segmentation output stores A as an HDF5 group with sub-datasets
+    (data, indices, indptr, shape) representing a CSC sparse matrix.
+    """
+    a_obj = h5f.get("/estimates/A")
+    if a_obj is None:
+        return False
+    # Real estimates: A is a group (sparse CSC matrix) with non-empty data
+    if isinstance(a_obj, h5py.Group):
+        return "data" in a_obj and len(a_obj["data"]) > 0
+    # CaImAn saves None as a scalar dataset — not real segmentation data
+    return False
+
+
 class CaImAn:
     """
     Loader class for CaImAn analysis results
@@ -42,7 +60,7 @@ class CaImAn:
         caiman_subdirs = []
         for fp in caiman_dir.rglob("*.hdf5"):
             with h5py.File(fp.as_posix(), "r") as h5f:
-                if all(s in h5f for s in _required_hdf5_fields):
+                if all(s in h5f for s in _required_hdf5_fields) and _has_valid_estimates(h5f):
                     caiman_subdirs.append(fp.parent)
 
         if not caiman_subdirs:
@@ -388,7 +406,7 @@ class _CaImAn:
 
         for fp in caiman_dir.glob("*.hdf5"):
             with h5py.File(fp.as_posix(), "r") as h5f:
-                if all(s in h5f for s in _required_hdf5_fields):
+                if all(s in h5f for s in _required_hdf5_fields) and _has_valid_estimates(h5f):
                     self.caiman_fp = fp
                     break
         else:
