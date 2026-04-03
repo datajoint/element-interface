@@ -73,9 +73,16 @@ class CaImAn:
 
         # Extract CaImAn results from all planes, sorted by plane index
         _planes_caiman = {}
-        for idx, caiman_subdir in enumerate(sorted(caiman_subdirs)):
+        for idx, caiman_subdir in enumerate(sorted(set(caiman_subdirs))):
             pln_cm = _CaImAn(caiman_subdir.as_posix())
+            # Try matching plane index from directory name, walking up parents
+            # if the immediate dir doesn't match (e.g. pln1_chn2/segmentation/)
             pln_idx_match = re.search(r"pln(\d+)_.*", caiman_subdir.stem)
+            if pln_idx_match is None:
+                for parent in caiman_subdir.parents:
+                    pln_idx_match = re.search(r"pln(\d+)_.*", parent.stem)
+                    if pln_idx_match is not None:
+                        break
             pln_idx = pln_idx_match.groups()[0] if pln_idx_match else idx
             pln_cm.plane_idx = pln_idx
             _planes_caiman[pln_idx] = pln_cm
