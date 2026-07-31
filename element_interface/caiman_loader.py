@@ -261,7 +261,13 @@ class CaImAn:
                             "mask_id": m["mask_id"] + mask_count,
                             "orig_mask_id": m["mask_id"],
                             "accepted": (
-                                m["mask_id"] in pln_cm.cnmf.estimates.idx_components
+                                # mask_id is CaImAn's neuron_id, which counts from 1,
+                                # while idx_components holds zero-based component
+                                # indices. Subtract one so the two are on the same
+                                # basis: without it every component inherits the
+                                # acceptance of the one after it.
+                                (m["mask_id"] - 1)
+                                in pln_cm.cnmf.estimates.idx_components
                                 if pln_cm.cnmf.estimates.idx_components is not None
                                 else False
                             ),

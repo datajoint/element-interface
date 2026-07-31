@@ -3,6 +3,15 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.8.2] - 2026-07-31
+
++ Fix - `caiman_loader.py` correct off-by-one in mask acceptance. `mask_id` carries
+  CaImAn's `neuron_id`, which counts from 1, while `estimates.idx_components` holds
+  zero-based component indices; testing one against the other made every component
+  inherit the acceptance of the component after it, and a component accepted at index 0
+  lost its verdict entirely. Only the accept/reject attribution was affected — footprints,
+  counts, identity, motion correction and traces do not read the flag.
+
 [0.8.1] - 2026-03-03
 
 + Fix - `caiman_loader.py` replace branching if/elif with inline None guards for each estimate field.
