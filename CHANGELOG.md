@@ -3,6 +3,24 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.8.3] - 2026-07-31
+
++ Fix - `prairie_view_loader.py` correct plane-to-file mapping for bidirectional Z scans.
+  With `bidirectionalZ="True"` the microscope alternates plane order between cycles, and
+  `Frame[@index]` is a position within a cycle rather than a stable identifier for a depth,
+  so on backward cycles the same index refers to a different z-position. Files are now
+  grouped by z-position using a per-cycle index mapping, and `fieldZ` is read from a forward
+  cycle so z-positions align with `plane_indices` ordering. Adds a `NotImplementedError`
+  guard for multipage TIFF combined with bidirectional Z.
++ Fix - `caiman_loader.py` reject motion-correction-only HDF5 files. `/estimates/A` is now
+  checked for a real sparse matrix rather than the placeholder written when the field is
+  empty, so once motion correction and segmentation outputs are written to separate
+  directories a motion-correction file can no longer be matched as a segmentation result.
++ Fix - `caiman_loader.py` read the plane index by walking up parent directories when the
+  immediate directory name does not match `pln<N>_`, and drop duplicates where several
+  valid result files share a directory. Results under `pln<N>_chn<C>/segmentation/` were
+  otherwise counted as additional planes that do not exist.
+
 ## [0.8.2] - 2026-07-31
 
 + Fix - `caiman_loader.py` correct off-by-one in mask acceptance. `mask_id` carries
