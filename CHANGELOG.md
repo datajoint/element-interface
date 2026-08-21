@@ -3,6 +3,30 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
+## [0.8.4] - 2026-08-21
+
++ Fix - `prairie_view_loader.py` route multipage frames by the acquisition XML. Page offsets
+  were computed from a global channel-by-plane stride and applied to a file list
+  `get_prairieview_filenames` had already filtered by channel and plane, so the offset was
+  applied twice. With two channels roughly half the output frames were never assigned, and
+  because the output array is allocated with `np.empty` they held uninitialised memory rather
+  than raising. `get_prairieview_file_pages()` now returns the filename and page the XML names
+  for each frame, and the multipage branch writes exactly those. Note the previous formula was
+  correct when the file list was not filtered — a single interleaved file holding every channel
+  and plane — which is why the defect went unnoticed.
++ Fix - `prairie_view_loader.py` carry z positions forward across frames. `PVStateShard`
+  records state *changes*, so a frame whose z has not moved omits `positionCurrent` entirely
+  and inherits it; counting the elements in a cycle counted re-declarations rather than planes,
+  and a 3-plane bidirectional-Z recording failed outright with "Number of z fields does not
+  match number of depths". Positions are accumulated from the document-level shard through
+  every preceding frame, and a depth that is declared nowhere now raises instead of entering
+  `fieldZ` as `None`, which the length check could not detect.
++ Fix - `prairie_view_loader.py` handle an acquisition that stopped part-way through its final
+  cycle. `num_frames` is floored by `num_planes`, so the early planes are named more frames
+  than the late ones; the incomplete trailing cycle is now dropped with a warning, keeping
+  every plane the same length. Fewer frames than expected still raises, since that indicates
+  missing data rather than a partial cycle.
+
 ## [0.8.3] - 2026-07-31
 
 + Fix - `prairie_view_loader.py` correct plane-to-file mapping for bidirectional Z scans.

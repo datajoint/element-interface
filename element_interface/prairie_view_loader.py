@@ -203,12 +203,29 @@ class PrairieViewMeta:
             file_pages, plane_idx, channel = self.get_prairieview_file_pages(
                 plane_idx=plane_idx, channel=channel
             )
-            if len(file_pages) != self.meta["num_frames"]:
+            # `num_frames` is floored by `num_planes`, so an acquisition that
+            # stopped part-way through its last cycle names more frames for the
+            # early planes than for the late ones. Every plane must come out the
+            # same length, so the incomplete cycle is dropped rather than making
+            # one plane longer than another.
+            if len(file_pages) > self.meta["num_frames"]:
+                logger.warning(
+                    "The XML names %d frames for plane %s channel %s but only %d "
+                    "complete cycles were acquired; dropping the %d trailing "
+                    "frame(s) of the incomplete final cycle.",
+                    len(file_pages),
+                    plane_idx,
+                    channel,
+                    self.meta["num_frames"],
+                    len(file_pages) - self.meta["num_frames"],
+                )
+                file_pages = file_pages[: self.meta["num_frames"]]
+            elif len(file_pages) < self.meta["num_frames"]:
                 raise ValueError(
                     f"The XML names {len(file_pages)} frames for plane {plane_idx} "
-                    f"channel {channel}, but the metadata reports "
-                    f"{self.meta['num_frames']}. Refusing to write a movie of "
-                    f"uncertain length."
+                    f"channel {channel}, fewer than the {self.meta['num_frames']} "
+                    f"the metadata reports. Frames are missing, so the movie is "
+                    f"not being written."
                 )
 
             combined_data = np.empty(
@@ -481,6 +498,14 @@ def _extract_prairieview_metadata(xml_filepath: str):
                     if declared is not None:
                         current = float(declared.attrib["value"])
                     if cycle == target_cycle:
+                        if current is None:
+                            # A caller downstream would otherwise receive None as
+                            # a depth, and the length check below cannot see it.
+                            raise ValueError(
+                                f"No z position for subindex {active_subindex} is "
+                                f"declared at the document level or in any frame "
+                                f"preceding cycle {target_cycle}."
+                            )
                         positions.append(current)
                 if cycle == target_cycle:
                     return positions
