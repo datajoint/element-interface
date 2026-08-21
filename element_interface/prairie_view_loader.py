@@ -113,6 +113,46 @@ class PrairieViewMeta:
             fnames = np.unique([f.attrib["filename"] for f in frames]).tolist()
         return fnames if not return_pln_chn else (fnames, plane_idx, channel)
 
+    def get_prairieview_file_pages(self, plane_idx=None, channel=None):
+        """Ordered `(filename, page)` pairs for one plane and channel.
+
+        The acquisition XML states, per frame, which file and which page inside it
+        holds that frame. Reading those pairs directly is the only safe way to
+        assemble a multipage series: computing page offsets from a global
+        channel-by-plane stride assumes every channel and plane shares one
+        interleaved page sequence, which is false when PrairieView writes each
+        channel to its own file. Applying such a stride to an already-filtered
+        file list applies the offset twice.
+
+        Pages are 1-based in the XML and returned as declared. Order follows the
+        XML, which is the recording order.
+
+        Returns:
+            (pairs, plane_idx, channel) where pairs is [(filename, page), ...]
+        """
+        _, plane_idx, channel = self.get_prairieview_filenames(
+            plane_idx=plane_idx, channel=channel, return_pln_chn=True
+        )
+        channel_search = f"/[@channel='{channel}']"
+        bidi_map = self.meta.get("_bidi_z_index_map")
+        multiplane = self.meta["num_planes"] > 1
+
+        pairs = []
+        for sequence in self._xml_root.findall(".//Sequence[@cycle]"):
+            if multiplane and bidi_map:
+                cycle_num = int(sequence.attrib.get("cycle"))
+                target_idx = plane_idx if cycle_num % 2 == 1 else bidi_map[plane_idx]
+                frames = sequence.findall(f"Frame[@index='{target_idx}']")
+            elif multiplane:
+                frames = sequence.findall(f"Frame[@index='{plane_idx}']")
+            else:
+                frames = sequence.findall("Frame")
+            for frame in frames:
+                for f in frame.findall(f"File{channel_search}"):
+                    page = f.attrib.get("page")
+                    pairs.append((f.attrib["filename"], int(page) if page else 1))
+        return pairs, plane_idx, channel
+
     def write_single_bigtiff(
         self,
         plane_idx=None,
@@ -155,20 +195,21 @@ class PrairieViewMeta:
                 logger.warning(
                     "Ignoring `gb_per_file` argument for multi-page tiff (NotYetImplemented)"
                 )
-            # For multi-page tiff - the pages are organized as:
-            # (channel x slice x frame) - each page is (height x width)
-            # - TODO: verify this is the case for Bruker multi-page tiff
-            # This implementation is partially based on the reference code from `scanreader` package - https://github.com/atlab/scanreader
-            # See: https://github.com/atlab/scanreader/blob/2a021a85fca011c17e553d0e1c776998d3f2b2d8/scanreader/scans.py#L337
-            slice_step = self.meta["num_channels"]
-            frame_step = self.meta["num_channels"] * self.meta["num_planes"]
-            slice_idx = self.meta["plane_indices"].index(plane_idx)
-            channel_idx = self.meta["channels"].index(channel)
-
-            page_indices = [
-                frame_idx * frame_step + slice_idx * slice_step + channel_idx
-                for frame_idx in range(self.meta["num_frames"])
-            ]
+            # Each output frame is taken from the file and page the XML names for
+            # it. An earlier implementation instead computed page offsets from a
+            # global channel-by-plane stride, which double-counts the offset when
+            # the file list has already been filtered by channel and plane, and
+            # silently leaves frames unwritten.
+            file_pages, plane_idx, channel = self.get_prairieview_file_pages(
+                plane_idx=plane_idx, channel=channel
+            )
+            if len(file_pages) != self.meta["num_frames"]:
+                raise ValueError(
+                    f"The XML names {len(file_pages)} frames for plane {plane_idx} "
+                    f"channel {channel}, but the metadata reports "
+                    f"{self.meta['num_frames']}. Refusing to write a movie of "
+                    f"uncertain length."
+                )
 
             combined_data = np.empty(
                 [
@@ -178,30 +219,42 @@ class PrairieViewMeta:
                 ],
                 dtype=np.uint16, # use unsigned int 16 instead of int. int is defined as 32 or 64 bit based on the platform -> this will inflated a 16 bit tiff by 2 to 4 times!
             )
-            start_page = 0
-            try:
-                for input_file in tiff_names:
-                    with tifffile.TiffFile((self.prairieview_dir / input_file).as_posix()) as tffl:
-                        # Get indices in this tiff file and in output array
-                        final_page_in_file = start_page + len(tffl.pages)
-                        is_page_in_file = lambda page: page in range(
-                            start_page, final_page_in_file
-                        )
-                        pages_in_file = filter(is_page_in_file, page_indices)
-                        file_indices = [page - start_page for page in pages_in_file]
-                        global_indices = [
-                            is_page_in_file(page) for page in page_indices
-                        ]
+            written = np.zeros(self.meta["num_frames"], dtype=bool)
 
-                        # Read from this tiff file (if needed)
-                        if len(file_indices) > 0:
-                            # this line looks a bit ugly but is memory efficient. Do not separate
-                            combined_data[global_indices] = tffl.asarray(
-                                key=file_indices
-                            )
-                        start_page += len(tffl.pages)
-            except Exception as e:
-                raise Exception(f"Error in processing tiff file {input_file}: {e}")
+            # Group the output positions by source file so each file opens once.
+            by_file = {}
+            for out_idx, (fname, page) in enumerate(file_pages):
+                by_file.setdefault(fname, []).append((out_idx, page))
+
+            for input_file, entries in by_file.items():
+                try:
+                    with tifffile.TiffFile(
+                        (self.prairieview_dir / input_file).as_posix()
+                    ) as tffl:
+                        n_pages = len(tffl.pages)
+                        # XML pages are 1-based; a page outside the file means the
+                        # XML and the file on disk disagree.
+                        for out_idx, page in entries:
+                            if not 1 <= page <= n_pages:
+                                raise ValueError(
+                                    f"XML names page {page} of {input_file}, which "
+                                    f"holds {n_pages} pages."
+                                )
+                        keys = [page - 1 for _, page in entries]
+                        combined_data[[out_idx for out_idx, _ in entries]] = (
+                            tffl.asarray(key=keys)
+                        )
+                        written[[out_idx for out_idx, _ in entries]] = True
+                except Exception as e:
+                    raise Exception(f"Error in processing tiff file {input_file}: {e}")
+
+            if not written.all():
+                missing = int((~written).sum())
+                raise ValueError(
+                    f"{missing} of {written.size} frames were never written for "
+                    f"plane {plane_idx} channel {channel}. The movie would contain "
+                    f"uninitialised memory, so it is not being saved."
+                )
 
             output_tiff_fullpath = output_dir / f"{output_tiff_stem}.tif"
             tifffile.imwrite(
@@ -401,27 +454,49 @@ def _extract_prairieview_metadata(xml_filepath: str):
             "/SubindexedValue/[@subindex='{subindex}']"
         )
 
+        _z_subpath = (
+            "PVStateShard/PVStateValue/[@key='positionCurrent']"
+            "/SubindexedValues/[@index='ZAxis']"
+            "/SubindexedValue/[@subindex='{subindex}']"
+        )
+
+        def _cycle_z(target_cycle):
+            """One z position per frame of `target_cycle`, in acquisition order.
+
+            `PVStateShard` records state *changes*, so a frame whose z has not
+            moved since the previous frame omits `positionCurrent` entirely and
+            inherits it. Counting the elements in a cycle therefore counts
+            re-declarations, not planes: a recording that happens not to
+            re-declare z on its first frame reports fewer positions than it has
+            planes. Values are accumulated from the document-level shard through
+            every preceding frame instead.
+            """
+            seed = xml_root.find(_z_subpath.format(subindex=active_subindex))
+            current = float(seed.attrib["value"]) if seed is not None else None
+            positions = []
+            for sequence in xml_root.findall(".//Sequence[@cycle]"):
+                cycle = sequence.attrib.get("cycle")
+                for frame in sequence.findall("Frame"):
+                    declared = frame.find(_z_subpath.format(subindex=active_subindex))
+                    if declared is not None:
+                        current = float(declared.attrib["value"])
+                    if cycle == target_cycle:
+                        positions.append(current)
+                if cycle == target_cycle:
+                    return positions
+            return positions
+
         if bidirection_z:
             # With bidirectional Z, even-numbered cycles scan planes in
-            # reverse z-order.  Extract z-positions from cycle 1 (forward)
-            # so that fieldZ aligns with the plane_indices ordering.
-            z_fields = [
-                float(z.attrib.get("value"))
-                for z in xml_root.findall(
-                    _z_xpath.format(cycle="1", subindex=active_subindex)
-                )
-            ]
+            # reverse z-order.  Take z-positions from a forward (odd) cycle so
+            # that fieldZ aligns with the plane_indices ordering.
+            z_fields = _cycle_z("1")
 
             # Build mapping: plane_idx → Frame[@index] in backward (even) cycles.
-            # In forward cycles, Frame[@index] matches the plane ordering from
-            # cycle 1 directly.  In backward cycles the z-positions are reversed,
-            # so a different index is needed to reach the same physical plane.
-            z_fields_bwd = [
-                float(z.attrib.get("value"))
-                for z in xml_root.findall(
-                    _z_xpath.format(cycle="2", subindex=active_subindex)
-                )
-            ]
+            # In forward cycles, Frame[@index] matches the forward plane ordering
+            # directly.  In backward cycles the z-positions are reversed, so a
+            # different index is needed to reach the same physical plane.
+            z_fields_bwd = _cycle_z("2")
 
             fwd_indices = sorted(plane_indices)
             fwd_z = dict(zip(fwd_indices, z_fields))
@@ -439,17 +514,14 @@ def _extract_prairieview_metadata(xml_filepath: str):
                         f"Backward z-values: {bwd_z}"
                     )
         else:
-            z_fields = [
-                float(z.attrib.get("value"))
-                for z in xml_root.findall(
-                    _z_xpath.format(cycle="2", subindex=active_subindex)
-                )
-            ]
+            z_fields = _cycle_z("2")
             bidi_z_index_map = None
 
-        assert (
-            len(z_fields) == n_depths
-        ), "Number of z fields does not match number of depths."
+        assert len(z_fields) == n_depths, (
+            f"Recovered {len(z_fields)} z positions for {n_depths} planes. Each "
+            f"frame of a cycle should yield one position once inherited values "
+            f"are carried forward."
+        )
 
     metainfo = dict(
         num_fields=n_depths,
