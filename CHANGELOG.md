@@ -3,7 +3,10 @@
 Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) convention.
 
-## [0.8.4] - 2026-08-21
+## [0.9.0] - 2026-08-24
+
+Minor rather than patch: cases that previously passed silently now raise, so this is a behavior change for every consumer of the loader,
+not only a bug fix.
 
 + Fix - `prairie_view_loader.py` route multipage frames by the acquisition XML. Page offsets
   were computed from a global channel-by-plane stride and applied to a file list
@@ -21,6 +24,12 @@ Observes [Semantic Versioning](https://semver.org/spec/v2.0.0.html) standard and
   match number of depths". Positions are accumulated from the document-level shard through
   every preceding frame, and a depth that is declared nowhere now raises instead of entering
   `fieldZ` as `None`, which the length check could not detect.
++ Fix - `prairie_view_loader.py` use one XML traversal for filenames and for file/page pairs.
+  `get_prairieview_file_pages` filtered on `Sequence[@cycle]` while `get_prairieview_filenames`
+  and `num_frames` count every `Sequence`, so a Sequence carrying no `cycle` attribute made the
+  two disagree and the frame-count check reject valid data. An excess of more than one frame now
+  raises rather than truncating, since a partial final cycle can leave at most one — more means
+  the plane or channel filter is not selecting what it should.
 + Fix - `prairie_view_loader.py` handle an acquisition that stopped part-way through its final
   cycle. `num_frames` is floored by `num_planes`, so the early planes are named more frames
   than the late ones; the incomplete trailing cycle is now dropped with a warning, keeping

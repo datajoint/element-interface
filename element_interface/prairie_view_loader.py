@@ -138,9 +138,15 @@ class PrairieViewMeta:
         multiplane = self.meta["num_planes"] > 1
 
         pairs = []
-        for sequence in self._xml_root.findall(".//Sequence[@cycle]"):
+        # Must be the same traversal `get_prairieview_filenames` uses. A Sequence
+        # without a `cycle` attribute is counted by that function and by
+        # `num_frames`, so filtering on `[@cycle]` here would make the two
+        # disagree and the frame-count check below reject valid data.
+        for sequence in self._xml_root.findall(".//Sequence"):
             if multiplane and bidi_map:
-                cycle_num = int(sequence.attrib.get("cycle"))
+                cycle = sequence.attrib.get("cycle")
+                # No cycle to alternate on: take the forward ordering.
+                cycle_num = int(cycle) if cycle else 1
                 target_idx = plane_idx if cycle_num % 2 == 1 else bidi_map[plane_idx]
                 frames = sequence.findall(f"Frame[@index='{target_idx}']")
             elif multiplane:
@@ -208,6 +214,18 @@ class PrairieViewMeta:
             # early planes than for the late ones. Every plane must come out the
             # same length, so the incomplete cycle is dropped rather than making
             # one plane longer than another.
+            # A partial final cycle can leave at most one extra frame, since
+            # `num_frames` is floored by `num_planes`. More than that means the
+            # plane or channel filter did not filter, and truncating would write
+            # the leading fraction of the wrong movie.
+            if len(file_pages) > self.meta["num_frames"] + 1:
+                raise ValueError(
+                    f"The XML names {len(file_pages)} frames for plane {plane_idx} "
+                    f"channel {channel}, more than one beyond the "
+                    f"{self.meta['num_frames']} the metadata reports. That is too "
+                    f"many for an incomplete final cycle, so the plane or channel "
+                    f"filter is not selecting what it should."
+                )
             if len(file_pages) > self.meta["num_frames"]:
                 logger.warning(
                     "The XML names %d frames for plane %s channel %s but only %d "
